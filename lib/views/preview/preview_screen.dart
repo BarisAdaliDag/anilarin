@@ -9,6 +9,7 @@ import '../../constants/strings_tr.dart';
 import '../../view_model/editor_view_model.dart';
 import '../editor/editor_screen.dart' show buyBook;
 import '../widgets/print_page_view.dart';
+import 'book_3d.dart';
 import 'upgrades_sheet.dart';
 
 /// [kapak], [boş, 1], [2, 3], ... — Popsa'daki gibi ilk iç sayfa sağda açılır. -1 boş sayfadır.
@@ -216,7 +217,19 @@ class _PreviewScreenState extends State<PreviewScreen> {
                         child: Center(
                           child: Padding(
                             padding: const EdgeInsets.all(16),
-                            child: _SpreadView(vm: vm, pages: spreads[i]),
+                            child: i == 0
+                                ? Book3D(
+                                    aspect: vm.product.aspect,
+                                    pageCount: vm.book.pageCount,
+                                    spineColor: vm.themeOf(0).background,
+                                    cover: PrintPageView(
+                                      book: vm.book,
+                                      pageIndex: 0,
+                                      catalog: vm.catalog,
+                                      thumbSize: 900,
+                                    ),
+                                  )
+                                : _SpreadView(vm: vm, pages: spreads[i]),
                           ),
                         ),
                       ),
