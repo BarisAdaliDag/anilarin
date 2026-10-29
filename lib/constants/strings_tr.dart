@@ -136,6 +136,9 @@ class S {
   static const duplicatePage = 'Bu Sayfayı Çoğalt';
   static const deletePage = 'Bu Sayfayı Sil';
   static const rearrangePages = 'Sayfaları Yeniden Sırala';
+  static const rearrangeHint = 'Kitabının düzenini değiştirmek için sayfaları basılı tutup istediğin konuma sürükle.';
+  static const blankPage = 'Boş Sayfa';
+  static const rearrangeTitle = 'Sayfaları Sırala';
   static const preview = 'Önizle';
   static const duplicateBook = 'Bu Kitabı Çoğalt';
   static const deleteBook = 'Bu Kitabı Sil';

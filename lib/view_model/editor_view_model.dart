@@ -457,6 +457,13 @@ class EditorViewModel extends ChangeNotifier {
     });
   }
 
+  /// [id]'yi [to] konumuna taşır; aradaki sayfalar birer kayar (sürükle-bırak önizlemesi).
+  static List<String> movedOrder(List<String> ids, String id, int to) {
+    final list = [...ids]..remove(id);
+    list.insert(to.clamp(0, list.length), id);
+    return list;
+  }
+
   /// Yeniden sıralama ekranından gelen yeni iç sayfa sırası (sayfa kimlikleri).
   void reorderInner(List<String> innerIds) {
     _mutate((book) {

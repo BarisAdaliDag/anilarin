@@ -88,6 +88,13 @@ void main() {
     expect(vm.book.pages[1].id, ids.last);
   });
 
+  test('sürüklenen sayfa araya girer, diğerleri kayar', () {
+    const ids = ['1', '2', '3', '4', '5'];
+    expect(EditorViewModel.movedOrder(ids, '5', 1), ['1', '5', '2', '3', '4']);
+    expect(EditorViewModel.movedOrder(ids, '2', 2), ['1', '3', '2', '4', '5']);
+    expect(EditorViewModel.movedOrder(ids, '1', 9), ['2', '3', '4', '5', '1']);
+  });
+
   test('tema kapsamları', () {
     final vm = make();
     vm.setTheme('#1E1E1E', scope: ThemeScope.page, pageIndex: 2);
