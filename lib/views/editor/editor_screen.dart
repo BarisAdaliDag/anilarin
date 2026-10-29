@@ -502,6 +502,7 @@ class _EditablePage extends StatelessWidget {
         pageIndex: pageIndex,
         catalog: vm.catalog,
         showPlaceholders: true,
+        animateLayout: true,
         thumbSize: 700,
         onTextTap: (i) => vm.book.pages[pageIndex].isCover
             ? editTitleDialog(context, vm)

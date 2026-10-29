@@ -19,6 +19,7 @@ class PrintPageView extends StatelessWidget {
     this.showPlaceholders = false,
     this.thumbSize = 600,
     this.highlightSlot,
+    this.animateLayout = false,
   });
 
   final PhotoBook book;
@@ -29,6 +30,9 @@ class PrintPageView extends StatelessWidget {
   final bool showPlaceholders;
   final int thumbSize;
   final int? highlightSlot;
+
+  /// Düzen değişince (kenarlıksız, şablon, yazı şeridi) alanlar yeni yerlerine kayarak gider.
+  final bool animateLayout;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +82,7 @@ class PrintPageView extends StatelessWidget {
                 );
               }
               if (slotWrapper != null) child = slotWrapper!(context, i, child);
-              children.add(Positioned.fromRect(rect: r, child: child));
+              children.add(_place(r, child));
             } else {
               final i = textIdx++;
               final onPhoto = photoRects.any((p) => p.overlaps(r.deflate(2)));
@@ -135,7 +139,7 @@ class PrintPageView extends StatelessWidget {
                 );
               }
               if (e.vertical) textView = RotatedBox(quarterTurns: 3, child: textView);
-              children.add(Positioned.fromRect(rect: r, child: textView));
+              children.add(_place(r, textView));
             }
           }
           if (!page.isCover && page.caption.isNotEmpty) {
@@ -196,6 +200,15 @@ class PrintPageView extends StatelessWidget {
       ),
     );
   }
+
+  Widget _place(Rect r, Widget child) => animateLayout
+      ? AnimatedPositioned.fromRect(
+          rect: r,
+          duration: const Duration(milliseconds: 380),
+          curve: Curves.easeInOutCubic,
+          child: child,
+        )
+      : Positioned.fromRect(rect: r, child: child);
 
   String _textValue(PrintPage page, TemplateElement e, int i) {
     if (page.isCover) {
@@ -410,15 +423,47 @@ List<TemplateElement> tightenGutters(List<TemplateElement> elements) {
 List<TemplateElement> borderlessElements(List<TemplateElement> elements) {
   final photos = elements.where((e) => e.isPhoto).map((e) => e.frame).toList();
   if (photos.isEmpty) return elements;
-  final u = photos.reduce((a, b) => a.expandToInclude(b));
+  const eps = 0.5, maxGap = 12.0;
+  final overlapping = elements.any((e) => e.overlay);
+
+  // 1) Popsa gibi fotoğraflar arasındaki boşlukları kapat: komşu iki fotoğraf boşluğun ortasında buluşur.
+  final closed = <Rect>[];
+  for (final r in photos) {
+    var l = r.left, t = r.top, rt = r.right, b = r.bottom;
+    if (!overlapping) {
+      for (final o in photos) {
+        if (identical(o, r)) continue;
+        final vOverlap = o.top < r.bottom - eps && o.bottom > r.top + eps;
+        final hOverlap = o.left < r.right - eps && o.right > r.left + eps;
+        if (vOverlap && o.left >= r.right - eps && o.left - r.right < maxGap) rt = (r.right + o.left) / 2;
+        if (vOverlap && o.right <= r.left + eps && r.left - o.right < maxGap) l = (o.right + r.left) / 2;
+        if (hOverlap && o.top >= r.bottom - eps && o.top - r.bottom < maxGap) b = (r.bottom + o.top) / 2;
+        if (hOverlap && o.bottom <= r.top + eps && r.top - o.bottom < maxGap) t = (o.bottom + r.top) / 2;
+      }
+    }
+    closed.add(Rect.fromLTRB(l, t, rt, b));
+  }
+
+  // 2) Fotoğraf bölgesini sayfa kenarlarına uzat; yazı alanının bulunduğu tarafta mevcut kenar korunur.
+  final u = closed.reduce((a, b) => a.expandToInclude(b));
   if (u.width <= 0 || u.height <= 0) return elements;
-  Rect map(Rect f) => Rect.fromLTWH(
-    (f.left - u.left) / u.width * 100,
-    (f.top - u.top) / u.height * 100,
-    f.width / u.width * 100,
-    f.height / u.height * 100,
+  var target = const Rect.fromLTRB(0, 0, 100, 100);
+  for (final e in elements.where((e) => !e.isPhoto)) {
+    final f = e.frame;
+    if (f.overlaps(u.deflate(eps))) continue; // fotoğrafın üstündeki yazı (ör. kapak) alanı ayırmaz
+    if (f.left >= u.right - eps) target = Rect.fromLTRB(target.left, target.top, u.right, target.bottom);
+    if (f.right <= u.left + eps) target = Rect.fromLTRB(u.left, target.top, target.right, target.bottom);
+    if (f.top >= u.bottom - eps) target = Rect.fromLTRB(target.left, target.top, target.right, u.bottom);
+    if (f.bottom <= u.top + eps) target = Rect.fromLTRB(target.left, u.top, target.right, target.bottom);
+  }
+  Rect map(Rect f) => Rect.fromLTRB(
+    target.left + (f.left - u.left) / u.width * target.width,
+    target.top + (f.top - u.top) / u.height * target.height,
+    target.left + (f.right - u.left) / u.width * target.width,
+    target.top + (f.bottom - u.top) / u.height * target.height,
   );
-  return [for (final e in elements) e.isPhoto ? e.withFrame(map(e.frame)) : e];
+  var i = 0;
+  return [for (final e in elements) e.isPhoto ? e.withFrame(map(closed[i++])) : e];
 }
 
 /// Alan içinde fotoğrafın çizileceği dikdörtgen (döndürülmüş en-boy, Doldur/Sığdır, yakınlaştırma ve kaydırma).

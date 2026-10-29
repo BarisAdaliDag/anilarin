@@ -217,6 +217,21 @@ void main() {
     expect(vm.book.pages[1].paletteKey, isNot(key));
   });
 
+  test('kenarlıksız: boşluklar kapanır, kenarlara uzanır, yazı sütunu korunur', () {
+    final catalog = loadTestCatalog();
+    // 2x2 ızgara: boşluk kalmaz, sayfayı kaplar
+    final grid = borderlessElements(catalog.template(5).elementsFor('square')).map((e) => e.frame).toList();
+    final u = grid.reduce((a, b) => a.expandToInclude(b));
+    expect(u, const Rect.fromLTRB(0, 0, 100, 100));
+    expect(grid[1].left - grid[0].right, closeTo(0, 0.01));
+    // yazı sütunlu şablon (41): fotoğraf yazının üstüne taşmaz
+    final els = borderlessElements(catalog.template(41).elementsFor('square'));
+    final photo = els.firstWhere((e) => e.isPhoto).frame;
+    final text = els.firstWhere((e) => !e.isPhoto).frame;
+    expect(photo.overlaps(text), isFalse);
+    expect(photo.right, closeTo(100, 0.01));
+  });
+
   test('json gidiş-dönüş', () {
     final vm = make();
     final copy = PhotoBook.fromJson(vm.book.toJson());
