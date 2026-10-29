@@ -174,15 +174,20 @@ class ProductOptions {
   bool giftBox;
   bool layflat;
   String? foil; // null | gold | silver
+  bool gloss; // kâğıt yüzeyi: mat (varsayılan) | parlak
 
-  ProductOptions({this.giftBox = false, this.layflat = false, this.foil});
+  ProductOptions({this.giftBox = false, this.layflat = false, this.foil, this.gloss = false});
 
-  Map<String, dynamic> toJson() => {'gift': giftBox, 'layflat': layflat, 'foil': foil};
+  Map<String, dynamic> toJson() => {'gift': giftBox, 'layflat': layflat, 'foil': foil, 'gloss': gloss};
 
-  factory ProductOptions.fromJson(Map<String, dynamic>? j) =>
-      ProductOptions(giftBox: j?['gift'] ?? false, layflat: j?['layflat'] ?? false, foil: j?['foil']);
+  factory ProductOptions.fromJson(Map<String, dynamic>? j) => ProductOptions(
+    giftBox: j?['gift'] ?? false,
+    layflat: j?['layflat'] ?? false,
+    foil: j?['foil'],
+    gloss: j?['gloss'] ?? false,
+  );
 
-  ProductOptions copy() => ProductOptions(giftBox: giftBox, layflat: layflat, foil: foil);
+  ProductOptions copy() => ProductOptions(giftBox: giftBox, layflat: layflat, foil: foil, gloss: gloss);
 }
 
 /// Popsa'daki `Print` modelinin karşılığı.

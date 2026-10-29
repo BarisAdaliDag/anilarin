@@ -9,6 +9,7 @@ import '../../constants/strings_tr.dart';
 import '../../view_model/editor_view_model.dart';
 import '../editor/editor_screen.dart' show buyBook;
 import '../widgets/print_page_view.dart';
+import 'upgrades_sheet.dart';
 
 /// [kapak], [boş, 1], [2, 3], ... — Popsa'daki gibi ilk iç sayfa sağda açılır. -1 boş sayfadır.
 List<List<int>> bookSpreads(int pageCount) {
@@ -242,7 +243,23 @@ class _PreviewScreenState extends State<PreviewScreen> {
                   children: [
                     _RoundButton(icon: Icons.palette_outlined, onTap: _pickBackground),
                     _RoundButton(icon: Icons.shopping_cart_outlined, large: true, onTap: () => buyBook(context, vm)),
-                    _RoundButton(icon: Icons.edit_outlined, onTap: () => Navigator.pop(context)),
+                    _RoundButton(
+                      icon: Icons.auto_stories_outlined,
+                      onTap: () => showUpgradesSheet(
+                        context,
+                        vm,
+                        // Kâğıt sekmesinde Popsa gibi kitap açılır; iç sayfa görünür.
+                        onTab: (tab) {
+                          if (tab == 2 && _page < 1) {
+                            _controller.animateToPage(
+                              1,
+                              duration: const Duration(milliseconds: 450),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),

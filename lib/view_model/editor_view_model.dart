@@ -472,5 +472,19 @@ class EditorViewModel extends ChangeNotifier {
     });
   }
 
+  /// Kitabı aynı biçimde başka bir ürüne (tür/boyut) taşır. Sayfa sayısı yeni ürünün sınırını aşıyorsa olmaz.
+  bool changeProduct(String code) {
+    final next = catalog.product(code);
+    if (code == _book.productCode || next.format != product.format) return false;
+    if (_book.pageCount > next.pagesMax) return false;
+    _mutate((book) => book.productCode = code);
+    return true;
+  }
+
+  void setGloss(bool gloss) {
+    if (_book.options.gloss == gloss) return;
+    _mutate((book) => book.options = book.options.copy()..gloss = gloss);
+  }
+
   void setOptions(ProductOptions options) => _mutate((book) => book.options = options.copy());
 }

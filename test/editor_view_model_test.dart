@@ -95,6 +95,23 @@ void main() {
     expect(EditorViewModel.movedOrder(ids, '1', 9), ['2', '3', '4', '5', '1']);
   });
 
+  test('yükseltmeler: tür ve boyut değişir, sayfa sınırı aşılmaz, kâğıt kaydedilir', () {
+    final vm = make(product: 'PBK-8');
+    final soft = vm.catalog.closestOfType(vm.product, 'softcover')!;
+    expect(soft.code, 'PBK-4'); // aynı boyut (büyük) korunur
+    expect(vm.changeProduct(soft.code), isTrue);
+    expect(vm.product.type, 'softcover');
+    // Kitapçıkta büyük yok, en yakın orta seçilir
+    expect(vm.catalog.closestOfType(vm.product, 'booklet')!.code, 'PBK-1');
+    vm.addPages(vm.product.pagesMax - vm.book.pageCount);
+    expect(vm.changeProduct('PBK-1'), isFalse); // 40 sayfayı aşıyor
+    expect(vm.catalog.sizesOf('hardback', 'landscape').map((p) => p.size), ['medium', 'large', 'xlarge']);
+    vm.setGloss(true);
+    expect(vm.book.options.gloss, isTrue);
+    vm.undo();
+    expect(vm.book.options.gloss, isFalse);
+  });
+
   test('tema kapsamları', () {
     final vm = make();
     vm.setTheme('#1E1E1E', scope: ThemeScope.page, pageIndex: 2);

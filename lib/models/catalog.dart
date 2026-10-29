@@ -117,6 +117,13 @@ class Product {
     _ => S.hardback,
   };
 
+  /// Popsa'daki kalite basamağı: Sert Kapak Premium, Yumuşak Kapak Standart, Kitapçık Ekonomik.
+  String get tierLabel => switch (type) {
+    'booklet' => S.tierEconomy,
+    'softcover' => S.tierStandard,
+    _ => S.tierPremium,
+  };
+
   String get formatLabel => format == 'square' ? S.square : S.landscape;
 
   String get sizeLabel => switch (size) {
@@ -339,6 +346,23 @@ class Catalog {
   List<String> get productTypes => const ['hardback', 'softcover', 'booklet'];
 
   List<Product> productsOfType(String type) => products.where((p) => p.type == type).toList();
+
+  static const sizeOrder = ['small', 'medium', 'large', 'xlarge'];
+
+  /// Aynı biçimde (yatay/kare) [type] türündeki ürünler, küçükten büyüğe.
+  List<Product> sizesOf(String type, String format) =>
+      products.where((p) => p.type == type && p.format == format).toList()
+        ..sort((a, b) => sizeOrder.indexOf(a.size).compareTo(sizeOrder.indexOf(b.size)));
+
+  /// Tür değişince: aynı boyut varsa o, yoksa en yakın boyut (Popsa Yükseltmeler > Tür).
+  Product? closestOfType(Product from, String type) {
+    final options = sizesOf(type, from.format);
+    if (options.isEmpty) return null;
+    final want = sizeOrder.indexOf(from.size);
+    return options.reduce(
+      (a, b) => (sizeOrder.indexOf(a.size) - want).abs() <= (sizeOrder.indexOf(b.size) - want).abs() ? a : b,
+    );
+  }
 
   int get lowestPrice => products.map((p) => p.priceCents).reduce((a, b) => a < b ? a : b);
 

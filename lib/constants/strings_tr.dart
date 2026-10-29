@@ -51,6 +51,16 @@ class S {
   static const medium = 'Orta';
   static const large = 'Büyük';
   static const xlarge = 'Çok Büyük';
+  static const tierPremium = 'Premium';
+  static const tierStandard = 'Standart';
+  static const tierEconomy = 'Ekonomik';
+  static const upgrades = 'Yükseltmeler';
+  static const upgradeType = 'Tür';
+  static const upgradeSize = 'Boyut';
+  static const paperFinish = 'Kâğıt';
+  static const matte = 'Mat';
+  static const gloss = 'Parlak';
+  static String maxPagesNote(int n) => 'En fazla $n sayfa; önce sayfa kaldırın';
   static const giftBox = 'Hediye Kutusu';
   static const giftBoxBody = 'Özel kutusunda, hediye etmeye hazır.';
   static const layflat = 'Düz Açılan Cilt';
