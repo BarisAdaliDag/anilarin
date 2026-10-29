@@ -62,6 +62,10 @@ class PrintPageView extends StatelessWidget {
               showPlaceholder: showPlaceholders,
               thumbSize: thumbSize,
             );
+            if (e.border && !page.borderless) {
+              final bw = w * 0.012;
+              child = Container(color: Colors.white, padding: EdgeInsets.all(bw), child: child);
+            }
             if (highlightSlot == i) {
               child = DecoratedBox(
                 position: DecorationPosition.foreground,
@@ -75,10 +79,29 @@ class PrintPageView extends StatelessWidget {
             final i = textIdx++;
             final onPhoto = photoRects.any((p) => p.overlaps(r.deflate(2)));
             final value = _textValue(page, e, i);
-            children.add(Positioned.fromRect(
-              rect: r,
-              child: _TextSlotView(
-                text: value,
+            final coverTitle = page.isCover && e.role == 'title';
+            if (e.scrim && onPhoto) {
+              children.add(Positioned(
+                left: 0,
+                right: 0,
+                top: r.top - r.height,
+                bottom: 0,
+                child: const IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0x00000000), Color(0x99000000)],
+                      ),
+                    ),
+                  ),
+                ),
+              ));
+            }
+            Widget textView = _TextSlotView(
+                text: coverTitle ? book.title : value,
+                subtitle: coverTitle ? book.subtitle : '',
                 role: e.role,
                 align: e.align,
                 pageHeight: h,
@@ -87,8 +110,9 @@ class PrintPageView extends StatelessWidget {
                 font: font,
                 placeholder: showPlaceholders && value.isEmpty,
                 onTap: onTextTap == null ? null : () => onTextTap!(i),
-              ),
-            ));
+              );
+            if (e.vertical) textView = RotatedBox(quarterTurns: 3, child: textView);
+            children.add(Positioned.fromRect(rect: r, child: textView));
           }
         }
         return ClipRect(child: ColoredBox(color: bg, child: Stack(children: children)));
@@ -194,6 +218,7 @@ Rect photoRect(Size slot, double photoAspect, PhotoSlot s) {
 class _TextSlotView extends StatelessWidget {
   const _TextSlotView({
     required this.text,
+    this.subtitle = '',
     required this.role,
     required this.align,
     required this.pageHeight,
@@ -205,6 +230,7 @@ class _TextSlotView extends StatelessWidget {
   });
 
   final String text;
+  final String subtitle;
   final String role;
   final TextAlign align;
   final double pageHeight;
@@ -221,7 +247,7 @@ class _TextSlotView extends StatelessWidget {
       fontFamily: isTitle ? font.titleFont : font.bodyFont,
       fontWeight: isTitle ? font.titleWeight : FontWeight.w400,
       letterSpacing: font.letterSpacing * pageHeight / 400,
-      fontSize: isTitle ? pageHeight * 0.06 : pageHeight * 0.03,
+      fontSize: isTitle ? pageHeight * (subtitle.isEmpty ? 0.06 : 0.048) : pageHeight * 0.03,
       height: 1.2,
       color: placeholder ? color.withValues(alpha: 0.45) : color,
       shadows: shadow ? const [Shadow(blurRadius: 6, color: Colors.black54)] : null,
@@ -236,10 +262,35 @@ class _TextSlotView extends StatelessWidget {
       child = const SizedBox.expand();
     } else {
       final value = placeholder ? (isTitle ? 'Başlık' : 'Altyazı eklemek için dokun') : font.apply(text);
+      Widget titleBlock = Text(value, textAlign: align, style: style);
+      if (isTitle && subtitle.isNotEmpty && !placeholder) {
+        titleBlock = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: switch (align) {
+            TextAlign.left => CrossAxisAlignment.start,
+            TextAlign.right => CrossAxisAlignment.end,
+            _ => CrossAxisAlignment.center,
+          },
+          children: [
+            titleBlock,
+            SizedBox(height: pageHeight * 0.008),
+            Text(
+              font.apply(subtitle),
+              textAlign: align,
+              style: style.copyWith(
+                fontFamily: font.bodyFont,
+                fontWeight: FontWeight.w400,
+                fontSize: pageHeight * 0.022,
+                letterSpacing: 0,
+              ),
+            ),
+          ],
+        );
+      }
       child = Align(
         alignment: alignment,
         child: isTitle
-            ? FittedBox(fit: BoxFit.scaleDown, alignment: alignment, child: Text(value, textAlign: align, style: style))
+            ? FittedBox(fit: BoxFit.scaleDown, alignment: alignment, child: titleBlock)
             : Text(value, textAlign: align, style: style, overflow: TextOverflow.fade),
       );
     }

@@ -142,8 +142,19 @@ class TemplateElement {
   final String role; // title | caption (yalnız text)
   final Rect frame; // yüzde (0-100)
   final TextAlign align;
+  final bool border; // fotoğraf etrafında beyaz çerçeve (Popsa kapak görünümü)
+  final bool vertical; // yazı 90° döndürülmüş (aşağıdan yukarı)
+  final bool scrim; // fotoğraf üstündeki yazının arkasında koyu geçiş
 
-  const TemplateElement({required this.type, required this.role, required this.frame, required this.align});
+  const TemplateElement({
+    required this.type,
+    required this.role,
+    required this.frame,
+    required this.align,
+    this.border = false,
+    this.vertical = false,
+    this.scrim = false,
+  });
 
   bool get isPhoto => type == 'photo';
 
@@ -158,6 +169,9 @@ class TemplateElement {
         'right' => TextAlign.right,
         _ => TextAlign.center,
       },
+      border: j['border'] ?? false,
+      vertical: j['vertical'] ?? false,
+      scrim: j['scrim'] ?? false,
     );
   }
 }

@@ -223,9 +223,14 @@ class EditorViewModel extends ChangeNotifier {
     });
   }
 
+  /// Popsa'nın kapak şablonu sırası; 25 (tam sayfa fotoğraf) ve 39 (yalnız başlık) iç sayfalarda da kullanılır.
+  static const coverOrder = [1, 18, 19, 20, 25, 31, 32, 33, 34, 35, 39, 36, 37, 38];
+
   List<PageTemplate> templatesFor(int pageIndex) {
-    final cover = _book.pages[pageIndex].isCover;
-    return catalog.templates.where((t) => t.isCover == cover).toList();
+    if (_book.pages[pageIndex].isCover) {
+      return [for (final id in coverOrder) catalog.template(id)];
+    }
+    return catalog.templates.where((t) => !t.isCover).toList();
   }
 
   // ---- tema / yazı ----

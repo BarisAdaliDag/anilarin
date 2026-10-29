@@ -110,6 +110,7 @@ class S {
   static const removePages = 'Sayfaları Kaldır';
   static String extraPagesEach(String price) => 'Ek sayfalar tanesi $price.';
   static const changeTemplate = 'Şablonu Değiştir';
+  static const templates = 'Şablonlar';
   static const changeTheme = 'Temayı Değiştir';
   static const changeFont = 'Yazı Tipini Değiştir';
   static const editTitle = 'Başlığı Düzenle';
