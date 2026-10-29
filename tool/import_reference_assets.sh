@@ -34,4 +34,8 @@ done
 # Ekran kayıtlarından çıkarılan kareler/klipler (reference/screens/media) varsa
 if [ -d "$SRC/screens/media" ]; then mkdir -p "$DST/media"; cp "$SRC"/screens/media/* "$DST/media/" 2>/dev/null || true; fi
 
+# Boyut kartlarındaki "elde tutulan kitap" sahneleri için eller katmanı (Pillow + numpy gerekir)
+python3 -I "$ROOT/tool/make_scene_overlays.py" "$SRC/decoded/assets/topdownscene" "$DST/mockups/scene" 2>/dev/null \
+  || echo "Uyarı: sahne katmanları üretilemedi (pip install pillow numpy); boyut kartları düz mockup gösterir."
+
 echo "Kopyalandı: $(find "$DST" -type f ! -name .gitkeep | wc -l | tr -d ' ') dosya → $DST"

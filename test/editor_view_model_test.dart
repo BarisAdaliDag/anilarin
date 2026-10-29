@@ -112,6 +112,18 @@ void main() {
     expect(vm.book.options.gloss, isFalse);
   });
 
+  test('sipariş ayrıntıları: parlak kâğıt fiyatı, üstü çizili toplam, ölçü etiketi', () {
+    final vm = make(product: 'PBK-8');
+    final p = vm.product;
+    final base = p.totalPrice(vm.book.pageCount, vm.book.options);
+    vm.setGloss(true);
+    expect(p.totalPrice(vm.book.pageCount, vm.book.options), base + p.glossPriceCents);
+    expect(p.glossPriceCents, 17100); // 900 TL'nin ~%19'u
+    expect(p.compareTotal(20, vm.book.options) - p.totalPrice(20, vm.book.options), p.compareAtCents - p.priceCents);
+    expect(p.dimensionsLabel(), '27cm × 21cm');
+    expect(p.dimensionsLabel(inches: true), '10.6in × 8.3in');
+  });
+
   test('tema kapsamları', () {
     final vm = make();
     vm.setTheme('#1E1E1E', scope: ThemeScope.page, pageIndex: 2);

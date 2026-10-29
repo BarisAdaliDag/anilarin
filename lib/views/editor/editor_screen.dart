@@ -10,6 +10,7 @@ import '../../services/palette_service.dart';
 import '../../view_model/editor_view_model.dart';
 import '../basket/basket_screen.dart';
 import '../photo_picker/photo_picker_screen.dart';
+import '../order/order_details_screen.dart';
 import '../preview/preview_screen.dart';
 import '../widgets/photo_image.dart';
 import '../widgets/print_page_view.dart';
@@ -101,7 +102,7 @@ class _EditorBodyState extends State<_EditorBody> {
           const SizedBox(width: 4),
           _Pill(label: 'Paylaş', onTap: () => _share(context)),
           const SizedBox(width: 8),
-          _Pill(label: S.next, icon: Icons.arrow_forward, onTap: () => openPreview(context, vm)),
+          _Pill(label: S.next, icon: Icons.arrow_forward, onTap: () => showOrderDetails(context, vm)),
           const SizedBox(width: 12),
         ],
       ),

@@ -104,12 +104,28 @@ class Product {
 
   bool get supportsUpgrades => type == 'hardback';
 
+  /// Parlak kâğıt farkı: Popsa'da kitap fiyatının ~%19'u (Büyük Sert Kapak: 1.800 → +345).
+  int get glossPriceCents => (priceCents * 19 / 100 / 100).round() * 100;
+
   int optionsPrice(ProductOptions o) =>
+      (o.gloss ? glossPriceCents : 0) +
       (o.giftBox ? giftBoxPriceCents : 0) +
       (supportsUpgrades && o.layflat ? layflatPriceCents : 0) +
       (supportsUpgrades && o.foil != null ? foilPriceCents : 0);
 
   int totalPrice(int pages, ProductOptions o) => priceFor(pages) + optionsPrice(o);
+
+  /// Üstü çizili toplam: indirimsiz kitap fiyatı + aynı ekler.
+  int compareTotal(int pages, ProductOptions o) => totalPrice(pages, o) + compareAtCents - priceCents;
+
+  int get extraPagesPrice => incrementPriceCents;
+
+  /// Ölçü etiketi: "27cm × 21cm" ya da inç.
+  String dimensionsLabel({bool inches = false}) {
+    final parts = dimensionsCm.split('×').map((s) => double.parse(s.trim())).toList();
+    String f(double v) => inches ? '${(v / 2.54).toStringAsFixed(1)}in' : '${v.round()}cm';
+    return parts.map(f).join(' × ');
+  }
 
   String get typeLabel => switch (type) {
     'booklet' => S.booklet,

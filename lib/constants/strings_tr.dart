@@ -60,6 +60,17 @@ class S {
   static const paperFinish = 'Kâğıt';
   static const matte = 'Mat';
   static const gloss = 'Parlak';
+  static const glossFinish = 'Parlak Kâğıt';
+  static const orderDetails = 'Sipariş Ayrıntıları';
+  static const orderDetailsBody = 'Fotoğraf kitabının ayrıntılarını onayla. Fiyat otomatik güncellenir.';
+  static const coverSection = 'Kapak';
+  static const paperFinishSection = 'Kâğıt Yüzeyi';
+  static const subtotal = 'Ara Toplam';
+  static const price = 'Fiyat';
+  static const vouchersAtBasket = 'İndirim kodları sepette eklenebilir.';
+  static const mostPopularBadge = 'EN POPÜLER';
+  static String extraPages(int n) => '$n Ek Sayfa';
+  static String onlySizes(String sizes) => 'Yalnızca $sizes boyutta';
   static String maxPagesNote(int n) => 'En fazla $n sayfa; önce sayfa kaldırın';
   static const giftBox = 'Hediye Kutusu';
   static const giftBoxBody = 'Özel kutusunda, hediye etmeye hazır.';

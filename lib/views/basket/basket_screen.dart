@@ -55,9 +55,13 @@ class BasketScreen extends StatelessWidget {
                               '${catalog.product(item.productCode).title} · ${S.pagesCount(item.pages)}',
                               style: TextStyle(color: context.mutedText, fontSize: 13),
                             ),
-                            if (item.options.giftBox || item.options.layflat || item.options.foil != null)
+                            if (item.options.giftBox ||
+                                item.options.layflat ||
+                                item.options.foil != null ||
+                                item.options.gloss)
                               Text(
                                 [
+                                  if (item.options.gloss) S.glossFinish,
                                   if (item.options.giftBox) S.giftBox,
                                   if (item.options.layflat) S.layflat,
                                   if (item.options.foil != null)
