@@ -45,7 +45,7 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
         if (!isCover)
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 54,
+              height: 40,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -113,10 +113,17 @@ class _CategoryChip extends StatelessWidget {
         customBorder: const StadiumBorder(),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
-          child: Text(
-            label,
-            style: TextStyle(fontSize: 17, color: selected ? AppColors.accent : context.strongText),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Center(
+            widthFactor: 1,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.0,
+                color: selected ? AppColors.accent : context.strongText,
+              ),
+            ),
           ),
         ),
       ),
