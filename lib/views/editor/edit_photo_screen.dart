@@ -16,11 +16,7 @@ const printDpi = 300.0;
 
 /// Popsa PhotoQualityMeter: kalite = fotoğraf pikseli / (baskıda gereken piksel × yakınlaştırma);
 /// puan = kalite × 10, 1–10 arası. Döndürülen ikinci değer "fotoğrafı % kaçına ölçekleyeceğiz" oranıdır.
-(int, double) photoQuality({
-  required double photoPx,
-  required double requiredPx,
-  required double zoom,
-}) {
+(int, double) photoQuality({required double photoPx, required double requiredPx, required double zoom}) {
   if (requiredPx <= 0 || zoom <= 0) return (10, 1);
   final exact = photoPx / (requiredPx * zoom);
   return ((exact * 10).round().clamp(1, 10), exact);
@@ -98,53 +94,62 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
             child: _QualityCard(score: score, onTap: () => _explain(exact)),
           ),
           Expanded(
-            child: Center(
-              child: AspectRatio(
-                aspectRatio: slotAspect,
-                child: LayoutBuilder(
-                  builder: (context, c) {
-                    final size = Size(c.maxWidth, c.maxHeight);
-                    final r = photoRect(size, pa, _slot);
-                    return GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onScaleStart: (d) {
-                        _startScale = _slot.scale;
-                        _startFocal = d.localFocalPoint;
-                        _startDx = _slot.dx;
-                        _startDy = _slot.dy;
-                      },
-                      onScaleUpdate: (d) => setState(() {
-                        _slot.scale = (_startScale * d.scale).clamp(1.0, 4.0);
-                        final cur = photoRect(size, pa, _slot);
-                        final ox = max(1.0, (cur.width - size.width).abs() / 2);
-                        final oy = max(1.0, (cur.height - size.height).abs() / 2);
-                        final delta = d.localFocalPoint - _startFocal;
-                        _slot.dx = (_startDx + delta.dx / ox).clamp(-1.0, 1.0);
-                        _slot.dy = (_startDy + delta.dy / oy).clamp(-1.0, 1.0);
-                      }),
-                      // Popsa gibi: alanın dışına taşan kısım da karartılmış olarak görünür.
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Positioned.fromRect(
-                            rect: r,
-                            child: Opacity(opacity: 0.3, child: _photo()),
-                          ),
-                          Positioned.fill(
-                            child: ClipRect(
-                              child: Stack(
-                                children: [
-                                  Positioned.fill(child: ColoredBox(color: Colors.white.withValues(alpha: 0.04))),
-                                  Positioned.fromRect(rect: r, child: _photo()),
-                                ],
+            // Taşan kısım bu alanın içinde kalsın (kalite kartının ve araçların üstüne binmesin).
+            child: ClipRect(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: slotAspect,
+                    child: LayoutBuilder(
+                      builder: (context, c) {
+                        final size = Size(c.maxWidth, c.maxHeight);
+                        final r = photoRect(size, pa, _slot);
+                        return GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onScaleStart: (d) {
+                            _startScale = _slot.scale;
+                            _startFocal = d.localFocalPoint;
+                            _startDx = _slot.dx;
+                            _startDy = _slot.dy;
+                          },
+                          onScaleUpdate: (d) => setState(() {
+                            _slot.scale = (_startScale * d.scale).clamp(1.0, 4.0);
+                            final cur = photoRect(size, pa, _slot);
+                            final ox = max(1.0, (cur.width - size.width).abs() / 2);
+                            final oy = max(1.0, (cur.height - size.height).abs() / 2);
+                            final delta = d.localFocalPoint - _startFocal;
+                            _slot.dx = (_startDx + delta.dx / ox).clamp(-1.0, 1.0);
+                            _slot.dy = (_startDy + delta.dy / oy).clamp(-1.0, 1.0);
+                          }),
+                          // Popsa gibi: alanın dışına taşan kısım da karartılmış olarak görünür.
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Positioned.fromRect(
+                                rect: r,
+                                child: Opacity(opacity: 0.3, child: _photo()),
                               ),
-                            ),
+                              Positioned.fill(
+                                child: ClipRect(
+                                  child: Stack(
+                                    children: [
+                                      Positioned.fill(child: ColoredBox(color: Colors.white.withValues(alpha: 0.04))),
+                                      Positioned.fromRect(rect: r, child: _photo()),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              if (_grid)
+                                IgnorePointer(
+                                  child: CustomPaint(size: size, painter: _GridPainter()),
+                                ),
+                            ],
                           ),
-                          if (_grid) IgnorePointer(child: CustomPaint(size: size, painter: _GridPainter())),
-                        ],
-                      ),
-                    );
-                  },
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -208,9 +213,9 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
   }
 
   Widget _photo() => RotatedBox(
-        quarterTurns: _slot.quarterTurns % 4,
-        child: PhotoImage(photoId: _slot.photoId, size: 1400, fit: BoxFit.fill),
-      );
+    quarterTurns: _slot.quarterTurns % 4,
+    child: PhotoImage(photoId: _slot.photoId, size: 1400, fit: BoxFit.fill),
+  );
 
   Future<void> _replace(EditorViewModel vm) async {
     final nav = Navigator.of(context);
@@ -265,23 +270,25 @@ class _QualityCard extends StatelessWidget {
                 curve: Curves.easeOutBack,
                 builder: (_, v, _) => FractionallySizedBox(
                   widthFactor: v.clamp(0.0, 1.0),
-                  child: Container(color: color.withValues(alpha: 0.18)),
+                  child: Container(color: color.withValues(alpha: 0.10)),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Row(
-                  children: [
-                    Text(
-                      S.photoQuality,
-                      style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 1.4, color: context.strongText),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '$score/10',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: context.strongText),
-                    ),
-                  ],
+              Positioned.fill(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: Row(
+                    children: [
+                      Text(
+                        S.photoQuality,
+                        style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 1.4, color: context.strongText),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '$score/10',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: context.strongText),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
