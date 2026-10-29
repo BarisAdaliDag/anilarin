@@ -64,6 +64,7 @@ class PrintPage {
   List<String> texts; // şablonun metin alanı sırasına göre (kapakta başlık kitap başlığından gelir)
   String? themeOverride;
   bool borderless; // kenarlıksız: fotoğraf alanları sayfa kenarına kadar uzar
+  String caption; // sayfa altyazısı: şablondan bağımsız, sayfanın altında şerit (Popsa page caption)
 
   PrintPage({
     required this.id,
@@ -73,6 +74,7 @@ class PrintPage {
     required this.texts,
     this.themeOverride,
     this.borderless = false,
+    this.caption = '',
   });
 
   bool get isCover => tag == 'layout-front';
@@ -87,6 +89,7 @@ class PrintPage {
         'texts': texts,
         'theme': themeOverride,
         if (borderless) 'bl': true,
+        if (caption.isNotEmpty) 'cap': caption,
       };
 
   factory PrintPage.fromJson(Map<String, dynamic> j) => PrintPage(
@@ -97,6 +100,7 @@ class PrintPage {
         texts: List<String>.from(j['texts'] ?? const []),
         themeOverride: j['theme'],
         borderless: j['bl'] ?? false,
+        caption: j['cap'] ?? '',
       );
 }
 

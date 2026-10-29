@@ -36,23 +36,23 @@ Future<void> editTitleDialog(BuildContext context, EditorViewModel vm) async {
   if (ok == true) vm.setTitle(title.text, subtitle.text);
 }
 
-/// Sayfaya altyazı ekler. Şablonda yazı alanı yoksa aynı fotoğraf sayısındaki yazılı bir şablona geçer.
+/// Sayfaya altyazı ekler/düzenler. Popsa gibi düzeni bozmaz: altyazı sayfanın altında şerit olarak durur.
 Future<void> editCaptionFlow(BuildContext context, EditorViewModel vm, int pageIndex) async {
-  if (vm.templateOf(pageIndex).textSlots(vm.format).isEmpty) {
-    final tpl = vm.captionTemplateFor(pageIndex);
-    if (tpl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bu sayfa düzeni için yazılı şablon yok. Önce şablonu değiştir.')),
-      );
-      return;
-    }
-    vm.changeTemplate(pageIndex, tpl);
-  }
-  if (!context.mounted) return;
-  await editCaptionDialog(context, vm, pageIndex, 0);
+  final page = vm.book.pages[pageIndex];
+  final result = await Navigator.of(context).push<String>(MaterialPageRoute(
+    fullscreenDialog: true,
+    builder: (_) => TextEditorScreen(
+      title: page.caption.isEmpty ? S.addCaption : S.editCaption,
+      initial: page.caption,
+      limit: 90,
+      font: vm.textAppearance,
+    ),
+  ));
+  if (result != null) vm.setPageCaption(pageIndex, result);
 }
 
 Future<void> editCaptionDialog(BuildContext context, EditorViewModel vm, int pageIndex, int textIndex) async {
+  if (textIndex < 0) return editCaptionFlow(context, vm, pageIndex);
   final page = vm.book.pages[pageIndex];
   final slots = vm.templateOf(pageIndex).textSlots(vm.format);
   if (textIndex >= slots.length) return;

@@ -293,6 +293,10 @@ class EditorViewModel extends ChangeNotifier {
     });
   }
 
+  /// Sayfa altyazısı: düzeni değiştirmez, sayfanın altına şerit olarak eklenir.
+  void setPageCaption(int pageIndex, String text) =>
+      _mutate((book) => book.pages[pageIndex].caption = text.trim());
+
   /// Sayfanın, varsa yazı alanı olan aynı fotoğraf sayısındaki şablona geçerek altyazı eklemesi.
   int? captionTemplateFor(int pageIndex) {
     final tpl = templateOf(pageIndex);

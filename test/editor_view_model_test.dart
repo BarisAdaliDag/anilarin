@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:anilarin/models/photo_book.dart';
 import 'package:anilarin/services/auto_layout_service.dart';
 import 'package:anilarin/view_model/editor_view_model.dart';
+import 'package:anilarin/views/widgets/print_page_view.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -112,11 +113,10 @@ void main() {
     final base = vm.price;
     vm.addPages(2);
     expect(vm.price, base + 2 * vm.product.incrementPriceCents);
-    final tpl = vm.captionTemplateFor(1);
-    expect(tpl, isNotNull);
-    vm.changeTemplate(1, tpl!);
-    vm.setCaption(1, 0, ' Deniz kenarı ');
-    expect(vm.book.pages[1].texts.first, 'Deniz kenarı');
+    final tplBefore = vm.book.pages[1].templateId;
+    vm.setPageCaption(1, ' Deniz kenarı ');
+    expect(vm.book.pages[1].caption, 'Deniz kenarı');
+    expect(vm.book.pages[1].templateId, tplBefore); // altyazı düzeni değiştirmez
   });
 
   test('kenarlıksız sayfa ve tümü', () {
@@ -127,6 +127,18 @@ void main() {
     expect(vm.allBorderless, isTrue);
     vm.undo();
     expect(vm.allBorderless, isFalse);
+  });
+
+  test('ızgara şablonlarında boşluklar daralır, altyazı fotoğrafları yukarı sıkıştırır', () {
+    final tpl = catalog.template(5); // 2x2 ızgara
+    final tight = tightenGutters(tpl.elementsFor('square')).map((e) => e.frame).toList();
+    expect(tight[0].left, closeTo(4.5, 0.01));
+    expect(tight[1].left - tight[0].right, closeTo(1.8, 0.01));
+    expect(tight[2].top - tight[0].bottom, closeTo(2.4, 0.01));
+    final page = PrintPage(id: 'x', tag: 'layout-regular', templateId: 5, photos: [], texts: [], caption: 'Merhaba');
+    final laid = pageLayout(page, tpl, 'square');
+    final bottom = laid.map((e) => e.frame.bottom).reduce((a, b) => a > b ? a : b);
+    expect(bottom, lessThanOrEqualTo(100 - captionBand));
   });
 
   test('json gidiş-dönüş', () {

@@ -37,8 +37,7 @@ class PrintPageView extends StatelessWidget {
     final tpl = catalog.template(page.templateId);
     final theme = catalog.theme(page.themeOverride ?? book.themeId);
     final font = catalog.textAppearance(book.textAppearanceId);
-    var elements = tpl.elementsFor(product.format);
-    if (page.borderless) elements = borderlessElements(elements);
+    final elements = pageLayout(page, tpl, product.format);
     final bg = page.isCover ? theme.coverBackground : theme.background;
 
     return AspectRatio(
@@ -115,6 +114,27 @@ class PrintPageView extends StatelessWidget {
             children.add(Positioned.fromRect(rect: r, child: textView));
           }
         }
+        if (!page.isCover && page.caption.isNotEmpty) {
+          children.add(Positioned(
+            left: w * 0.08,
+            right: w * 0.08,
+            top: h * (100 - captionBand + 1.5) / 100,
+            bottom: h * 0.02,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTextTap == null ? null : () => onTextTap!(-1),
+              child: Center(
+                child: Text(
+                  page.caption,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontFamily: font.bodyFont, fontSize: h * 0.034, height: 1.25, color: theme.text),
+                ),
+              ),
+            ),
+          ));
+        }
         return ClipRect(child: ColoredBox(color: bg, child: Stack(children: children)));
       }),
     );
@@ -175,6 +195,78 @@ class _PhotoSlotView extends StatelessWidget {
   }
 }
 
+/// Sayfa altyazısı için sayfanın altında ayrılan şeridin yüksekliği (yüzde).
+const captionBand = 13.0;
+
+/// Şablon öğelerini sayfaya uygular: kenarlıksız, Popsa'nın dar boşlukları ve altyazı şeridi.
+List<TemplateElement> pageLayout(PrintPage page, PageTemplate tpl, String format) {
+  var elements = tpl.elementsFor(format);
+  if (!page.isCover && tpl.automaticUse) elements = tightenGutters(elements);
+  if (page.borderless) elements = borderlessElements(elements);
+  if (!page.isCover && page.caption.isNotEmpty) {
+    final k = (100 - captionBand) / 100;
+    elements = [
+      for (final e in elements)
+        TemplateElement(
+          type: e.type,
+          role: e.role,
+          frame: Rect.fromLTWH(e.frame.left, e.frame.top * k, e.frame.width, e.frame.height * k),
+          align: e.align,
+          border: e.border,
+          vertical: e.vertical,
+          scrim: e.scrim,
+        ),
+    ];
+  }
+  return elements;
+}
+
+/// Şablon ikonlarındaki geniş boşlukları Popsa'nın baskıdaki oranlarına daraltır:
+/// kenar boşluğu yatayda ~%4.5, dikeyde ~%6; fotoğraflar arası ~%1.8 / ~%2.4.
+List<TemplateElement> tightenGutters(List<TemplateElement> elements) {
+  const marginX = 4.5, marginY = 6.0, gapX = 1.8, gapY = 2.4;
+  final photos = elements.where((e) => e.isPhoto).map((e) => e.frame).toList();
+  if (photos.isEmpty || elements.any((e) => !e.isPhoto)) return elements;
+  final u = photos.reduce((a, b) => a.expandToInclude(b));
+  // Yalnız kenar boşlukları simetrik ızgara şablonlarına uygula.
+  if ((u.left - (100 - u.right)).abs() > 1 || u.left < 3 || u.left > 9) return elements;
+  double mapX(double x) => marginX + (x - u.left) / u.width * (100 - 2 * marginX);
+  double mapY(double y) => marginY + (y - u.top) / u.height * (100 - 2 * marginY);
+  var rects = [for (final f in photos) Rect.fromLTRB(mapX(f.left), mapY(f.top), mapX(f.right), mapY(f.bottom))];
+  const eps = 0.5;
+  final out = <Rect>[];
+  for (final r in rects) {
+    var l = r.left, t = r.top, rt = r.right, b = r.bottom;
+    for (final o in rects) {
+      if (identical(o, r)) continue;
+      final vOverlap = o.top < r.bottom - eps && o.bottom > r.top + eps;
+      final hOverlap = o.left < r.right - eps && o.right > r.left + eps;
+      if (vOverlap && o.left >= r.right - eps) {
+        final gap = o.left - r.right;
+        if (gap > gapX) rt = r.right + (gap - gapX) / 2;
+      }
+      if (vOverlap && o.right <= r.left + eps) {
+        final gap = r.left - o.right;
+        if (gap > gapX) l = r.left - (gap - gapX) / 2;
+      }
+      if (hOverlap && o.top >= r.bottom - eps) {
+        final gap = o.top - r.bottom;
+        if (gap > gapY) b = r.bottom + (gap - gapY) / 2;
+      }
+      if (hOverlap && o.bottom <= r.top + eps) {
+        final gap = r.top - o.bottom;
+        if (gap > gapY) t = r.top - (gap - gapY) / 2;
+      }
+    }
+    out.add(Rect.fromLTRB(l, t, rt, b));
+  }
+  var i = 0;
+  return [
+    for (final e in elements)
+      TemplateElement(type: e.type, role: e.role, frame: out[i++], align: e.align, border: e.border),
+  ];
+}
+
 /// Fotoğraf alanlarının kapladığı bölgeyi sayfanın tamamına genişletir (kenarlıksız görünüm).
 List<TemplateElement> borderlessElements(List<TemplateElement> elements) {
   final photos = elements.where((e) => e.isPhoto).map((e) => e.frame).toList();
@@ -189,7 +281,7 @@ List<TemplateElement> borderlessElements(List<TemplateElement> elements) {
       );
   return [
     for (final e in elements)
-      e.isPhoto ? TemplateElement(type: e.type, role: e.role, frame: map(e.frame), align: e.align) : e,
+      e.isPhoto ? TemplateElement(type: e.type, role: e.role, frame: map(e.frame), align: e.align, border: e.border) : e,
   ];
 }
 

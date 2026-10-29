@@ -391,7 +391,7 @@ class _PageHeader extends StatelessWidget {
 
   Future<void> _pageMenu(BuildContext context, EditorViewModel vm, int pageIndex) async {
     final page = vm.book.pages[pageIndex];
-    final hasCaption = page.texts.any((t) => t.isNotEmpty);
+    final hasCaption = page.caption.isNotEmpty;
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (c) => SafeArea(
@@ -423,9 +423,7 @@ class _PageHeader extends StatelessWidget {
       case 'caption':
         await editCaptionFlow(context, vm, pageIndex);
       case 'removeCaption':
-        for (var i = 0; i < page.texts.length; i++) {
-          if (page.texts[i].isNotEmpty) vm.setCaption(pageIndex, i, '');
-        }
+        vm.setPageCaption(pageIndex, '');
       case 'template':
         Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider.value(value: vm, child: TemplatePickerScreen(pageIndex: pageIndex)),

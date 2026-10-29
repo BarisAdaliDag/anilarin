@@ -10,7 +10,7 @@ import '../../../view_model/editor_view_model.dart';
 Future<void> showThemeSheet(BuildContext context, EditorViewModel vm, {int? pageIndex}) {
   return showModalBottomSheet(
     context: context,
-    barrierColor: Colors.black26,
+    barrierColor: Colors.transparent,
     builder: (_) => ChangeNotifierProvider.value(value: vm, child: _ThemeSheet(pageIndex: pageIndex)),
   );
 }
@@ -90,11 +90,6 @@ class _ThemeSheetState extends State<_ThemeSheet> {
           const Text(S.neutralThemes, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
           const SizedBox(height: 12),
           _Swatches(colors: vm.catalog.neutralColors, current: current, onPick: (c) => _apply(vm, c)),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(onPressed: vm.resetThemes, child: const Text(S.resetAll)),
-          ),
         ]),
       ),
     );
