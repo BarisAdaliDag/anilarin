@@ -39,6 +39,9 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
   Offset _startFocal = Offset.zero;
   double _startDx = 0, _startDy = 0;
   bool _grid = false;
+  bool _gesturing = false; // parmakla sürüklerken animasyon olmaz
+  int _rotateTick = 0; // her döndürmede dönüş animasyonunu yeniden başlatır
+  static const _anim = Duration(milliseconds: 320);
 
   @override
   void initState() {
@@ -104,10 +107,12 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                     child: LayoutBuilder(
                       builder: (context, c) {
                         final size = Size(c.maxWidth, c.maxHeight);
-                        final r = photoRect(size, pa, _slot);
+                        final target = photoRect(size, pa, _slot);
                         return GestureDetector(
                           behavior: HitTestBehavior.opaque,
+                          onScaleEnd: (_) => setState(() => _gesturing = false),
                           onScaleStart: (d) {
+                            _gesturing = true;
                             _startScale = _slot.scale;
                             _startFocal = d.localFocalPoint;
                             _startDx = _slot.dx;
@@ -122,29 +127,40 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                             _slot.dx = (_startDx + delta.dx / ox).clamp(-1.0, 1.0);
                             _slot.dy = (_startDy + delta.dy / oy).clamp(-1.0, 1.0);
                           }),
-                          // Popsa gibi: alanın dışına taşan kısım da karartılmış olarak görünür.
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Positioned.fromRect(
-                                rect: r,
-                                child: Opacity(opacity: 0.3, child: _photo()),
-                              ),
-                              Positioned.fill(
-                                child: ClipRect(
-                                  child: Stack(
-                                    children: [
-                                      Positioned.fill(child: ColoredBox(color: Colors.white.withValues(alpha: 0.04))),
-                                      Positioned.fromRect(rect: r, child: _photo()),
-                                    ],
+                          // Doldur/Sığdır/Döndür geçişleri yumuşak: dikdörtgen animasyonla hedefe gider.
+                          child: TweenAnimationBuilder<Rect?>(
+                            tween: RectTween(end: target),
+                            duration: _gesturing ? Duration.zero : _anim,
+                            curve: Curves.easeOutCubic,
+                            builder: (context, rect, _) {
+                              final r = rect ?? target;
+                              // Popsa gibi: alanın dışına taşan kısım da karartılmış olarak görünür.
+                              return Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Positioned.fromRect(
+                                    rect: r,
+                                    child: Opacity(opacity: 0.3, child: _photo()),
                                   ),
-                                ),
-                              ),
-                              if (_grid)
-                                IgnorePointer(
-                                  child: CustomPaint(size: size, painter: _GridPainter()),
-                                ),
-                            ],
+                                  Positioned.fill(
+                                    child: ClipRect(
+                                      child: Stack(
+                                        children: [
+                                          Positioned.fill(
+                                            child: ColoredBox(color: Colors.white.withValues(alpha: 0.04)),
+                                          ),
+                                          Positioned.fromRect(rect: r, child: _photo()),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  if (_grid)
+                                    IgnorePointer(
+                                      child: CustomPaint(size: size, painter: _GridPainter()),
+                                    ),
+                                ],
+                              );
+                            },
                           ),
                         );
                       },
@@ -152,6 +168,14 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                   ),
                 ),
               ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(32, 0, 32, 8),
+            child: Text(
+              S.panPinchHint,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: context.mutedText, fontSize: 13),
             ),
           ),
           SafeArea(
@@ -195,6 +219,7 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                     onTap: () => setState(() {
                       _slot.quarterTurns = (_slot.quarterTurns + 1) % 4;
                       _slot.resetCrop();
+                      _rotateTick++;
                     }),
                   ),
                   _ToolCard(
@@ -212,9 +237,17 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
     );
   }
 
-  Widget _photo() => RotatedBox(
-    quarterTurns: _slot.quarterTurns % 4,
-    child: PhotoImage(photoId: _slot.photoId, size: 1400, fit: BoxFit.fill),
+  /// Döndürmeden sonra fotoğraf -90°'den 0°'ye dönerek yeni yönüne oturur.
+  Widget _photo() => TweenAnimationBuilder<double>(
+    key: ValueKey(_rotateTick),
+    tween: Tween(begin: _rotateTick == 0 ? 0 : -pi / 2, end: 0),
+    duration: _anim,
+    curve: Curves.easeOutCubic,
+    builder: (_, angle, child) => Transform.rotate(angle: angle, child: child),
+    child: RotatedBox(
+      quarterTurns: _slot.quarterTurns % 4,
+      child: PhotoImage(photoId: _slot.photoId, size: 1400, fit: BoxFit.fill),
+    ),
   );
 
   Future<void> _replace(EditorViewModel vm) async {
@@ -243,7 +276,7 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
   }
 }
 
-/// Popsa'nın kalite kartı: koyu yuvarlak kart, puan kadar dolan çubuk, sağda "10/10".
+/// Popsa'nın kalite kartı: sabit, sade koyu kart; solda başlık, sağda puan. Dokununca açıklama.
 class _QualityCard extends StatelessWidget {
   const _QualityCard({required this.score, required this.onTap});
 
@@ -252,46 +285,39 @@ class _QualityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = score >= 7 ? AppColors.success : (score >= 4 ? AppColors.warning : AppColors.failure);
+    final low = score < 4;
     return Material(
       color: context.cardColor,
       borderRadius: BorderRadius.circular(12),
-      clipBehavior: Clip.antiAlias,
       child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: SizedBox(
           height: 52,
-          child: Stack(
-            children: [
-              // Puan kadar dolan arka çubuk (Popsa'da animasyonlu, gradyanlı).
-              TweenAnimationBuilder<double>(
-                tween: Tween(end: score / 10),
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.easeOutBack,
-                builder: (_, v, _) => FractionallySizedBox(
-                  widthFactor: v.clamp(0.0, 1.0),
-                  child: Container(color: color.withValues(alpha: 0.10)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Row(
+              children: [
+                Text(
+                  S.photoQuality,
+                  style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 1.4, color: context.strongText),
                 ),
-              ),
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  child: Row(
-                    children: [
-                      Text(
-                        S.photoQuality,
-                        style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 1.4, color: context.strongText),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '$score/10',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: context.strongText),
-                      ),
-                    ],
+                const Spacer(),
+                if (low)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.warning),
+                  ),
+                Text(
+                  '$score/10',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: low ? AppColors.warning : context.strongText,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

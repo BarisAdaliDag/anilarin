@@ -153,6 +153,7 @@ class S {
   static const editPhoto = 'Fotoğrafı Düzenle';
   static const photoQuality = 'FOTOĞRAF KALİTESİ';
   static const grid = 'Izgara';
+  static const panPinchHint = 'Fotoğrafı alana yerleştirmek için sürükle ve iki parmakla yakınlaştır.';
   static const ok = 'Tamam';
   static const qualityExplanationA =
       'Bu puan, fotoğrafının baskıda nasıl görüneceğini gösterir. Puan düştükçe fotoğraf daha pikselli görünür.';
