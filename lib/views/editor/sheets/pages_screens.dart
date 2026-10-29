@@ -30,7 +30,10 @@ class _RearrangePagesScreenState extends State<RearrangePagesScreen> {
               vm.reorderInner(_order);
               Navigator.pop(context);
             },
-            child: const Text(S.save, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.accent)),
+            child: const Text(
+              S.save,
+              style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.accent),
+            ),
           ),
         ],
       ),
@@ -75,77 +78,88 @@ class _RemovePagesScreenState extends State<RemovePagesScreen> {
     final removable = vm.book.pageCount - vm.product.pagesMin;
     return Scaffold(
       appBar: AppBar(title: const Text(S.removePages)),
-      body: Column(children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-          child: Text(
-            S.minPagesWarning(vm.product.pagesMin),
-            style: TextStyle(color: context.mutedText),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            child: Text(S.minPagesWarning(vm.product.pagesMin), style: TextStyle(color: context.mutedText)),
           ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.85,
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: vm.book.pages.length - 1,
+              itemBuilder: (_, i) {
+                final index = i + 1;
+                final selected = _selected.contains(index);
+                final disabled = !selected && _selected.length >= removable;
+                return GestureDetector(
+                  onTap: disabled
+                      ? null
+                      : () => setState(() => selected ? _selected.remove(index) : _selected.add(index)),
+                  child: Opacity(
+                    opacity: disabled ? 0.4 : 1,
+                    child: Column(
+                      children: [
+                        Stack(
+                          children: [
+                            DecoratedBox(
+                              position: DecorationPosition.foreground,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: selected ? AppColors.failure : context.divider,
+                                  width: selected ? 3 : 1,
+                                ),
+                              ),
+                              child: PrintPageView(
+                                book: vm.book,
+                                pageIndex: index,
+                                catalog: vm.catalog,
+                                thumbSize: 200,
+                              ),
+                            ),
+                            if (selected)
+                              const Positioned(
+                                top: 4,
+                                right: 4,
+                                child: CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: AppColors.failure,
+                                  child: Icon(Icons.close, size: 16, color: Colors.white),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(S.pageN(index), style: const TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-            itemCount: vm.book.pages.length - 1,
-            itemBuilder: (_, i) {
-              final index = i + 1;
-              final selected = _selected.contains(index);
-              final disabled = !selected && _selected.length >= removable;
-              return GestureDetector(
-                onTap: disabled
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: AppColors.failure),
+                onPressed: _selected.isEmpty
                     ? null
-                    : () => setState(() => selected ? _selected.remove(index) : _selected.add(index)),
-                child: Opacity(
-                  opacity: disabled ? 0.4 : 1,
-                  child: Column(children: [
-                    Stack(children: [
-                      DecoratedBox(
-                        position: DecorationPosition.foreground,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: selected ? AppColors.failure : context.divider, width: selected ? 3 : 1),
-                        ),
-                        child: PrintPageView(book: vm.book, pageIndex: index, catalog: vm.catalog, thumbSize: 200),
-                      ),
-                      if (selected)
-                        const Positioned(
-                          top: 4,
-                          right: 4,
-                          child: CircleAvatar(
-                            radius: 12,
-                            backgroundColor: AppColors.failure,
-                            child: Icon(Icons.close, size: 16, color: Colors.white),
-                          ),
-                        ),
-                    ]),
-                    const SizedBox(height: 4),
-                    Text(S.pageN(index), style: const TextStyle(fontSize: 12)),
-                  ]),
-                ),
-              );
-            },
-          ),
-        ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: AppColors.failure),
-              onPressed: _selected.isEmpty
-                  ? null
-                  : () {
-                      if (vm.removePages(_selected)) Navigator.pop(context);
-                    },
-              child: Text(S.removePagesN(_selected.length)),
+                    : () {
+                        if (vm.removePages(_selected)) Navigator.pop(context);
+                      },
+                child: Text(S.removePagesN(_selected.length)),
+              ),
             ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }

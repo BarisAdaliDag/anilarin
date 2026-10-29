@@ -91,46 +91,52 @@ class _TitleScreenState extends State<TitleScreen> {
           ),
         ],
       ),
-      body: ListView(padding: const EdgeInsets.fromLTRB(20, 8, 20, 32), children: [
-        TextField(
-          controller: _title,
-          autofocus: true,
-          maxLength: 40,
-          maxLines: null,
-          textCapitalization: TextCapitalization.sentences,
-          style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w500, height: 1.25),
-          decoration: InputDecoration(
-            hintText: S.enterTitle,
-            hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.6)),
-            border: InputBorder.none,
-            counterText: '',
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          TextField(
+            controller: _title,
+            autofocus: true,
+            maxLength: 40,
+            maxLines: null,
+            textCapitalization: TextCapitalization.sentences,
+            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w500, height: 1.25),
+            decoration: InputDecoration(
+              hintText: S.enterTitle,
+              hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.6)),
+              border: InputBorder.none,
+              counterText: '',
+            ),
           ),
-        ),
-        TextField(
-          controller: _subtitle,
-          maxLength: 60,
-          textCapitalization: TextCapitalization.sentences,
-          style: TextStyle(fontSize: 16, color: context.mutedText),
-          decoration: InputDecoration(
-            hintText: S.subtitleHint,
-            hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.6)),
-            border: InputBorder.none,
-            counterText: '',
+          TextField(
+            controller: _subtitle,
+            maxLength: 60,
+            textCapitalization: TextCapitalization.sentences,
+            style: TextStyle(fontSize: 16, color: context.mutedText),
+            decoration: InputDecoration(
+              hintText: S.subtitleHint,
+              hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.6)),
+              border: InputBorder.none,
+              counterText: '',
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-        Text(S.suggestions.toUpperCase(), style: TextStyle(fontSize: 12, letterSpacing: 1.4, color: context.mutedText)),
-        const SizedBox(height: 4),
-        for (final s in _suggestions)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.auto_stories_outlined),
-            title: Text(s),
-            subtitle: dateLabel.isEmpty ? null : Text(dateLabel, style: TextStyle(color: context.mutedText)),
-            trailing: Icon(Icons.more_horiz, color: context.mutedText),
-            onTap: () => _title.text = s,
+          const SizedBox(height: 24),
+          Text(
+            S.suggestions.toUpperCase(),
+            style: TextStyle(fontSize: 12, letterSpacing: 1.4, color: context.mutedText),
           ),
-      ]),
+          const SizedBox(height: 4),
+          for (final s in _suggestions)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.auto_stories_outlined),
+              title: Text(s),
+              subtitle: dateLabel.isEmpty ? null : Text(dateLabel, style: TextStyle(color: context.mutedText)),
+              trailing: Icon(Icons.more_horiz, color: context.mutedText),
+              onTap: () => _title.text = s,
+            ),
+        ],
+      ),
     );
   }
 }
@@ -142,11 +148,14 @@ class _DesigningView extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          SizedBox(width: 56, height: 56, child: CircularProgressIndicator(strokeWidth: 5)),
-          SizedBox(height: 24),
-          Text(S.designingLayout, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(width: 56, height: 56, child: CircularProgressIndicator(strokeWidth: 5)),
+            SizedBox(height: 24),
+            Text(S.designingLayout, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }

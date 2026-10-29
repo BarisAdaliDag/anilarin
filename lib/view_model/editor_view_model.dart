@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../models/catalog.dart';
 import '../models/photo_book.dart';
 import '../services/auto_layout_service.dart';
+import '../services/palette_service.dart';
 
 /// Bir sayfadaki fotoğraf alanının adresi.
 @immutable
@@ -69,14 +70,18 @@ class EditorViewModel extends ChangeNotifier {
   PageTemplate templateOf(int pageIndex) => catalog.template(_book.pages[pageIndex].templateId);
 
   BookTheme themeOf(int pageIndex) => catalog.resolve(
-        _book.themeIdOf(pageIndex),
-        pagePalette: _book.pages[pageIndex].palette,
-        bookPalette: _book.palette,
-      );
+    _book.themeIdOf(pageIndex),
+    pagePalette: _book.pages[pageIndex].palette,
+    bookPalette: _book.palette,
+  );
 
   /// Fotoğrafları değişen sayfaların dinamik paletini arka planda yeniden hesaplar (geri al geçmişine girmez).
   /// Popsa'da dinamik tema her sayfada o sayfanın fotoğraflarının renklerini alır.
-  Future<void> refreshPagePalettes(Future<List<String>> Function(List<String> photoIds) compute) async {
+  /// [minLength]: bundan kısa (eski sürümde kaydedilmiş) paletler de yeniden hesaplanır.
+  Future<void> refreshPagePalettes(
+    Future<List<String>> Function(List<String> photoIds) compute, {
+    int minLength = PaletteService.size,
+  }) async {
     _paletteCompute = compute;
     if (_paletteBusy) {
       _paletteDirty = true; // çalışma bitince yeniden bakılır
@@ -85,10 +90,18 @@ class EditorViewModel extends ChangeNotifier {
     _paletteBusy = true;
     var changed = false;
     try {
+      if (_book.palette.length < minLength) {
+        final ids = _book.pages.expand((p) => p.photoIds).take(PaletteService.maxPhotos).toList();
+        if (ids.isNotEmpty) {
+          _book.palette = await compute(ids);
+          changed = true;
+          notifyListeners();
+        }
+      }
       for (var i = 0; i < _book.pages.length; i++) {
         final page = _book.pages[i];
         final key = page.photoKey;
-        if (key.isEmpty || key == page.paletteKey) continue;
+        if (key.isEmpty || (key == page.paletteKey && page.palette.length >= minLength)) continue;
         final pal = await compute(page.photoIds.toList());
         if (i >= _book.pages.length || _book.pages[i].id != page.id || _disposed) continue;
         page
@@ -103,7 +116,7 @@ class EditorViewModel extends ChangeNotifier {
     }
     if (_paletteDirty && !_disposed) {
       _paletteDirty = false;
-      await refreshPagePalettes(compute);
+      await refreshPagePalettes(compute, minLength: minLength);
     }
   }
 
@@ -317,10 +330,10 @@ class EditorViewModel extends ChangeNotifier {
       _mutate((book) => book.pages[pageIndex].borderless = !book.pages[pageIndex].borderless);
 
   void setAllBorderless(bool value) => _mutate((book) {
-        for (final p in book.pages) {
-          p.borderless = value;
-        }
-      });
+    for (final p in book.pages) {
+      p.borderless = value;
+    }
+  });
 
   void setTextAppearance(String id) => _mutate((book) => book.textAppearanceId = id);
 
@@ -353,15 +366,14 @@ class EditorViewModel extends ChangeNotifier {
     String? font,
     bool clearFont = false,
     bool? top,
-  }) =>
-      _mutate((book) {
-        final p = book.pages[pageIndex];
-        p.caption = text.trim();
-        if (style != null) p.captionStyle = style;
-        if (align != null) p.captionAlign = align;
-        if (font != null || clearFont) p.captionFont = font;
-        if (top != null) p.captionTop = top;
-      });
+  }) => _mutate((book) {
+    final p = book.pages[pageIndex];
+    p.caption = text.trim();
+    if (style != null) p.captionStyle = style;
+    if (align != null) p.captionAlign = align;
+    if (font != null || clearFont) p.captionFont = font;
+    if (top != null) p.captionTop = top;
+  });
 
   /// Sayfanın, varsa yazı alanı olan aynı fotoğraf sayısındaki şablona geçerek altyazı eklemesi.
   int? captionTemplateFor(int pageIndex) {

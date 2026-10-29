@@ -18,20 +18,20 @@ class BasketItem {
   });
 
   Map<String, dynamic> toJson() => {
-        'book': bookId,
-        'title': title,
-        'product': productCode,
-        'pages': pages,
-        'options': options.toJson(),
-        'qty': quantity,
-      };
+    'book': bookId,
+    'title': title,
+    'product': productCode,
+    'pages': pages,
+    'options': options.toJson(),
+    'qty': quantity,
+  };
 
   factory BasketItem.fromJson(Map<String, dynamic> j) => BasketItem(
-        bookId: j['book'],
-        title: j['title'] ?? '',
-        productCode: j['product'],
-        pages: j['pages'],
-        options: ProductOptions.fromJson(j['options']),
-        quantity: j['qty'] ?? 1,
-      );
+    bookId: j['book'],
+    title: j['title'] ?? '',
+    productCode: j['product'],
+    pages: j['pages'],
+    options: ProductOptions.fromJson(j['options']),
+    quantity: j['qty'] ?? 1,
+  );
 }

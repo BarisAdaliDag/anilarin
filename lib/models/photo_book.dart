@@ -29,26 +29,16 @@ class TextSlotStyle {
   TextVAlign valign;
   String? font; // null = kitabın yazı grubu
 
-  TextSlotStyle({
-    this.style = TextStyleId.body,
-    this.align = TextAlign.left,
-    this.valign = TextVAlign.top,
-    this.font,
-  });
+  TextSlotStyle({this.style = TextStyleId.body, this.align = TextAlign.left, this.valign = TextVAlign.top, this.font});
 
-  Map<String, dynamic> toJson() => {
-        's': style.name,
-        'a': align.name,
-        'v': valign.name,
-        if (font != null) 'f': font,
-      };
+  Map<String, dynamic> toJson() => {'s': style.name, 'a': align.name, 'v': valign.name, if (font != null) 'f': font};
 
   factory TextSlotStyle.fromJson(Map<String, dynamic> j) => TextSlotStyle(
-        style: TextStyleId.values.asNameMap()[j['s']] ?? TextStyleId.body,
-        align: TextAlign.values.asNameMap()[j['a']] ?? TextAlign.left,
-        valign: TextVAlign.values.asNameMap()[j['v']] ?? TextVAlign.top,
-        font: j['f'],
-      );
+    style: TextStyleId.values.asNameMap()[j['s']] ?? TextStyleId.body,
+    align: TextAlign.values.asNameMap()[j['a']] ?? TextAlign.left,
+    valign: TextVAlign.values.asNameMap()[j['v']] ?? TextVAlign.top,
+    font: j['f'],
+  );
 }
 
 /// Kitapta kullanılan bir fotoğraf (cihaz galerisindeki asset).
@@ -79,26 +69,18 @@ class PhotoSlot {
   double dy;
   int quarterTurns;
 
-  PhotoSlot({
-    required this.photoId,
-    this.fit = false,
-    this.scale = 1,
-    this.dx = 0,
-    this.dy = 0,
-    this.quarterTurns = 0,
-  });
+  PhotoSlot({required this.photoId, this.fit = false, this.scale = 1, this.dx = 0, this.dy = 0, this.quarterTurns = 0});
 
-  Map<String, dynamic> toJson() =>
-      {'p': photoId, 'fit': fit, 's': scale, 'dx': dx, 'dy': dy, 'r': quarterTurns};
+  Map<String, dynamic> toJson() => {'p': photoId, 'fit': fit, 's': scale, 'dx': dx, 'dy': dy, 'r': quarterTurns};
 
   factory PhotoSlot.fromJson(Map<String, dynamic> j) => PhotoSlot(
-        photoId: j['p'],
-        fit: j['fit'] ?? false,
-        scale: (j['s'] as num?)?.toDouble() ?? 1,
-        dx: (j['dx'] as num?)?.toDouble() ?? 0,
-        dy: (j['dy'] as num?)?.toDouble() ?? 0,
-        quarterTurns: j['r'] ?? 0,
-      );
+    photoId: j['p'],
+    fit: j['fit'] ?? false,
+    scale: (j['s'] as num?)?.toDouble() ?? 1,
+    dx: (j['dx'] as num?)?.toDouble() ?? 0,
+    dy: (j['dy'] as num?)?.toDouble() ?? 0,
+    quarterTurns: j['r'] ?? 0,
+  );
 
   void resetCrop() {
     scale = 1;
@@ -149,43 +131,43 @@ class PrintPage {
   String get photoKey => photoIds.join(',');
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'tag': tag,
-        'tpl': templateId,
-        'photos': photos.map((p) => p?.toJson()).toList(),
-        'texts': texts,
-        if (textStyles.isNotEmpty) 'ts': {for (final e in textStyles.entries) '${e.key}': e.value.toJson()},
-        'theme': themeOverride,
-        if (borderless) 'bl': true,
-        if (palette.isNotEmpty) 'pal': palette,
-        if (paletteKey.isNotEmpty) 'palKey': paletteKey,
-        if (caption.isNotEmpty) 'cap': caption,
-        if (captionStyle != TextStyleId.body) 'capStyle': captionStyle.name,
-        if (captionAlign != TextAlign.left) 'capAlign': captionAlign.name,
-        if (captionFont != null) 'capFont': captionFont,
-        if (captionTop) 'capTop': true,
-      };
+    'id': id,
+    'tag': tag,
+    'tpl': templateId,
+    'photos': photos.map((p) => p?.toJson()).toList(),
+    'texts': texts,
+    if (textStyles.isNotEmpty) 'ts': {for (final e in textStyles.entries) '${e.key}': e.value.toJson()},
+    'theme': themeOverride,
+    if (borderless) 'bl': true,
+    if (palette.isNotEmpty) 'pal': palette,
+    if (paletteKey.isNotEmpty) 'palKey': paletteKey,
+    if (caption.isNotEmpty) 'cap': caption,
+    if (captionStyle != TextStyleId.body) 'capStyle': captionStyle.name,
+    if (captionAlign != TextAlign.left) 'capAlign': captionAlign.name,
+    if (captionFont != null) 'capFont': captionFont,
+    if (captionTop) 'capTop': true,
+  };
 
   factory PrintPage.fromJson(Map<String, dynamic> j) => PrintPage(
-        id: j['id'],
-        tag: j['tag'],
-        templateId: j['tpl'],
-        photos: (j['photos'] as List).map((e) => e == null ? null : PhotoSlot.fromJson(e)).toList(),
-        texts: List<String>.from(j['texts'] ?? const []),
-        textStyles: {
-          for (final e in ((j['ts'] as Map<String, dynamic>?) ?? const {}).entries)
-            int.parse(e.key): TextSlotStyle.fromJson(e.value),
-        },
-        themeOverride: j['theme'],
-        borderless: j['bl'] ?? false,
-        palette: List<String>.from(j['pal'] ?? const []),
-        paletteKey: j['palKey'] ?? '',
-        caption: j['cap'] ?? '',
-        captionStyle: TextStyleId.values.asNameMap()[j['capStyle']] ?? TextStyleId.body,
-        captionAlign: TextAlign.values.asNameMap()[j['capAlign']] ?? TextAlign.left,
-        captionFont: j['capFont'],
-        captionTop: j['capTop'] ?? false,
-      );
+    id: j['id'],
+    tag: j['tag'],
+    templateId: j['tpl'],
+    photos: (j['photos'] as List).map((e) => e == null ? null : PhotoSlot.fromJson(e)).toList(),
+    texts: List<String>.from(j['texts'] ?? const []),
+    textStyles: {
+      for (final e in ((j['ts'] as Map<String, dynamic>?) ?? const {}).entries)
+        int.parse(e.key): TextSlotStyle.fromJson(e.value),
+    },
+    themeOverride: j['theme'],
+    borderless: j['bl'] ?? false,
+    palette: List<String>.from(j['pal'] ?? const []),
+    paletteKey: j['palKey'] ?? '',
+    caption: j['cap'] ?? '',
+    captionStyle: TextStyleId.values.asNameMap()[j['capStyle']] ?? TextStyleId.body,
+    captionAlign: TextAlign.values.asNameMap()[j['capAlign']] ?? TextAlign.left,
+    captionFont: j['capFont'],
+    captionTop: j['capTop'] ?? false,
+  );
 }
 
 class ProductOptions {
@@ -197,11 +179,8 @@ class ProductOptions {
 
   Map<String, dynamic> toJson() => {'gift': giftBox, 'layflat': layflat, 'foil': foil};
 
-  factory ProductOptions.fromJson(Map<String, dynamic>? j) => ProductOptions(
-        giftBox: j?['gift'] ?? false,
-        layflat: j?['layflat'] ?? false,
-        foil: j?['foil'],
-      );
+  factory ProductOptions.fromJson(Map<String, dynamic>? j) =>
+      ProductOptions(giftBox: j?['gift'] ?? false, layflat: j?['layflat'] ?? false, foil: j?['foil']);
 
   ProductOptions copy() => ProductOptions(giftBox: giftBox, layflat: layflat, foil: foil);
 }
@@ -252,38 +231,36 @@ class PhotoBook {
   Set<String> get usedPhotoIds => {for (final p in pages) ...p.photoIds};
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'product': productCode,
-        'title': title,
-        'subtitle': subtitle,
-        'theme': themeId,
-        'font': textAppearanceId,
-        'pages': pages.map((p) => p.toJson()).toList(),
-        'unused': unusedPhotoIds,
-        'photos': photos.values.map((p) => p.toJson()).toList(),
-        'options': options.toJson(),
-        'palette': palette,
-        'created': createdAtMs,
-        'updated': updatedAtMs,
-      };
+    'id': id,
+    'product': productCode,
+    'title': title,
+    'subtitle': subtitle,
+    'theme': themeId,
+    'font': textAppearanceId,
+    'pages': pages.map((p) => p.toJson()).toList(),
+    'unused': unusedPhotoIds,
+    'photos': photos.values.map((p) => p.toJson()).toList(),
+    'options': options.toJson(),
+    'palette': palette,
+    'created': createdAtMs,
+    'updated': updatedAtMs,
+  };
 
   factory PhotoBook.fromJson(Map<String, dynamic> j) => PhotoBook(
-        id: j['id'],
-        productCode: j['product'],
-        title: j['title'] ?? '',
-        subtitle: j['subtitle'] ?? '',
-        themeId: j['theme'],
-        textAppearanceId: j['font'],
-        pages: (j['pages'] as List).map((e) => PrintPage.fromJson(e)).toList(),
-        unusedPhotoIds: List<String>.from(j['unused'] ?? const []),
-        photos: {
-          for (final p in (j['photos'] as List).map((e) => BookPhoto.fromJson(e))) p.id: p,
-        },
-        options: ProductOptions.fromJson(j['options']),
-        palette: List<String>.from(j['palette'] ?? const []),
-        createdAtMs: j['created'],
-        updatedAtMs: j['updated'],
-      );
+    id: j['id'],
+    productCode: j['product'],
+    title: j['title'] ?? '',
+    subtitle: j['subtitle'] ?? '',
+    themeId: j['theme'],
+    textAppearanceId: j['font'],
+    pages: (j['pages'] as List).map((e) => PrintPage.fromJson(e)).toList(),
+    unusedPhotoIds: List<String>.from(j['unused'] ?? const []),
+    photos: {for (final p in (j['photos'] as List).map((e) => BookPhoto.fromJson(e))) p.id: p},
+    options: ProductOptions.fromJson(j['options']),
+    palette: List<String>.from(j['palette'] ?? const []),
+    createdAtMs: j['created'],
+    updatedAtMs: j['updated'],
+  );
 
   String encode() => jsonEncode(toJson());
 

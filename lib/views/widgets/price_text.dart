@@ -13,17 +13,20 @@ class PriceText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text.rich(TextSpan(children: [
-      if (compareAt > price)
-        TextSpan(
-          text: '${formatPrice(compareAt)} ',
-          style: TextStyle(
-            decoration: TextDecoration.lineThrough,
-            color: context.mutedText,
-            fontSize: size * 0.85,
+    return Text.rich(
+      TextSpan(
+        children: [
+          if (compareAt > price)
+            TextSpan(
+              text: '${formatPrice(compareAt)} ',
+              style: TextStyle(decoration: TextDecoration.lineThrough, color: context.mutedText, fontSize: size * 0.85),
+            ),
+          TextSpan(
+            text: formatPrice(price),
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: size),
           ),
-        ),
-      TextSpan(text: formatPrice(price), style: TextStyle(fontWeight: FontWeight.w600, fontSize: size)),
-    ]));
+        ],
+      ),
+    );
   }
 }

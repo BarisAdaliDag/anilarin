@@ -23,11 +23,11 @@ class AssetPaths {
 
   /// Cilt tipi + format kart görselleri.
   static String productCover(String type, String format) => switch ((type, format)) {
-        ('hardback', 'square') => 'assets/ref/media/cover_hardback_square.jpg',
-        ('softcover', 'square') => 'assets/ref/media/cover_softcover_square.jpg',
-        ('softcover', _) => 'assets/ref/media/cover_softcover_landscape.jpg',
-        ('booklet', 'square') => 'assets/ref/media/cover_softcover_square.jpg',
-        ('booklet', _) => 'assets/ref/media/cover_booklet_landscape.jpg',
-        _ => 'assets/ref/media/cover_hardback_landscape.jpg',
-      };
+    ('hardback', 'square') => 'assets/ref/media/cover_hardback_square.jpg',
+    ('softcover', 'square') => 'assets/ref/media/cover_softcover_square.jpg',
+    ('softcover', _) => 'assets/ref/media/cover_softcover_landscape.jpg',
+    ('booklet', 'square') => 'assets/ref/media/cover_softcover_square.jpg',
+    ('booklet', _) => 'assets/ref/media/cover_booklet_landscape.jpg',
+    _ => 'assets/ref/media/cover_hardback_landscape.jpg',
+  };
 }

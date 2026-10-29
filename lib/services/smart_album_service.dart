@@ -32,8 +32,18 @@ class SmartAlbumService {
   static const maxAlbums = 6; // Popsa seçicide en fazla 6 öneri gösterir (uce.java: take 6)
 
   static const _months = [
-    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+    'Ocak',
+    'Şubat',
+    'Mart',
+    'Nisan',
+    'Mayıs',
+    'Haziran',
+    'Temmuz',
+    'Ağustos',
+    'Eylül',
+    'Ekim',
+    'Kasım',
+    'Aralık',
   ];
 
   /// Fotoğraflar arasında bu kadardan uzun boşluk varsa yeni bir etkinlik başlar.
@@ -92,12 +102,12 @@ class SmartAlbumService {
 
   /// Mevsime göre kısa bir başlık (Popsa'daki "Let's Celebrate!" gibi).
   static String titleFor(DateTime m) => switch (m.month) {
-        12 => 'Yılın Son Ayı',
-        1 || 2 => 'Kış Günleri',
-        3 || 4 || 5 => 'Bahar Esintisi',
-        6 || 7 || 8 => 'Yaz Anıları',
-        _ => 'Sonbahar Renkleri',
-      };
+    12 => 'Yılın Son Ayı',
+    1 || 2 => 'Kış Günleri',
+    3 || 4 || 5 => 'Bahar Esintisi',
+    6 || 7 || 8 => 'Yaz Anıları',
+    _ => 'Sonbahar Renkleri',
+  };
 
   static const _alternates = ['Güzel Bir Gün', 'Birlikte', 'Unutulmaz Anlar', 'Küçük Kaçamak', 'Anılar Defteri'];
 

@@ -15,11 +15,9 @@ class PhotoRepository {
 
   /// İlk eleman "Tüm Fotoğraflar"dır.
   Future<List<AssetPathEntity>> albums() => PhotoManager.getAssetPathList(
-        type: RequestType.image,
-        filterOption: FilterOptionGroup(
-          orders: [const OrderOption(type: OrderOptionType.createDate, asc: false)],
-        ),
-      );
+    type: RequestType.image,
+    filterOption: FilterOptionGroup(orders: [const OrderOption(type: OrderOptionType.createDate, asc: false)]),
+  );
 
   Future<List<AssetEntity>> page(AssetPathEntity album, int page, {int size = 120}) async {
     final list = await album.getAssetListPaged(page: page, size: size);
@@ -40,9 +38,9 @@ class PhotoRepository {
   }
 
   static BookPhoto toBookPhoto(AssetEntity a) => BookPhoto(
-        id: a.id,
-        width: a.orientatedWidth,
-        height: a.orientatedHeight,
-        takenAtMs: a.createDateTime.millisecondsSinceEpoch <= 0 ? null : a.createDateTime.millisecondsSinceEpoch,
-      );
+    id: a.id,
+    width: a.orientatedWidth,
+    height: a.orientatedHeight,
+    takenAtMs: a.createDateTime.millisecondsSinceEpoch <= 0 ? null : a.createDateTime.millisecondsSinceEpoch,
+  );
 }

@@ -61,76 +61,85 @@ class _PreviewScreenState extends State<PreviewScreen> {
         foregroundColor: fg,
         title: Text(book.title, style: TextStyle(color: fg)),
       ),
-      body: Column(children: [
-        Expanded(
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: spreads.length,
-            itemBuilder: (context, i) {
-              final delta = (i - _page).clamp(-1.0, 1.0);
-              return Transform(
-                alignment: delta > 0 ? Alignment.centerLeft : Alignment.centerRight,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.0012)
-                  ..rotateY(-delta * pi / 2.6),
-                child: Opacity(
-                  opacity: (1 - delta.abs() * 0.6).clamp(0.0, 1.0),
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: _SpreadView(vm: vm, pages: spreads[i]),
+      body: Column(
+        children: [
+          Expanded(
+            child: PageView.builder(
+              controller: _controller,
+              itemCount: spreads.length,
+              itemBuilder: (context, i) {
+                final delta = (i - _page).clamp(-1.0, 1.0);
+                return Transform(
+                  alignment: delta > 0 ? Alignment.centerLeft : Alignment.centerRight,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.0012)
+                    ..rotateY(-delta * pi / 2.6),
+                  child: Opacity(
+                    opacity: (1 - delta.abs() * 0.6).clamp(0.0, 1.0),
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: _SpreadView(vm: vm, pages: spreads[i]),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Text(
+            current == 0 ? S.cover : spreads[current].map((p) => '$p').join(' – '),
+            style: TextStyle(color: fg, fontWeight: FontWeight.w600),
+          ),
+          Slider(
+            value: _page.clamp(0, (spreads.length - 1).toDouble()),
+            max: max(1, spreads.length - 1).toDouble(),
+            activeColor: AppColors.accent,
+            onChanged: (v) => _controller.jumpToPage(v.round()),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(S.background, style: TextStyle(color: fg)),
+              const SizedBox(width: 12),
+              for (final c in _backgrounds)
+                GestureDetector(
+                  onTap: () => setState(() => _bg = c),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: c,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: c == _bg ? AppColors.accent : Colors.black26, width: c == _bg ? 3 : 1),
                     ),
                   ),
                 ),
-              );
-            },
+            ],
           ),
-        ),
-        Text(
-          current == 0 ? S.cover : spreads[current].map((p) => '$p').join(' – '),
-          style: TextStyle(color: fg, fontWeight: FontWeight.w600),
-        ),
-        Slider(
-          value: _page.clamp(0, (spreads.length - 1).toDouble()),
-          max: max(1, spreads.length - 1).toDouble(),
-          activeColor: AppColors.accent,
-          onChanged: (v) => _controller.jumpToPage(v.round()),
-        ),
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Text(S.background, style: TextStyle(color: fg)),
-          const SizedBox(width: 12),
-          for (final c in _backgrounds)
-            GestureDetector(
-              onTap: () => setState(() => _bg = c),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: c,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: c == _bg ? AppColors.accent : Colors.black26, width: c == _bg ? 3 : 1),
-                ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(foregroundColor: fg),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Düzenle'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(onPressed: () => buyBook(context, vm), child: const Text(S.buy)),
+                  ),
+                ],
               ),
             ),
-        ]),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Row(children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(foregroundColor: fg),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Düzenle'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(child: FilledButton(onPressed: () => buyBook(context, vm), child: const Text(S.buy))),
-            ]),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
@@ -154,31 +163,35 @@ class _SpreadView extends StatelessWidget {
           decoration: const BoxDecoration(
             boxShadow: [BoxShadow(color: Colors.black38, blurRadius: 18, offset: Offset(0, 10))],
           ),
-          child: Row(children: [
-            for (var k = 0; k < (isCover ? 1 : 2); k++)
-              Expanded(
-                child: k < pages.length
-                    ? Stack(children: [
-                        PrintPageView(book: vm.book, pageIndex: pages[k], catalog: vm.catalog, thumbSize: 900),
-                        if (!isCover)
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: k == 0 ? Alignment.centerRight : Alignment.centerLeft,
-                                    end: k == 0 ? Alignment.centerLeft : Alignment.centerRight,
-                                    colors: const [Color(0x33000000), Color(0x00000000)],
-                                    stops: const [0, 0.12],
+          child: Row(
+            children: [
+              for (var k = 0; k < (isCover ? 1 : 2); k++)
+                Expanded(
+                  child: k < pages.length
+                      ? Stack(
+                          children: [
+                            PrintPageView(book: vm.book, pageIndex: pages[k], catalog: vm.catalog, thumbSize: 900),
+                            if (!isCover)
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: k == 0 ? Alignment.centerRight : Alignment.centerLeft,
+                                        end: k == 0 ? Alignment.centerLeft : Alignment.centerRight,
+                                        colors: const [Color(0x33000000), Color(0x00000000)],
+                                        stops: const [0, 0.12],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                      ])
-                    : const ColoredBox(color: Colors.white),
-              ),
-          ]),
+                          ],
+                        )
+                      : const ColoredBox(color: Colors.white),
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -69,35 +69,34 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> j) => Product(
-        code: j['code'],
-        type: j['type'],
-        format: j['format'],
-        size: j['size'],
-        priceCents: j['priceCents'],
-        compareAtCents: j['compareAtCents'] ?? j['priceCents'],
-        mostPopular: j['mostPopular'] ?? false,
-        incrementPriceCents: j['incrementPriceCents'],
-        pagesMin: j['pagesMin'],
-        pagesMax: j['pagesMax'],
-        pagesDefault: j['pagesDefault'],
-        pageIncrement: j['pageIncrement'],
-        photoMin: j['photoMin'],
-        photoRecommend: j['photoRecommend'],
-        photosPerExtraPage: j['photosPerExtraPage'],
-        photoMaxBase: j['photoMaxBase'],
-        aspect: (j['aspect'] as num).toDouble(),
-        dimensionsCm: j['dimensionsCm'],
-        deliveryDays: List<int>.from(j['deliveryDays']),
-        layouts: (j['layouts'] as List).map((e) => ProductLayout.fromJson(e)).toList(),
-      );
+    code: j['code'],
+    type: j['type'],
+    format: j['format'],
+    size: j['size'],
+    priceCents: j['priceCents'],
+    compareAtCents: j['compareAtCents'] ?? j['priceCents'],
+    mostPopular: j['mostPopular'] ?? false,
+    incrementPriceCents: j['incrementPriceCents'],
+    pagesMin: j['pagesMin'],
+    pagesMax: j['pagesMax'],
+    pagesDefault: j['pagesDefault'],
+    pageIncrement: j['pageIncrement'],
+    photoMin: j['photoMin'],
+    photoRecommend: j['photoRecommend'],
+    photosPerExtraPage: j['photosPerExtraPage'],
+    photoMaxBase: j['photoMaxBase'],
+    aspect: (j['aspect'] as num).toDouble(),
+    dimensionsCm: j['dimensionsCm'],
+    deliveryDays: List<int>.from(j['deliveryDays']),
+    layouts: (j['layouts'] as List).map((e) => ProductLayout.fromJson(e)).toList(),
+  );
 
   /// Popsa'daki gibi: taban maksimum + (eklenebilecek sayfa × sayfa başı ek fotoğraf).
   int get photoMax => photoMaxBase + (pagesMax - pagesDefault) * photosPerExtraPage;
 
   bool get canChangePages => pagesMax > pagesMin;
 
-  int priceFor(int pages) =>
-      priceCents + (pages > pagesDefault ? (pages - pagesDefault) * incrementPriceCents : 0);
+  int priceFor(int pages) => priceCents + (pages > pagesDefault ? (pages - pagesDefault) * incrementPriceCents : 0);
 
   static const giftBoxPriceCents = 14900;
   static const layflatPriceCents = 19900;
@@ -113,28 +112,28 @@ class Product {
   int totalPrice(int pages, ProductOptions o) => priceFor(pages) + optionsPrice(o);
 
   String get typeLabel => switch (type) {
-        'booklet' => S.booklet,
-        'softcover' => S.softcover,
-        _ => S.hardback,
-      };
+    'booklet' => S.booklet,
+    'softcover' => S.softcover,
+    _ => S.hardback,
+  };
 
   String get formatLabel => format == 'square' ? S.square : S.landscape;
 
   String get sizeLabel => switch (size) {
-        'small' => S.small,
-        'medium' => S.medium,
-        'xlarge' => S.xlarge,
-        _ => S.large,
-      };
+    'small' => S.small,
+    'medium' => S.medium,
+    'xlarge' => S.xlarge,
+    _ => S.large,
+  };
 
   String get title => '$typeLabel ${S.photoBook}';
 
   /// Mockup katman adı (assets/ref/mockups/topdown).
   String get mockupKey => switch (type) {
-        'booklet' => 'PHOTOBOOKLET',
-        'softcover' => format == 'square' ? 'SOFTCOVER_SQUARE' : 'SOFTCOVER',
-        _ => format == 'square' ? 'HARDBACK_SQUARE' : 'HARDBACK',
-      };
+    'booklet' => 'PHOTOBOOKLET',
+    'softcover' => format == 'square' ? 'SOFTCOVER_SQUARE' : 'SOFTCOVER',
+    _ => format == 'square' ? 'HARDBACK_SQUARE' : 'HARDBACK',
+  };
 }
 
 class TemplateElement {
@@ -161,15 +160,15 @@ class TemplateElement {
   bool get isPhoto => type == 'photo';
 
   TemplateElement withFrame(Rect f) => TemplateElement(
-        type: type,
-        role: role,
-        frame: f,
-        align: align,
-        border: border,
-        vertical: vertical,
-        scrim: scrim,
-        overlay: overlay,
-      );
+    type: type,
+    role: role,
+    frame: f,
+    align: align,
+    border: border,
+    vertical: vertical,
+    scrim: scrim,
+    overlay: overlay,
+  );
 
   factory TemplateElement.fromJson(Map<String, dynamic> j) {
     final f = (j['frame'] as List).map((e) => (e as num).toDouble()).toList();
@@ -208,15 +207,15 @@ class PageTemplate {
   });
 
   factory PageTemplate.fromJson(Map<String, dynamic> j) => PageTemplate(
-        id: j['id'],
-        tag: j['tag'],
-        photoCount: j['photoCount'],
-        automaticUse: j['automaticUse'],
-        categories: List<String>.from(j['categories']),
-        shapes: (j['shapes'] as Map<String, dynamic>).map(
-          (k, v) => MapEntry(k, (v as List).map((e) => TemplateElement.fromJson(e)).toList()),
-        ),
-      );
+    id: j['id'],
+    tag: j['tag'],
+    photoCount: j['photoCount'],
+    automaticUse: j['automaticUse'],
+    categories: List<String>.from(j['categories']),
+    shapes: (j['shapes'] as Map<String, dynamic>).map(
+      (k, v) => MapEntry(k, (v as List).map((e) => TemplateElement.fromJson(e)).toList()),
+    ),
+  );
 
   bool get isCover => tag == 'layout-front';
 
@@ -235,22 +234,13 @@ class BookTheme {
   final Color title;
   final Color text;
 
-  final bool texture; // kâğıt dokusu (Popsa "Textures")
+  const BookTheme({required this.id, required this.background, required this.title, required this.text});
 
-  const BookTheme({
-    required this.id,
-    required this.background,
-    required this.title,
-    required this.text,
-    this.texture = false,
-  });
-
-  factory BookTheme.fromHex(String hex, {String? id, bool texture = false}) {
+  factory BookTheme.fromHex(String hex, {String? id}) {
     final bg = hexColor(hex);
     final light = bg.computeLuminance() > 0.45;
     return BookTheme(
       id: id ?? hex.toUpperCase(),
-      texture: texture,
       background: bg,
       title: light ? const Color(0xFF3A3A3A) : Colors.white,
       text: light ? const Color(0xFF555555) : const Color(0xFFE6E6E6),
@@ -262,8 +252,7 @@ class BookTheme {
   Color get coverText => title;
 }
 
-String colorHex(Color c) =>
-    '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
+String colorHex(Color c) => '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
 
 class TextAppearance {
   final String id;
@@ -285,17 +274,14 @@ class TextAppearance {
   });
 
   factory TextAppearance.fromJson(Map<String, dynamic> j) => TextAppearance(
-        id: j['id'],
-        name: j['name'],
-        titleFont: j['title'],
-        titleWeight: FontWeight.values.firstWhere(
-          (w) => w.value == j['titleWeight'],
-          orElse: () => FontWeight.w400,
-        ),
-        bodyFont: j['body'],
-        uppercase: j['transform'] == 'upper',
-        letterSpacing: (j['letterSpacing'] as num?)?.toDouble() ?? 0,
-      );
+    id: j['id'],
+    name: j['name'],
+    titleFont: j['title'],
+    titleWeight: FontWeight.values.firstWhere((w) => w.value == j['titleWeight'], orElse: () => FontWeight.w400),
+    bodyFont: j['body'],
+    uppercase: j['transform'] == 'upper',
+    letterSpacing: (j['letterSpacing'] as num?)?.toDouble() ?? 0,
+  );
 
   String apply(String s) => uppercase ? s.toUpperCase() : s;
 }
@@ -314,11 +300,11 @@ class Catalog {
   });
 
   factory Catalog.fromJson(Map<String, dynamic> catalog, Map<String, dynamic> templates) => Catalog(
-        products: (catalog['products'] as List).map((e) => Product.fromJson(e)).toList(),
-        templates: (templates['templates'] as List).map((e) => PageTemplate.fromJson(e)).toList(),
-        neutralColors: List<String>.from(catalog['neutralColors']),
-        textAppearances: (catalog['textAppearances'] as List).map((e) => TextAppearance.fromJson(e)).toList(),
-      );
+    products: (catalog['products'] as List).map((e) => Product.fromJson(e)).toList(),
+    templates: (templates['templates'] as List).map((e) => PageTemplate.fromJson(e)).toList(),
+    neutralColors: List<String>.from(catalog['neutralColors']),
+    textAppearances: (catalog['textAppearances'] as List).map((e) => TextAppearance.fromJson(e)).toList(),
+  );
 
   Product product(String code) => products.firstWhere((p) => p.code == code);
 
@@ -332,11 +318,10 @@ class Catalog {
     'pastel': ['#FFEAED', '#FBE5EC', '#F3E5F5', '#EEE8F5', '#E8EAF7', '#E4F2FD', '#E2F4FE'],
     'deep': ['#AF1919', '#880E50', '#4A148D', '#301B91', '#1B237E', '#0D47A3', '#00579B'],
     'vivid': ['#F44235', '#E91F63', '#9C29B2', '#663BB7', '#3F51B6', '#2196F3', '#04A9F5'],
-    'textures': ['tex:#F2F2F2', 'tex:#EFE9E4', 'tex:#8C7E73', 'tex:#262626'],
   };
 
-  /// Bir sayfanın teması: `#RRGGBB` düz renk, `tex:#RRGGBB` doku, `dyn:N` sayfanın kendi fotoğraflarından
-  /// çıkan paletin N'inci rengi (açık, yumuşak, canlı, zengin, koyu); sayfa paleti yoksa kitabınki.
+  /// Bir sayfanın teması: `#RRGGBB` düz renk, `dyn:N` sayfanın kendi fotoğraflarından çıkan paletin N'inci rengi
+  /// ([PaletteService] sırası); sayfa paleti yoksa kitabınki. Eski `tex:` kimlikleri düz renk olarak okunur.
   BookTheme resolve(String id, {List<String> pagePalette = const [], List<String> bookPalette = const []}) {
     if (id.startsWith('dyn:')) {
       final n = int.tryParse(id.substring(4)) ?? 0;
@@ -344,7 +329,7 @@ class Catalog {
       if (pal.length > n) return BookTheme.fromHex(pal[n], id: id);
       return theme(neutralColors.first);
     }
-    if (id.startsWith('tex:')) return BookTheme.fromHex(id.substring(4), id: id, texture: true);
+    if (id.startsWith('tex:')) return BookTheme.fromHex(id.substring(4), id: id);
     return theme(id);
   }
 

@@ -42,155 +42,158 @@ class PrintPageView extends StatelessWidget {
 
     return AspectRatio(
       aspectRatio: product.aspect,
-      child: LayoutBuilder(builder: (context, c) {
-        final w = c.maxWidth, h = c.maxHeight;
-        Rect toPx(Rect f) => Rect.fromLTWH(f.left / 100 * w, f.top / 100 * h, f.width / 100 * w, f.height / 100 * h);
-        final photoRects = <Rect>[];
-        final children = <Widget>[];
-        var photoIdx = 0, textIdx = 0;
-        for (final e in elements) {
-          final r = toPx(e.frame);
-          if (e.isPhoto) {
-            final i = photoIdx++;
-            photoRects.add(r);
-            final slot = i < page.photos.length ? page.photos[i] : null;
-            Widget child = _PhotoSlotView(
-              slot: slot,
-              photo: slot == null ? null : book.photos[slot.photoId],
-              background: bg,
-              showPlaceholder: showPlaceholders,
-              thumbSize: thumbSize,
-            );
-            if (e.border && !page.borderless) {
-              final bw = w * 0.012;
-              child = Container(color: Colors.white, padding: EdgeInsets.all(bw), child: child);
-            }
-            if (e.overlay) {
-              // Üst üste şablon: öndeki fotoğraf sayfa renginde ince bir çerçeveyle arkadakinden ayrılır.
-              child = Container(color: bg, padding: EdgeInsets.all(w * 0.012), child: child);
-            }
-            if (highlightSlot == i) {
-              child = DecoratedBox(
-                position: DecorationPosition.foreground,
-                decoration: BoxDecoration(border: Border.all(color: const Color(0xFF00ACC3), width: 3)),
-                child: child,
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final w = c.maxWidth, h = c.maxHeight;
+          Rect toPx(Rect f) => Rect.fromLTWH(f.left / 100 * w, f.top / 100 * h, f.width / 100 * w, f.height / 100 * h);
+          final photoRects = <Rect>[];
+          final children = <Widget>[];
+          var photoIdx = 0, textIdx = 0;
+          for (final e in elements) {
+            final r = toPx(e.frame);
+            if (e.isPhoto) {
+              final i = photoIdx++;
+              photoRects.add(r);
+              final slot = i < page.photos.length ? page.photos[i] : null;
+              Widget child = _PhotoSlotView(
+                slot: slot,
+                photo: slot == null ? null : book.photos[slot.photoId],
+                background: bg,
+                showPlaceholder: showPlaceholders,
+                thumbSize: thumbSize,
               );
-            }
-            if (slotWrapper != null) child = slotWrapper!(context, i, child);
-            children.add(Positioned.fromRect(rect: r, child: child));
-          } else {
-            final i = textIdx++;
-            final onPhoto = photoRects.any((p) => p.overlaps(r.deflate(2)));
-            final value = _textValue(page, e, i);
-            final coverTitle = page.isCover && e.role == 'title';
-            if (e.scrim && onPhoto) {
-              children.add(Positioned(
-                left: 0,
-                right: 0,
-                top: r.top - r.height,
-                bottom: 0,
-                child: const IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0x00000000), Color(0x99000000)],
+              if (e.border && !page.borderless) {
+                final bw = w * 0.012;
+                child = Container(color: Colors.white, padding: EdgeInsets.all(bw), child: child);
+              }
+              if (e.overlay) {
+                // Üst üste şablon: öndeki fotoğraf sayfa renginde ince bir çerçeveyle arkadakinden ayrılır.
+                child = Container(color: bg, padding: EdgeInsets.all(w * 0.012), child: child);
+              }
+              if (highlightSlot == i) {
+                child = DecoratedBox(
+                  position: DecorationPosition.foreground,
+                  decoration: BoxDecoration(border: Border.all(color: const Color(0xFF00ACC3), width: 3)),
+                  child: child,
+                );
+              }
+              if (slotWrapper != null) child = slotWrapper!(context, i, child);
+              children.add(Positioned.fromRect(rect: r, child: child));
+            } else {
+              final i = textIdx++;
+              final onPhoto = photoRects.any((p) => p.overlaps(r.deflate(2)));
+              final value = _textValue(page, e, i);
+              final coverTitle = page.isCover && e.role == 'title';
+              if (e.scrim && onPhoto) {
+                children.add(
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: r.top - r.height,
+                    bottom: 0,
+                    child: const IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0x00000000), Color(0x99000000)],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ));
+                );
+              }
+              Widget textView;
+              if (page.isCover) {
+                final cs = coverTitle ? page.textStyles[0] : null;
+                textView = _TextSlotView(
+                  text: coverTitle ? book.title : value,
+                  subtitle: coverTitle ? book.subtitle : '',
+                  slotStyle: cs,
+                  role: e.role,
+                  align: cs?.align ?? e.align,
+                  pageHeight: h,
+                  color: onPhoto ? Colors.white : (e.role == 'title' ? theme.coverText : theme.text),
+                  shadow: onPhoto,
+                  font: cs?.font == null ? font : catalog.textAppearance(cs!.font!),
+                  placeholder: showPlaceholders && value.isEmpty,
+                  onTap: onTextTap == null ? null : () => onTextTap!(i),
+                );
+              } else {
+                final st = page.textStyles[i] ?? defaultSlotStyle(e);
+                textView = _StyledTextSlot(
+                  text: value,
+                  style: st,
+                  font: st.font == null ? font : catalog.textAppearance(st.font!),
+                  pageHeight: h,
+                  color: onPhoto ? Colors.white : (st.style.heading ? theme.title : theme.text),
+                  shadow: onPhoto,
+                  placeholder: showPlaceholders && value.isEmpty,
+                  onTap: onTextTap == null ? null : () => onTextTap!(i),
+                );
+              }
+              if (e.vertical) textView = RotatedBox(quarterTurns: 3, child: textView);
+              children.add(Positioned.fromRect(rect: r, child: textView));
             }
-            Widget textView;
-            if (page.isCover) {
-              final cs = coverTitle ? page.textStyles[0] : null;
-              textView = _TextSlotView(
-                text: coverTitle ? book.title : value,
-                subtitle: coverTitle ? book.subtitle : '',
-                slotStyle: cs,
-                role: e.role,
-                align: cs?.align ?? e.align,
-                pageHeight: h,
-                color: onPhoto ? Colors.white : (e.role == 'title' ? theme.coverText : theme.text),
-                shadow: onPhoto,
-                font: cs?.font == null ? font : catalog.textAppearance(cs!.font!),
-                placeholder: showPlaceholders && value.isEmpty,
-                onTap: onTextTap == null ? null : () => onTextTap!(i),
-              );
-            } else {
-              final st = page.textStyles[i] ?? defaultSlotStyle(e);
-              textView = _StyledTextSlot(
-                text: value,
-                style: st,
-                font: st.font == null ? font : catalog.textAppearance(st.font!),
-                pageHeight: h,
-                color: onPhoto ? Colors.white : (st.style.heading ? theme.title : theme.text),
-                shadow: onPhoto,
-                placeholder: showPlaceholders && value.isEmpty,
-                onTap: onTextTap == null ? null : () => onTextTap!(i),
-              );
-            }
-            if (e.vertical) textView = RotatedBox(quarterTurns: 3, child: textView);
-            children.add(Positioned.fromRect(rect: r, child: textView));
           }
-        }
-        if (!page.isCover && page.caption.isNotEmpty) {
-          final capFont = page.captionFont == null ? font : catalog.textAppearance(page.captionFont!);
-          final st = page.captionStyle;
-          final alignment = switch (page.captionAlign) {
-            TextAlign.left => Alignment.centerLeft,
-            TextAlign.right => Alignment.centerRight,
-            _ => Alignment.center,
-          };
-          final band = captionBandFor(page, product.aspect);
-          children.add(Positioned(
-            left: w * 0.045,
-            right: w * 0.045,
-            top: h * (page.captionTop ? 1.5 : 100 - band + 0.5) / 100,
-            height: h * (band - 2) / 100,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onTextTap == null ? null : () => onTextTap!(-1),
-              child: Align(
-                alignment: alignment,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: alignment,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: w * 0.91),
-                    child: Text(
-                      capFont.apply(page.caption),
-                      textAlign: page.captionAlign,
-                      maxLines: captionLines(page, product.aspect),
-                      style: TextStyle(
-                        fontFamily: st.heading ? capFont.titleFont : capFont.bodyFont,
-                        fontWeight: st.heading ? capFont.titleWeight : FontWeight.w400,
-                        fontSize: h * st.sizeFactor,
-                        height: 1.2,
-                        color: st.heading ? theme.title : theme.text,
+          if (!page.isCover && page.caption.isNotEmpty) {
+            final capFont = page.captionFont == null ? font : catalog.textAppearance(page.captionFont!);
+            final st = page.captionStyle;
+            final alignment = switch (page.captionAlign) {
+              TextAlign.left => Alignment.centerLeft,
+              TextAlign.right => Alignment.centerRight,
+              _ => Alignment.center,
+            };
+            final band = captionBandFor(page, product.aspect);
+            children.add(
+              Positioned(
+                left: w * 0.045,
+                right: w * 0.045,
+                top: h * (page.captionTop ? 1.5 : 100 - band + 0.5) / 100,
+                height: h * (band - 2) / 100,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onTextTap == null ? null : () => onTextTap!(-1),
+                  child: Align(
+                    alignment: alignment,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: alignment,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: w * 0.91),
+                        child: Text(
+                          capFont.apply(page.caption),
+                          textAlign: page.captionAlign,
+                          maxLines: captionLines(page, product.aspect),
+                          style: TextStyle(
+                            fontFamily: st.heading ? capFont.titleFont : capFont.bodyFont,
+                            fontWeight: st.heading ? capFont.titleWeight : FontWeight.w400,
+                            fontSize: h * st.sizeFactor,
+                            height: 1.2,
+                            color: st.heading ? theme.title : theme.text,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
+            );
+          }
+          // Tema değişince arka plan rengi yumuşakça geçer (Popsa'daki gibi).
+          return ClipRect(
+            child: TweenAnimationBuilder<Color?>(
+              tween: ColorTween(end: bg),
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeInOut,
+              builder: (context, color, child) => ColoredBox(color: color ?? bg, child: child),
+              child: Stack(children: children),
             ),
-          ));
-        }
-        // Tema değişince arka plan rengi yumuşakça geçer (Popsa'daki gibi).
-        return ClipRect(
-          child: TweenAnimationBuilder<Color?>(
-            tween: ColorTween(end: bg),
-            duration: const Duration(milliseconds: 450),
-            curve: Curves.easeInOut,
-            builder: (context, color, child) => ColoredBox(color: color ?? bg, child: child),
-            child: Stack(children: [
-              if (theme.texture) const Positioned.fill(child: IgnorePointer(child: PaperTexture())),
-              ...children,
-            ]),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 
@@ -229,23 +232,27 @@ class _PhotoSlotView extends StatelessWidget {
             : null,
       );
     }
-    return LayoutBuilder(builder: (context, c) {
-      final r = photoRect(Size(c.maxWidth, c.maxHeight), photo?.aspect ?? 1, s);
-      return ClipRect(
-        child: ColoredBox(
-          color: s.fit ? background : const Color(0xFFE6E6E6),
-          child: Stack(children: [
-            Positioned.fromRect(
-              rect: r,
-              child: RotatedBox(
-                quarterTurns: s.quarterTurns % 4,
-                child: PhotoImage(photoId: s.photoId, size: thumbSize, fit: BoxFit.fill),
-              ),
+    return LayoutBuilder(
+      builder: (context, c) {
+        final r = photoRect(Size(c.maxWidth, c.maxHeight), photo?.aspect ?? 1, s);
+        return ClipRect(
+          child: ColoredBox(
+            color: s.fit ? background : const Color(0xFFE6E6E6),
+            child: Stack(
+              children: [
+                Positioned.fromRect(
+                  rect: r,
+                  child: RotatedBox(
+                    quarterTurns: s.quarterTurns % 4,
+                    child: PhotoImage(photoId: s.photoId, size: thumbSize, fit: BoxFit.fill),
+                  ),
+                ),
+              ],
             ),
-          ]),
-        ),
-      );
-    });
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -284,7 +291,10 @@ class _StyledTextSlot extends StatelessWidget {
           ? Container(
               color: const Color(0xFFE6E6E6),
               alignment: Alignment.center,
-              child: Text('Aa', style: TextStyle(fontSize: pageHeight * 0.07, color: const Color(0xFF555555))),
+              child: Text(
+                'Aa',
+                style: TextStyle(fontSize: pageHeight * 0.07, color: const Color(0xFF555555)),
+              ),
             )
           : const SizedBox.expand();
     } else {
@@ -393,10 +403,7 @@ List<TemplateElement> tightenGutters(List<TemplateElement> elements) {
     out.add(Rect.fromLTRB(l, t, rt, b));
   }
   var i = 0;
-  return [
-    for (final e in elements)
-      e.withFrame(out[i++]),
-  ];
+  return [for (final e in elements) e.withFrame(out[i++])];
 }
 
 /// Fotoğraf alanlarının kapladığı bölgeyi sayfanın tamamına genişletir (kenarlıksız görünüm).
@@ -406,15 +413,12 @@ List<TemplateElement> borderlessElements(List<TemplateElement> elements) {
   final u = photos.reduce((a, b) => a.expandToInclude(b));
   if (u.width <= 0 || u.height <= 0) return elements;
   Rect map(Rect f) => Rect.fromLTWH(
-        (f.left - u.left) / u.width * 100,
-        (f.top - u.top) / u.height * 100,
-        f.width / u.width * 100,
-        f.height / u.height * 100,
-      );
-  return [
-    for (final e in elements)
-      e.isPhoto ? e.withFrame(map(e.frame)) : e,
-  ];
+    (f.left - u.left) / u.width * 100,
+    (f.top - u.top) / u.height * 100,
+    f.width / u.width * 100,
+    f.height / u.height * 100,
+  );
+  return [for (final e in elements) e.isPhoto ? e.withFrame(map(e.frame)) : e];
 }
 
 /// Alan içinde fotoğrafın çizileceği dikdörtgen (döndürülmüş en-boy, Doldur/Sığdır, yakınlaştırma ve kaydırma).
@@ -537,38 +541,4 @@ class _TextSlotView extends StatelessWidget {
     }
     return onTap == null ? child : GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap, child: child);
   }
-}
-
-
-/// Kâğıt dokusu: arka plan rengi üzerinde ince, rastgele lekeler (Popsa "Textures" temaları).
-class PaperTexture extends StatelessWidget {
-  const PaperTexture({super.key});
-
-  @override
-  Widget build(BuildContext context) => const RepaintBoundary(child: CustomPaint(painter: _PaperPainter()));
-}
-
-class _PaperPainter extends CustomPainter {
-  const _PaperPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    var seed = 7;
-    double rnd() {
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      return seed / 0x7fffffff;
-    }
-
-    final light = Paint()..color = const Color(0x14FFFFFF);
-    final dark = Paint()..color = const Color(0x12000000);
-    final count = (size.width * size.height / 90).clamp(200, 6000).toInt();
-    for (var i = 0; i < count; i++) {
-      final o = Offset(rnd() * size.width, rnd() * size.height);
-      final r = 0.4 + rnd() * 1.6;
-      canvas.drawCircle(o, r, rnd() > 0.5 ? light : dark);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -91,9 +91,9 @@ class AutoLayoutService {
   }
 
   Set<int> get autoCounts => {
-        for (final t in catalog.templates)
-          if (t.automaticUse && !t.isCover) t.photoCount,
-      };
+    for (final t in catalog.templates)
+      if (t.automaticUse && !t.isCover) t.photoCount,
+  };
 
   int get maxAutoCapacity => autoCounts.reduce(max);
 
@@ -176,8 +176,10 @@ class AutoLayoutService {
     double cost(BookPhoto p, int slot) => (log(p.aspect) - log(slotAspects[slot])).abs();
     // Fotoğraf alandan azsa önce en büyük alanlar doldurulur (ör. üst üste şablonda arkadaki büyük alan).
     final usable = List<int>.generate(n, (i) => i)
-      ..sort((a, b) => (slots[b].frame.width * slots[b].frame.height)
-          .compareTo(slots[a].frame.width * slots[a].frame.height));
+      ..sort(
+        (a, b) =>
+            (slots[b].frame.width * slots[b].frame.height).compareTo(slots[a].frame.width * slots[a].frame.height),
+      );
     final candidates = list.length < n ? (usable.take(list.length).toList()..sort()) : List<int>.generate(n, (i) => i);
 
     if (candidates.length <= 6) {
@@ -235,15 +237,25 @@ class AutoLayoutService {
   /// Fotoğrafların tarih aralığına göre başlık önerileri.
   static List<String> titleSuggestions(List<BookPhoto> photos, {DateTime? now}) {
     const months = [
-      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+      'Ocak',
+      'Şubat',
+      'Mart',
+      'Nisan',
+      'Mayıs',
+      'Haziran',
+      'Temmuz',
+      'Ağustos',
+      'Eylül',
+      'Ekim',
+      'Kasım',
+      'Aralık',
     ];
     String season(int m) => switch (m) {
-          12 || 1 || 2 => 'Kış',
-          3 || 4 || 5 => 'İlkbahar',
-          6 || 7 || 8 => 'Yaz',
-          _ => 'Sonbahar',
-        };
+      12 || 1 || 2 => 'Kış',
+      3 || 4 || 5 => 'İlkbahar',
+      6 || 7 || 8 => 'Yaz',
+      _ => 'Sonbahar',
+    };
     final dates = photos.map((p) => p.takenAt).whereType<DateTime>().toList()..sort();
     final out = <String>[];
     if (dates.isNotEmpty) {

@@ -86,9 +86,13 @@ ThemeData buildAppTheme(Brightness brightness) {
       ),
     ),
     switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? AppColors.accent : Colors.white),
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? AppColors.accent : Colors.white,
+      ),
       trackColor: WidgetStateProperty.resolveWith(
-        (s) => s.contains(WidgetState.selected) ? AppColors.accent.withValues(alpha: 0.4) : (dark ? AppColors.darkPill : const Color(0xFFD6D6D6)),
+        (s) => s.contains(WidgetState.selected)
+            ? AppColors.accent.withValues(alpha: 0.4)
+            : (dark ? AppColors.darkPill : const Color(0xFFD6D6D6)),
       ),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),

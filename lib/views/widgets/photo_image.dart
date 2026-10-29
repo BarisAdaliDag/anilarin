@@ -40,15 +40,17 @@ class _PhotoImageState extends State<PhotoImage> {
       return;
     }
     _entity = null;
-    PhotoRepository.entity(widget.photoId).then((e) {
-      if (!mounted) return;
-      setState(() {
-        _entity = e;
-        _missing = e == null;
-      });
-    }).catchError((_) {
-      if (mounted) setState(() => _missing = true);
-    });
+    PhotoRepository.entity(widget.photoId)
+        .then((e) {
+          if (!mounted) return;
+          setState(() {
+            _entity = e;
+            _missing = e == null;
+          });
+        })
+        .catchError((_) {
+          if (mounted) setState(() => _missing = true);
+        });
   }
 
   @override

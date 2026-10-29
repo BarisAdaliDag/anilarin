@@ -43,8 +43,9 @@ class EditorScreen extends StatelessWidget {
     final book = app.book(bookId);
     if (book == null) return const Scaffold(body: Center(child: Text('Tasarım bulunamadı')));
     return ChangeNotifierProvider(
-      create: (_) => EditorViewModel(book: book.clone(), catalog: app.catalog!, onSave: app.saveBook)
-        ..refreshPagePalettes(PaletteService.forPhotos),
+      create: (_) =>
+          EditorViewModel(book: book.clone(), catalog: app.catalog!, onSave: app.saveBook)
+            ..refreshPagePalettes(PaletteService.forPhotos),
       child: _EditorBody(firstCreation: firstCreation),
     );
   }
@@ -87,7 +88,10 @@ class _EditorBodyState extends State<_EditorBody> {
       });
     }
     final book = vm.book;
-    final edited = DateFormat("d MMMM y EEEE HH:mm", 'tr').format(DateTime.fromMillisecondsSinceEpoch(book.updatedAtMs));
+    final edited = DateFormat(
+      "d MMMM y EEEE HH:mm",
+      'tr',
+    ).format(DateTime.fromMillisecondsSinceEpoch(book.updatedAtMs));
 
     return Scaffold(
       appBar: AppBar(
@@ -101,72 +105,82 @@ class _EditorBodyState extends State<_EditorBody> {
           const SizedBox(width: 12),
         ],
       ),
-      body: Stack(children: [
-        ListView(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 180),
-          children: [
-            Text(book.title.isEmpty ? S.photoBook : book.title, style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w500)),
-            const SizedBox(height: 6),
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(
-                child: Text(
-                  '${vm.product.title} · son düzenleme $edited',
-                  style: TextStyle(color: context.mutedText, fontSize: 15, height: 1.4),
-                ),
+      body: Stack(
+        children: [
+          ListView(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 180),
+            children: [
+              Text(
+                book.title.isEmpty ? S.photoBook : book.title,
+                style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w500),
               ),
-              _CircleButton(icon: Icons.info_outline, onTap: () => showAboutBook(context, vm)),
-            ]),
-            const SizedBox(height: 16),
-            Divider(color: context.divider),
-            for (var i = 0; i < book.pages.length; i++) ...[
-              _PageHeader(pageIndex: i, onDragChanged: _setDragging),
-              _EditablePage(pageIndex: i, onDragChanged: _setDragging),
-            ],
-            const SizedBox(height: 24),
-            Row(children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: vm.canAddPages ? () => addPagesFlow(context, vm) : null,
-                  child: const Text(S.addMorePages),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: vm.canRemovePages ? () => _openRemove(context, vm) : null,
-                  child: const Text(S.removePages),
-                ),
-              ),
-            ]),
-          ],
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: SafeArea(
-            top: false,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: _photosOpen || _dragging
-                  ? _PhotosPanel(
-                      key: const ValueKey('photos'),
-                      vm: vm,
-                      onClose: () => setState(() => _photosOpen = false),
-                      onDragChanged: _setDragging,
-                    )
-                  : _Toolbar(
-                      key: const ValueKey('toolbar'),
-                      unused: book.unusedPhotoIds.length,
-                      onPhotos: () => setState(() => _photosOpen = true),
-                      onThemes: () => showThemeSheet(context, vm),
-                      onPages: () => _openRearrange(context, vm),
-                      onOptions: () => _options(context, vm),
+              const SizedBox(height: 6),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${vm.product.title} · son düzenleme $edited',
+                      style: TextStyle(color: context.mutedText, fontSize: 15, height: 1.4),
                     ),
+                  ),
+                  _CircleButton(icon: Icons.info_outline, onTap: () => showAboutBook(context, vm)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Divider(color: context.divider),
+              for (var i = 0; i < book.pages.length; i++) ...[
+                _PageHeader(pageIndex: i, onDragChanged: _setDragging),
+                _EditablePage(pageIndex: i, onDragChanged: _setDragging),
+              ],
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: vm.canAddPages ? () => addPagesFlow(context, vm) : null,
+                      child: const Text(S.addMorePages),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: vm.canRemovePages ? () => _openRemove(context, vm) : null,
+                      child: const Text(S.removePages),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: _photosOpen || _dragging
+                    ? _PhotosPanel(
+                        key: const ValueKey('photos'),
+                        vm: vm,
+                        onClose: () => setState(() => _photosOpen = false),
+                        onDragChanged: _setDragging,
+                      )
+                    : _Toolbar(
+                        key: const ValueKey('toolbar'),
+                        unused: book.unusedPhotoIds.length,
+                        onPhotos: () => setState(() => _photosOpen = true),
+                        onThemes: () => showThemeSheet(context, vm),
+                        onPages: () => _openRearrange(context, vm),
+                        onOptions: () => _options(context, vm),
+                      ),
+              ),
             ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 
@@ -175,15 +189,19 @@ class _EditorBodyState extends State<_EditorBody> {
   }
 
   void _openRemove(BuildContext context, EditorViewModel vm) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ChangeNotifierProvider.value(value: vm, child: const RemovePagesScreen()),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(value: vm, child: const RemovePagesScreen()),
+      ),
+    );
   }
 
   void _openRearrange(BuildContext context, EditorViewModel vm) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => ChangeNotifierProvider.value(value: vm, child: const RearrangePagesScreen()),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider.value(value: vm, child: const RearrangePagesScreen()),
+      ),
+    );
   }
 
   Future<void> _options(BuildContext context, EditorViewModel vm) async {
@@ -192,31 +210,35 @@ class _EditorBodyState extends State<_EditorBody> {
       isScrollControlled: true,
       builder: (c) => SafeArea(
         child: SingleChildScrollView(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-              child: Text(vm.book.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Text(vm.product.title, style: TextStyle(color: c.mutedText)),
-            ),
-            menuItem(c, 'title', Icons.edit_outlined, S.editTitle),
-            menuItem(c, 'font', Icons.text_fields, S.changeFont),
-            menuItem(
-              c,
-              'borders',
-              Icons.border_clear,
-              vm.allBorderless ? 'Kenarlıkları Geri Getir' : 'Kenarlıkları Kaldır',
-              subtitle: 'Tüm sayfalara uygulanır',
-            ),
-            menuItem(c, 'add', Icons.note_add_outlined, S.addMorePages, enabled: vm.canAddPages),
-            menuItem(c, 'remove', Icons.remove_circle_outline, S.removePages, enabled: vm.canRemovePages),
-            menuItem(c, 'photos', Icons.add_photo_alternate_outlined, S.addMorePhotos),
-            menuItem(c, 'preview', Icons.view_in_ar_outlined, S.preview),
-            menuItem(c, 'duplicate', Icons.copy_outlined, S.duplicateBook),
-            menuItem(c, 'delete', Icons.delete_outline, S.deleteBook, danger: true),
-          ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                child: Text(vm.book.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Text(vm.product.title, style: TextStyle(color: c.mutedText)),
+              ),
+              menuItem(c, 'title', Icons.edit_outlined, S.editTitle),
+              menuItem(c, 'font', Icons.text_fields, S.changeFont),
+              menuItem(
+                c,
+                'borders',
+                Icons.border_clear,
+                vm.allBorderless ? 'Kenarlıkları Geri Getir' : 'Kenarlıkları Kaldır',
+                subtitle: 'Tüm sayfalara uygulanır',
+              ),
+              menuItem(c, 'add', Icons.note_add_outlined, S.addMorePages, enabled: vm.canAddPages),
+              menuItem(c, 'remove', Icons.remove_circle_outline, S.removePages, enabled: vm.canRemovePages),
+              menuItem(c, 'photos', Icons.add_photo_alternate_outlined, S.addMorePhotos),
+              menuItem(c, 'preview', Icons.view_in_ar_outlined, S.preview),
+              menuItem(c, 'duplicate', Icons.copy_outlined, S.duplicateBook),
+              menuItem(c, 'delete', Icons.delete_outline, S.deleteBook, danger: true),
+            ],
+          ),
         ),
       ),
     );
@@ -255,8 +277,16 @@ class _EditorBodyState extends State<_EditorBody> {
   }
 }
 
-Widget menuItem(BuildContext c, String value, IconData icon, String label,
-    {bool enabled = true, bool danger = false, String? subtitle, Color? color}) {
+Widget menuItem(
+  BuildContext c,
+  String value,
+  IconData icon,
+  String label, {
+  bool enabled = true,
+  bool danger = false,
+  String? subtitle,
+  Color? color,
+}) {
   final fg = danger ? AppColors.failure : color;
   return ListTile(
     enabled: enabled,
@@ -269,9 +299,11 @@ Widget menuItem(BuildContext c, String value, IconData icon, String label,
 }
 
 void openPreview(BuildContext context, EditorViewModel vm) {
-  Navigator.of(context).push(MaterialPageRoute(
-    builder: (_) => ChangeNotifierProvider.value(value: vm, child: const PreviewScreen()),
-  ));
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => ChangeNotifierProvider.value(value: vm, child: const PreviewScreen()),
+    ),
+  );
 }
 
 Future<void> addPagesFlow(BuildContext context, EditorViewModel vm, {int? afterIndex}) async {
@@ -285,9 +317,9 @@ Future<void> addPagesFlow(BuildContext context, EditorViewModel vm, {int? afterI
 }
 
 Future<void> addPhotosFlow(BuildContext context, EditorViewModel vm) async {
-  final photos = await Navigator.of(context).push<List<BookPhoto>>(
-    MaterialPageRoute(builder: (_) => PhotoPickerScreen(maxPhotos: vm.product.photoMax)),
-  );
+  final photos = await Navigator.of(
+    context,
+  ).push<List<BookPhoto>>(MaterialPageRoute(builder: (_) => PhotoPickerScreen(maxPhotos: vm.product.photoMax)));
   if (photos != null && photos.isNotEmpty) vm.addPhotos(photos);
 }
 
@@ -308,10 +340,13 @@ class _Pill extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-            if (icon != null) ...[const SizedBox(width: 4), Icon(icon, size: 18)],
-          ]),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+              if (icon != null) ...[const SizedBox(width: 4), Icon(icon, size: 18)],
+            ],
+          ),
         ),
       ),
     );
@@ -357,37 +392,38 @@ class _PageHeader extends StatelessWidget {
     final theme = vm.themeOf(pageIndex);
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 28, 0, 14),
-      child: Row(children: [
-        Expanded(
-          child: Text(page.isCover ? S.frontCover : S.pageN(pageIndex), style: const TextStyle(fontSize: 19)),
-        ),
-        _CircleButton(
-          icon: Icons.circle,
-          onTap: () => showThemeSheet(context, vm, pageIndex: pageIndex),
-          child: Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: theme.background,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.black26),
+      child: Row(
+        children: [
+          Expanded(child: Text(page.isCover ? S.frontCover : S.pageN(pageIndex), style: const TextStyle(fontSize: 19))),
+          _CircleButton(
+            icon: Icons.circle,
+            onTap: () => showThemeSheet(context, vm, pageIndex: pageIndex),
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: theme.background,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.black26),
+              ),
             ),
           ),
-        ),
-        if (!page.isCover)
+          if (!page.isCover)
+            _CircleButton(icon: Icons.crop_free, active: page.borderless, onTap: () => vm.toggleBorderless(pageIndex)),
           _CircleButton(
-            icon: Icons.crop_free,
-            active: page.borderless,
-            onTap: () => vm.toggleBorderless(pageIndex),
+            icon: page.isCover ? Icons.call_to_action_outlined : Icons.grid_view,
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => ChangeNotifierProvider.value(
+                  value: vm,
+                  child: TemplatePickerScreen(pageIndex: pageIndex),
+                ),
+              ),
+            ),
           ),
-        _CircleButton(
-          icon: page.isCover ? Icons.call_to_action_outlined : Icons.grid_view,
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ChangeNotifierProvider.value(value: vm, child: TemplatePickerScreen(pageIndex: pageIndex)),
-          )),
-        ),
-        _CircleButton(icon: Icons.more_horiz, onTap: () => _pageMenu(context, vm, pageIndex)),
-      ]),
+          _CircleButton(icon: Icons.more_horiz, onTap: () => _pageMenu(context, vm, pageIndex)),
+        ],
+      ),
     );
   }
 
@@ -397,25 +433,29 @@ class _PageHeader extends StatelessWidget {
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (c) => SafeArea(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(
-              page.isCover ? S.frontCover : 'Sayfa $pageIndex / ${vm.book.pageCount}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                page.isCover ? S.frontCover : 'Sayfa $pageIndex / ${vm.book.pageCount}',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+              ),
             ),
-          ),
-          Divider(color: c.divider, indent: 20, endIndent: 20),
-          if (page.isCover) menuItem(c, 'title', Icons.edit_outlined, S.editTitle),
-          if (!page.isCover) menuItem(c, 'caption', Icons.text_fields, hasCaption ? S.editCaption : S.addCaption),
-          if (!page.isCover && hasCaption) menuItem(c, 'removeCaption', Icons.format_clear, S.removeCaption),
-          menuItem(c, 'template', Icons.grid_view, S.changeTemplate),
-          if (!page.isCover) ...[
-            menuItem(c, 'insert', Icons.playlist_add, S.insertNewPage, enabled: vm.canAddPages),
-            menuItem(c, 'duplicate', Icons.copy_outlined, S.duplicatePage, enabled: vm.canAddPages),
-            menuItem(c, 'delete', Icons.delete_outline, S.deletePage, enabled: vm.canRemovePages, danger: true),
+            Divider(color: c.divider, indent: 20, endIndent: 20),
+            if (page.isCover) menuItem(c, 'title', Icons.edit_outlined, S.editTitle),
+            if (!page.isCover) menuItem(c, 'caption', Icons.text_fields, hasCaption ? S.editCaption : S.addCaption),
+            if (!page.isCover && hasCaption) menuItem(c, 'removeCaption', Icons.format_clear, S.removeCaption),
+            menuItem(c, 'template', Icons.grid_view, S.changeTemplate),
+            if (!page.isCover) ...[
+              menuItem(c, 'insert', Icons.playlist_add, S.insertNewPage, enabled: vm.canAddPages),
+              menuItem(c, 'duplicate', Icons.copy_outlined, S.duplicatePage, enabled: vm.canAddPages),
+              menuItem(c, 'delete', Icons.delete_outline, S.deletePage, enabled: vm.canRemovePages, danger: true),
+            ],
           ],
-        ]),
+        ),
       ),
     );
     if (!context.mounted || action == null) return;
@@ -427,9 +467,14 @@ class _PageHeader extends StatelessWidget {
       case 'removeCaption':
         vm.setPageCaption(pageIndex, '');
       case 'template':
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => ChangeNotifierProvider.value(value: vm, child: TemplatePickerScreen(pageIndex: pageIndex)),
-        ));
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider.value(
+              value: vm,
+              child: TemplatePickerScreen(pageIndex: pageIndex),
+            ),
+          ),
+        );
       case 'insert':
         vm.addPages(1, afterIndex: pageIndex);
       case 'duplicate':
@@ -461,12 +506,8 @@ class _EditablePage extends StatelessWidget {
         onTextTap: (i) => vm.book.pages[pageIndex].isCover
             ? editTitleDialog(context, vm)
             : editCaptionDialog(context, vm, pageIndex, i),
-        slotWrapper: (context, slot, child) => _SlotTarget(
-          vm: vm,
-          ref: SlotRef(pageIndex, slot),
-          onDragChanged: onDragChanged,
-          child: child,
-        ),
+        slotWrapper: (context, slot, child) =>
+            _SlotTarget(vm: vm, ref: SlotRef(pageIndex, slot), onDragChanged: onDragChanged, child: child),
       ),
     );
   }
@@ -519,9 +560,14 @@ class _SlotTarget extends StatelessWidget {
 
   Future<void> _tap(BuildContext context, PhotoSlot? slot) async {
     if (slot != null) {
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider.value(value: vm, child: EditPhotoScreen(ref: ref)),
-      ));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ChangeNotifierProvider.value(
+            value: vm,
+            child: EditPhotoScreen(ref: ref),
+          ),
+        ),
+      );
       return;
     }
     await fillEmptySlot(context, vm, ref);
@@ -535,31 +581,34 @@ Future<void> fillEmptySlot(BuildContext context, EditorViewModel vm, SlotRef ref
     choice = await showModalBottomSheet<String>(
       context: context,
       builder: (c) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text(S.unusedPhotos, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 96,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: unused.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (_, i) => GestureDetector(
-                onTap: () => Navigator.pop(c, unused[i]),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: SizedBox(width: 96, child: PhotoImage(photoId: unused[i], size: 250)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(S.unusedPhotos, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 96,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                scrollDirection: Axis.horizontal,
+                itemCount: unused.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (_, i) => GestureDetector(
+                  onTap: () => Navigator.pop(c, unused[i]),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(width: 96, child: PhotoImage(photoId: unused[i], size: 250)),
+                  ),
                 ),
               ),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.photo_library_outlined),
-            title: const Text(S.addMorePhotos),
-            onTap: () => Navigator.pop(c, '__gallery__'),
-          ),
-        ]),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text(S.addMorePhotos),
+              onTap: () => Navigator.pop(c, '__gallery__'),
+            ),
+          ],
+        ),
       ),
     );
     if (choice == null) return;
@@ -569,9 +618,9 @@ Future<void> fillEmptySlot(BuildContext context, EditorViewModel vm, SlotRef ref
     vm.placeUnused(choice, ref);
     return;
   }
-  final picked = await Navigator.of(context).push<List<BookPhoto>>(
-    MaterialPageRoute(builder: (_) => const PhotoPickerScreen(single: true)),
-  );
+  final picked = await Navigator.of(
+    context,
+  ).push<List<BookPhoto>>(MaterialPageRoute(builder: (_) => const PhotoPickerScreen(single: true)));
   if (picked != null && picked.isNotEmpty) vm.replacePhoto(ref, picked.first);
 }
 
@@ -611,22 +660,20 @@ class _Toolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget item(IconData icon, String label, VoidCallback onTap, {bool badge = false}) => InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Badge(
-                isLabelVisible: badge,
-                smallSize: 9,
-                backgroundColor: AppColors.accent,
-                child: Icon(icon, size: 28),
-              ),
-              const SizedBox(height: 4),
-              Text(label, style: const TextStyle(fontSize: 13)),
-            ]),
-          ),
-        );
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Badge(isLabelVisible: badge, smallSize: 9, backgroundColor: AppColors.accent, child: Icon(icon, size: 28)),
+            const SizedBox(height: 4),
+            Text(label, style: const TextStyle(fontSize: 13)),
+          ],
+        ),
+      ),
+    );
     return Center(
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -637,13 +684,16 @@ class _Toolbar extends StatelessWidget {
           boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 16, offset: Offset(0, 4))],
         ),
         child: IntrinsicHeight(
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            item(Icons.photo_library_outlined, S.photos, onPhotos, badge: unused > 0),
-            item(Icons.palette_outlined, S.themes, onThemes),
-            item(Icons.menu_book_outlined, S.pages, onPages),
-            VerticalDivider(width: 1, color: context.divider, indent: 8, endIndent: 8),
-            item(Icons.more_horiz, S.options, onOptions),
-          ]),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              item(Icons.photo_library_outlined, S.photos, onPhotos, badge: unused > 0),
+              item(Icons.palette_outlined, S.themes, onThemes),
+              item(Icons.menu_book_outlined, S.pages, onPages),
+              VerticalDivider(width: 1, color: context.divider, indent: 8, endIndent: 8),
+              item(Icons.more_horiz, S.options, onOptions),
+            ],
+          ),
         ),
       ),
     );
@@ -674,63 +724,72 @@ class _PhotosPanel extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 16, offset: Offset(0, 4))],
         ),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-          Row(children: [
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text(S.photos, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-                Text('${unused.length} kullanılmıyor', style: TextStyle(color: context.mutedText, fontSize: 13)),
-              ]),
-            ),
-            if (unused.isNotEmpty)
-              IconButton(
-                tooltip: S.discardUnused,
-                onPressed: vm.discardUnused,
-                icon: const Icon(Icons.delete_sweep_outlined),
-              ),
-            IconButton(onPressed: onClose, icon: const Icon(Icons.close)),
-          ]),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 78,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
               children: [
-                GestureDetector(
-                  onTap: () => addPhotosFlow(context, vm),
-                  child: Container(
-                    width: 78,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: context.divider, width: 1.5),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.add, size: 30),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(S.photos, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                      Text('${unused.length} kullanılmıyor', style: TextStyle(color: context.mutedText, fontSize: 13)),
+                    ],
                   ),
                 ),
-                for (final id in unused)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: LongPressDraggable<DragItem>(
-                      data: DragItem.unused(id),
-                      delay: const Duration(milliseconds: 150),
-                      onDragStarted: () => onDragChanged(true),
-                      onDragEnd: (_) => onDragChanged(false),
-                      feedback: _DragFeedback(photoId: id),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: SizedBox(width: 78, child: PhotoImage(photoId: id, size: 220)),
-                      ),
-                    ),
+                if (unused.isNotEmpty)
+                  IconButton(
+                    tooltip: S.discardUnused,
+                    onPressed: vm.discardUnused,
+                    icon: const Icon(Icons.delete_sweep_outlined),
                   ),
+                IconButton(onPressed: onClose, icon: const Icon(Icons.close)),
               ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            unused.isEmpty ? 'Bir fotoğrafı çıkarmak için buraya sürükle.' : S.dragToSwap,
-            style: TextStyle(color: context.mutedText, fontSize: 12),
-          ),
-        ]),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 78,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  GestureDetector(
+                    onTap: () => addPhotosFlow(context, vm),
+                    child: Container(
+                      width: 78,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: context.divider, width: 1.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.add, size: 30),
+                    ),
+                  ),
+                  for (final id in unused)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: LongPressDraggable<DragItem>(
+                        data: DragItem.unused(id),
+                        delay: const Duration(milliseconds: 150),
+                        onDragStarted: () => onDragChanged(true),
+                        onDragEnd: (_) => onDragChanged(false),
+                        feedback: _DragFeedback(photoId: id),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: SizedBox(width: 78, child: PhotoImage(photoId: id, size: 220)),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              unused.isEmpty ? 'Bir fotoğrafı çıkarmak için buraya sürükle.' : S.dragToSwap,
+              style: TextStyle(color: context.mutedText, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     );
   }

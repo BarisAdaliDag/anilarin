@@ -3,13 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   List<SmartPhoto> event(DateTime start, int n, {bool screenshot = false, String prefix = ''}) => [
-        for (var i = 0; i < n; i++)
-          SmartPhoto(
-            id: '$prefix${start.toIso8601String()}-$i',
-            takenAt: start.add(Duration(minutes: 30 * i)),
-            screenshot: screenshot,
-          ),
-      ];
+    for (var i = 0; i < n; i++)
+      SmartPhoto(
+        id: '$prefix${start.toIso8601String()}-$i',
+        takenAt: start.add(Duration(minutes: 30 * i)),
+        screenshot: screenshot,
+      ),
+  ];
 
   test('zamana göre etkinliklere ayırır, küçük etkinlikleri ve ekran görüntülerini atar', () {
     final albums = SmartAlbumService.build([
@@ -25,10 +25,7 @@ void main() {
 
   test('tarih aralığı etiketleri', () {
     expect(SmartAlbumService.rangeLabel(DateTime(2026, 9, 28), DateTime(2026, 10, 2)), '28 Eylül – 2 Ekim 2026');
-    expect(
-      SmartAlbumService.rangeLabel(DateTime(2025, 12, 30), DateTime(2026, 1, 2)),
-      '30 Aralık 2025 – 2 Ocak 2026',
-    );
+    expect(SmartAlbumService.rangeLabel(DateTime(2025, 12, 30), DateTime(2026, 1, 2)), '30 Aralık 2025 – 2 Ocak 2026');
   });
 
   test('yalnız kamera klasörü kabul edilir, tekrar eden başlıklar değişir', () {
@@ -36,10 +33,7 @@ void main() {
     expect(SmartAlbumService.isCameraPath('Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/'), isFalse);
     expect(SmartAlbumService.isCameraPath('Download/'), isFalse);
     expect(SmartAlbumService.isCameraPath(null), isTrue);
-    final albums = SmartAlbumService.build([
-      ...event(DateTime(2026, 10, 20), 15),
-      ...event(DateTime(2026, 10, 5), 15),
-    ]);
+    final albums = SmartAlbumService.build([...event(DateTime(2026, 10, 20), 15), ...event(DateTime(2026, 10, 5), 15)]);
     expect(albums[0].title, isNot(albums[1].title));
   });
 

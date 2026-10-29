@@ -11,12 +11,7 @@ import 'views/home/home_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('tr');
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppViewModel()..load(),
-      child: const AnilarinApp(),
-    ),
-  );
+  runApp(ChangeNotifierProvider(create: (_) => AppViewModel()..load(), child: const AnilarinApp()));
 }
 
 class AnilarinApp extends StatelessWidget {

@@ -10,8 +10,8 @@ import '../repositories/design_repository.dart';
 /// Uygulama genelindeki durum: katalog, kayıtlı tasarımlar ve sepet.
 class AppViewModel extends ChangeNotifier {
   AppViewModel({CatalogRepository? catalogRepository, DesignRepository? designRepository})
-      : _catalogRepository = catalogRepository ?? CatalogRepository(),
-        designs = designRepository ?? DesignRepository();
+    : _catalogRepository = catalogRepository ?? CatalogRepository(),
+      designs = designRepository ?? DesignRepository();
 
   final CatalogRepository _catalogRepository;
   final DesignRepository designs;

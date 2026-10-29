@@ -29,10 +29,7 @@ class DesignsTab extends StatelessWidget {
             const SizedBox(height: 8),
             Text(S.homeDescription, style: TextStyle(fontSize: 15, color: context.mutedText, height: 1.4)),
             const SizedBox(height: 24),
-            for (final b in app.books) ...[
-              _DesignCard(book: b, catalog: catalog),
-              const SizedBox(height: 20),
-            ],
+            for (final b in app.books) ...[_DesignCard(book: b, catalog: catalog), const SizedBox(height: 20)],
             _SuggestionCard(onCreate: () => openProducts(context)),
           ],
         ),
@@ -58,11 +55,16 @@ class _Brand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      const Icon(Icons.auto_awesome, size: 26),
-      const SizedBox(width: 6),
-      Text(S.appName, style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: context.strongText)),
-    ]);
+    return Row(
+      children: [
+        const Icon(Icons.auto_awesome, size: 26),
+        const SizedBox(width: 6),
+        Text(
+          S.appName,
+          style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: context.strongText),
+        ),
+      ],
+    );
   }
 }
 
@@ -98,30 +100,44 @@ class _DesignCard extends StatelessWidget {
         onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditorScreen(bookId: book.id))),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 22, 12, 22),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(
-                    S.photoBook.toUpperCase(),
-                    style: TextStyle(fontSize: 12, letterSpacing: 1.6, color: onCard.withValues(alpha: 0.75)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          S.photoBook.toUpperCase(),
+                          style: TextStyle(fontSize: 12, letterSpacing: 1.6, color: onCard.withValues(alpha: 0.75)),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          book.title.isEmpty ? S.photoBook : book.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 20, color: onCard),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    book.title.isEmpty ? S.photoBook : book.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 20, color: onCard),
+                  IconButton(
+                    onPressed: () => _menu(context),
+                    icon: Icon(Icons.more_horiz, color: onCard),
                   ),
-                ]),
+                ],
               ),
-              IconButton(onPressed: () => _menu(context), icon: Icon(Icons.more_horiz, color: onCard)),
-            ]),
-            const SizedBox(height: 18),
-            SizedBox(width: 210, child: BookMockup(book: book, catalog: catalog)),
-            const SizedBox(height: 18),
-            Text(timeAgo(book.updatedAtMs), style: TextStyle(color: onCard.withValues(alpha: 0.85))),
-          ]),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: 210,
+                child: BookMockup(book: book, catalog: catalog),
+              ),
+              const SizedBox(height: 18),
+              Text(timeAgo(book.updatedAtMs), style: TextStyle(color: onCard.withValues(alpha: 0.85))),
+            ],
+          ),
         ),
       ),
     );
@@ -132,23 +148,26 @@ class _DesignCard extends StatelessWidget {
     final action = await showModalBottomSheet<String>(
       context: context,
       builder: (c) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: const Text('Düzenle'),
-            onTap: () => Navigator.pop(c, 'edit'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.copy_outlined),
-            title: const Text(S.duplicateBook),
-            onTap: () => Navigator.pop(c, 'duplicate'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.delete_outline, color: AppColors.failure),
-            title: const Text(S.deleteBook, style: TextStyle(color: AppColors.failure)),
-            onTap: () => Navigator.pop(c, 'delete'),
-          ),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Düzenle'),
+              onTap: () => Navigator.pop(c, 'edit'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.copy_outlined),
+              title: const Text(S.duplicateBook),
+              onTap: () => Navigator.pop(c, 'duplicate'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: AppColors.failure),
+              title: const Text(S.deleteBook, style: TextStyle(color: AppColors.failure)),
+              onTap: () => Navigator.pop(c, 'delete'),
+            ),
+          ],
+        ),
       ),
     );
     if (!context.mounted) return;
@@ -189,28 +208,31 @@ class _SuggestionCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
       decoration: BoxDecoration(color: const Color(0xFFC9A300), borderRadius: BorderRadius.circular(22)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('ÖNERİ', style: TextStyle(fontSize: 12, letterSpacing: 1.6, color: Colors.white70)),
-        const SizedBox(height: 4),
-        Text('$year Yılım', style: const TextStyle(fontSize: 20, color: Colors.white)),
-        const SizedBox(height: 6),
-        const Text(S.suggestionBody, style: TextStyle(color: Colors.white)),
-        const SizedBox(height: 14),
-        Align(
-          alignment: Alignment.centerRight,
-          child: FilledButton.icon(
-            style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFFF8E1),
-              foregroundColor: AppColors.textStrong,
-              minimumSize: const Size(130, 48),
-              shape: const StadiumBorder(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('ÖNERİ', style: TextStyle(fontSize: 12, letterSpacing: 1.6, color: Colors.white70)),
+          const SizedBox(height: 4),
+          Text('$year Yılım', style: const TextStyle(fontSize: 20, color: Colors.white)),
+          const SizedBox(height: 6),
+          const Text(S.suggestionBody, style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 14),
+          Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFFFF8E1),
+                foregroundColor: AppColors.textStrong,
+                minimumSize: const Size(130, 48),
+                shape: const StadiumBorder(),
+              ),
+              onPressed: onCreate,
+              icon: const Icon(Icons.auto_stories_outlined),
+              label: const Text(S.create),
             ),
-            onPressed: onCreate,
-            icon: const Icon(Icons.auto_stories_outlined),
-            label: const Text(S.create),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }

@@ -57,147 +57,182 @@ class _FormatDetailScreenState extends State<FormatDetailScreen> {
             child: _PillButton(
               label: S.next,
               icon: Icons.arrow_forward,
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => PhotoPickerScreen(product: product, options: _options.copy()),
-              )),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => PhotoPickerScreen(product: product, options: _options.copy()),
+                ),
+              ),
             ),
           ),
         ],
       ),
-      body: ListView(padding: const EdgeInsets.only(bottom: 40), children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(product.title, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500)),
-            const SizedBox(height: 8),
-            Text(_descriptions[product.type]!, style: TextStyle(fontSize: 15, color: context.mutedText, height: 1.4)),
-            const SizedBox(height: 18),
-            if (products.length > 1)
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(color: context.pillColor, borderRadius: BorderRadius.circular(10)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  for (var i = 0; i < products.length; i++)
-                    GestureDetector(
-                      onTap: () => setState(() => _selected = i),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                        decoration: BoxDecoration(
-                          color: i == sizeIndex ? (context.isDark ? const Color(0xFF555555) : Colors.white) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(products[i].sizeLabel, style: const TextStyle(fontSize: 15)),
-                      ),
-                    ),
-                ]),
-              ),
-            const SizedBox(height: 18),
-            PriceText(price: product.priceCents, compareAt: product.compareAtCents, size: 21),
-            const SizedBox(height: 16),
-          ]),
-        ),
-        AspectRatio(
-          aspectRatio: 1.15,
-          child: Stack(children: [
-            PageView.builder(
-              itemCount: media.length,
-              onPageChanged: (i) => setState(() => _mediaIndex = i),
-              itemBuilder: (_, i) => media[i].endsWith('.mp4')
-                  ? AssetVideo(path: media[i], playing: _mediaIndex == 0, fallback: const RefImage(AssetPaths.heroPhotoBook))
-                  : RefImage(media[i]),
-            ),
-            Positioned(
-              left: 20,
-              bottom: 14,
-              child: Row(children: [
-                for (var i = 0; i < media.length; i++)
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 40),
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(product.title, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 8),
+                Text(
+                  _descriptions[product.type]!,
+                  style: TextStyle(fontSize: 15, color: context.mutedText, height: 1.4),
+                ),
+                const SizedBox(height: 18),
+                if (products.length > 1)
                   Container(
-                    margin: const EdgeInsets.only(right: 6),
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: i == _mediaIndex ? Colors.white : Colors.white54,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(color: context.pillColor, borderRadius: BorderRadius.circular(10)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (var i = 0; i < products.length; i++)
+                          GestureDetector(
+                            onTap: () => setState(() => _selected = i),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                              decoration: BoxDecoration(
+                                color: i == sizeIndex
+                                    ? (context.isDark ? const Color(0xFF555555) : Colors.white)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(products[i].sizeLabel, style: const TextStyle(fontSize: 15)),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-              ]),
+                const SizedBox(height: 18),
+                PriceText(price: product.priceCents, compareAt: product.compareAtCents, size: 21),
+                const SizedBox(height: 16),
+              ],
             ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                color: const Color(0xCC1E1E1E),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: const Text(S.soldBanner, style: TextStyle(color: Colors.white, fontSize: 12, letterSpacing: 1.2)),
-              ),
-            ),
-          ]),
-        ),
-        const _SectionTitle(S.productSpecs),
-        _SpecRow(icon: Icons.straighten, title: '${product.dimensionsCm} cm', subtitle: '$inches"'),
-        _SpecRow(
-          icon: Icons.menu_book_outlined,
-          title: '${product.pagesDefault} sayfa',
-          subtitle: product.canChangePages ? '${product.pagesMax - product.pagesDefault} ek sayfaya kadar eklenebilir' : null,
-        ),
-        const _SpecRow(icon: Icons.layers_outlined, title: '200 g/m² kâğıt'),
-        const _SpecRow(icon: Icons.auto_awesome_outlined, title: 'Mat yüzey', subtitle: 'Parlak yüzeye yükseltilebilir'),
-        _SpecRow(icon: Icons.crop_landscape, title: product.formatLabel),
-        const _SectionTitle(S.extras),
-        _ExtraRow(
-          icon: Icons.auto_fix_high,
-          title: S.foil,
-          body: product.supportsUpgrades ? S.foilBody : S.hardbackOnly,
-          price: Product.foilPriceCents,
-          value: product.supportsUpgrades && _options.foil != null,
-          onChanged: product.supportsUpgrades ? (v) => setState(() => _options.foil = v ? 'gold' : null) : null,
-          button: 'Varak seçeneklerini gör',
-          onButton: product.supportsUpgrades ? () => _foilOptions(context) : null,
-        ),
-        _ExtraRow(
-          icon: Icons.chrome_reader_mode_outlined,
-          title: S.layflat,
-          body: product.supportsUpgrades ? S.layflatBody : S.hardbackOnly,
-          price: Product.layflatPriceCents,
-          value: product.supportsUpgrades && _options.layflat,
-          onChanged: product.supportsUpgrades ? (v) => setState(() => _options.layflat = v) : null,
-        ),
-        _ExtraRow(
-          icon: Icons.card_giftcard,
-          title: S.giftBox,
-          body: S.giftBoxBody,
-          price: Product.giftBoxPriceCents,
-          value: _options.giftBox,
-          onChanged: (v) => setState(() => _options.giftBox = v),
-        ),
-        if (_options.giftBox && _options.layflat && product.supportsUpgrades)
-          const Padding(
-            padding: EdgeInsets.fromLTRB(64, 0, 20, 8),
-            child: Text(S.giftLayflatLimit, style: TextStyle(color: AppColors.warning, fontSize: 13)),
           ),
-        const _SectionTitle(S.delivery),
-        _SpecRow(
-          icon: Icons.local_shipping_outlined,
-          title: S.standardShipping,
-          subtitle: 'Bugün sipariş ver, ${range(product.deliveryDays.first + 2, product.deliveryDays.last + 2)} arasında teslim al',
-        ),
-        _SpecRow(
-          icon: Icons.track_changes,
-          title: S.trackedShipping,
-          subtitle: 'Bugün sipariş ver, ${range(product.deliveryDays.first, product.deliveryDays.last - 2)} arasında teslim al',
-        ),
-        const _SectionTitle(S.moreInfo),
-        const _SpecRow(
-          icon: Icons.thumb_up_alt_outlined,
-          title: 'Kalite Garantisi',
-          subtitle: 'Üründen memnun kalmazsan bize ulaş; düzeltemezsek tam iade ederiz.',
-        ),
-        const _SpecRow(
-          icon: Icons.eco_outlined,
-          title: 'Çevreye Duyarlı',
-          subtitle: 'Yalnızca biyolojik olarak parçalanabilen ve geri dönüştürülebilir malzemeler.',
-        ),
-      ]),
+          AspectRatio(
+            aspectRatio: 1.15,
+            child: Stack(
+              children: [
+                PageView.builder(
+                  itemCount: media.length,
+                  onPageChanged: (i) => setState(() => _mediaIndex = i),
+                  itemBuilder: (_, i) => media[i].endsWith('.mp4')
+                      ? AssetVideo(
+                          path: media[i],
+                          playing: _mediaIndex == 0,
+                          fallback: const RefImage(AssetPaths.heroPhotoBook),
+                        )
+                      : RefImage(media[i]),
+                ),
+                Positioned(
+                  left: 20,
+                  bottom: 14,
+                  child: Row(
+                    children: [
+                      for (var i = 0; i < media.length; i++)
+                        Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i == _mediaIndex ? Colors.white : Colors.white54,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    color: const Color(0xCC1E1E1E),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: const Text(
+                      S.soldBanner,
+                      style: TextStyle(color: Colors.white, fontSize: 12, letterSpacing: 1.2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const _SectionTitle(S.productSpecs),
+          _SpecRow(icon: Icons.straighten, title: '${product.dimensionsCm} cm', subtitle: '$inches"'),
+          _SpecRow(
+            icon: Icons.menu_book_outlined,
+            title: '${product.pagesDefault} sayfa',
+            subtitle: product.canChangePages
+                ? '${product.pagesMax - product.pagesDefault} ek sayfaya kadar eklenebilir'
+                : null,
+          ),
+          const _SpecRow(icon: Icons.layers_outlined, title: '200 g/m² kâğıt'),
+          const _SpecRow(
+            icon: Icons.auto_awesome_outlined,
+            title: 'Mat yüzey',
+            subtitle: 'Parlak yüzeye yükseltilebilir',
+          ),
+          _SpecRow(icon: Icons.crop_landscape, title: product.formatLabel),
+          const _SectionTitle(S.extras),
+          _ExtraRow(
+            icon: Icons.auto_fix_high,
+            title: S.foil,
+            body: product.supportsUpgrades ? S.foilBody : S.hardbackOnly,
+            price: Product.foilPriceCents,
+            value: product.supportsUpgrades && _options.foil != null,
+            onChanged: product.supportsUpgrades ? (v) => setState(() => _options.foil = v ? 'gold' : null) : null,
+            button: 'Varak seçeneklerini gör',
+            onButton: product.supportsUpgrades ? () => _foilOptions(context) : null,
+          ),
+          _ExtraRow(
+            icon: Icons.chrome_reader_mode_outlined,
+            title: S.layflat,
+            body: product.supportsUpgrades ? S.layflatBody : S.hardbackOnly,
+            price: Product.layflatPriceCents,
+            value: product.supportsUpgrades && _options.layflat,
+            onChanged: product.supportsUpgrades ? (v) => setState(() => _options.layflat = v) : null,
+          ),
+          _ExtraRow(
+            icon: Icons.card_giftcard,
+            title: S.giftBox,
+            body: S.giftBoxBody,
+            price: Product.giftBoxPriceCents,
+            value: _options.giftBox,
+            onChanged: (v) => setState(() => _options.giftBox = v),
+          ),
+          if (_options.giftBox && _options.layflat && product.supportsUpgrades)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(64, 0, 20, 8),
+              child: Text(S.giftLayflatLimit, style: TextStyle(color: AppColors.warning, fontSize: 13)),
+            ),
+          const _SectionTitle(S.delivery),
+          _SpecRow(
+            icon: Icons.local_shipping_outlined,
+            title: S.standardShipping,
+            subtitle:
+                'Bugün sipariş ver, ${range(product.deliveryDays.first + 2, product.deliveryDays.last + 2)} arasında teslim al',
+          ),
+          _SpecRow(
+            icon: Icons.track_changes,
+            title: S.trackedShipping,
+            subtitle:
+                'Bugün sipariş ver, ${range(product.deliveryDays.first, product.deliveryDays.last - 2)} arasında teslim al',
+          ),
+          const _SectionTitle(S.moreInfo),
+          const _SpecRow(
+            icon: Icons.thumb_up_alt_outlined,
+            title: 'Kalite Garantisi',
+            subtitle: 'Üründen memnun kalmazsan bize ulaş; düzeltemezsek tam iade ederiz.',
+          ),
+          const _SpecRow(
+            icon: Icons.eco_outlined,
+            title: 'Çevreye Duyarlı',
+            subtitle: 'Yalnızca biyolojik olarak parçalanabilen ve geri dönüştürülebilir malzemeler.',
+          ),
+        ],
+      ),
     );
   }
 
@@ -205,18 +240,21 @@ class _FormatDetailScreenState extends State<FormatDetailScreen> {
     final choice = await showModalBottomSheet<String>(
       context: context,
       builder: (c) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          for (final (id, label, color) in const [
-            ('gold', S.foilGold, Color(0xFFD4AF37)),
-            ('silver', S.foilSilver, Color(0xFFC0C0C0)),
-          ])
-            ListTile(
-              leading: CircleAvatar(backgroundColor: color),
-              title: Text(label),
-              trailing: _options.foil == id ? const Icon(Icons.check, color: AppColors.accent) : null,
-              onTap: () => Navigator.pop(c, id),
-            ),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (id, label, color) in const [
+              ('gold', S.foilGold, Color(0xFFD4AF37)),
+              ('silver', S.foilSilver, Color(0xFFC0C0C0)),
+            ])
+              ListTile(
+                leading: CircleAvatar(backgroundColor: color),
+                title: Text(label),
+                trailing: _options.foil == id ? const Icon(Icons.check, color: AppColors.accent) : null,
+                onTap: () => Navigator.pop(c, id),
+              ),
+          ],
+        ),
       ),
     );
     if (choice != null) setState(() => _options.foil = choice);
@@ -240,10 +278,13 @@ class _PillButton extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-            if (icon != null) ...[const SizedBox(width: 6), Icon(icon, size: 18)],
-          ]),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+              if (icon != null) ...[const SizedBox(width: 6), Icon(icon, size: 18)],
+            ],
+          ),
         ),
       ),
     );
@@ -257,9 +298,9 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
-        child: Text(text, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w500)),
-      );
+    padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+    child: Text(text, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w500)),
+  );
 }
 
 class _SpecRow extends StatelessWidget {
@@ -273,19 +314,25 @@ class _SpecRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon, size: 24),
-        const SizedBox(width: 20),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: const TextStyle(fontSize: 16)),
-            if (subtitle != null) ...[
-              const SizedBox(height: 3),
-              Text(subtitle!, style: TextStyle(color: context.mutedText, height: 1.35)),
-            ],
-          ]),
-        ),
-      ]),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 24),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 16)),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 3),
+                  Text(subtitle!, style: TextStyle(color: context.mutedText, height: 1.35)),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -317,26 +364,32 @@ class _ExtraRow extends StatelessWidget {
       opacity: onChanged == null ? 0.5 : 1,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 10, 12, 14),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Padding(padding: const EdgeInsets.only(top: 2), child: Icon(icon, size: 24)),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('$title  +${formatPrice(price)}', style: const TextStyle(fontSize: 16)),
-              const SizedBox(height: 4),
-              Text(body, style: TextStyle(color: context.mutedText, height: 1.35)),
-              if (button != null) ...[
-                const SizedBox(height: 10),
-                OutlinedButton(
-                  style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
-                  onPressed: onButton,
-                  child: Text(button!),
-                ),
-              ],
-            ]),
-          ),
-          Switch(value: value, onChanged: onChanged),
-        ]),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(padding: const EdgeInsets.only(top: 2), child: Icon(icon, size: 24)),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$title  +${formatPrice(price)}', style: const TextStyle(fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Text(body, style: TextStyle(color: context.mutedText, height: 1.35)),
+                  if (button != null) ...[
+                    const SizedBox(height: 10),
+                    OutlinedButton(
+                      style: OutlinedButton.styleFrom(minimumSize: const Size(0, 40)),
+                      onPressed: onButton,
+                      child: Text(button!),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Switch(value: value, onChanged: onChanged),
+          ],
+        ),
       ),
     );
   }

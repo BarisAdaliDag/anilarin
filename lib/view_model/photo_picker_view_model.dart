@@ -17,8 +17,8 @@ class PhotoPickerViewModel extends ChangeNotifier {
     required this.recommended,
     this.product,
     PhotoRepository? repository,
-  })  : _baseMax = maxPhotos,
-        _repo = repository ?? PhotoRepository();
+  }) : _baseMax = maxPhotos,
+       _repo = repository ?? PhotoRepository();
 
   /// Yeni kitap: başlangıç sınırı varsayılan sayfa sayısına göre; "Sayfa ekle" ile artar.
   factory PhotoPickerViewModel.forProduct(Product p) =>

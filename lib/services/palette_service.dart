@@ -38,7 +38,16 @@ class PaletteService {
     return fromRgb(pixels);
   }
 
-  /// [rgb]: art arda r,g,b değerleri. Ton (hue) histogramında doygunlukla ağırlıklandırılmış en baskın tonu bulur.
+  /// Palet sırası (kimlikler `dyn:N` olarak saklandığı için ilk beşin anlamı değişmez):
+  /// 0 açık, 1 yumuşak, 2 canlı, 3 zengin, 4 koyu, 5 pastel, 6 toprak (sessiz orta ton), 7 derin,
+  /// 8 ikinci renk açık, 9 ikinci renk canlı.
+  static const size = 10;
+
+  /// Panelde açıktan koyuya doğru gösterim sırası.
+  static const displayOrder = [0, 5, 8, 1, 6, 2, 9, 3, 7, 4];
+
+  /// [rgb]: art arda r,g,b değerleri. Ton (hue) histogramında doygunlukla ağırlıklandırılmış en baskın tonu ve
+  /// ondan en az 60° uzaktaki ikinci tonu bulur.
   static List<String> fromRgb(List<int> rgb) {
     const buckets = 24;
     final weight = List<double>.filled(buckets, 0);
@@ -55,17 +64,31 @@ class PaletteService {
     for (var b = 1; b < buckets; b++) {
       if (weight[b] > weight[best]) best = b;
     }
+    int dist(int a, int b) => min((a - b).abs(), buckets - (a - b).abs());
+    int? second;
+    for (var b = 0; b < buckets; b++) {
+      if (dist(b, best) < 4 || weight[b] <= 0) continue;
+      if (second == null || weight[b] > weight[second]) second = b;
+    }
     final hasColor = weight[best] > 0;
     final hue = hasColor ? (best + 0.5) * 360 / buckets : 30.0;
     final sat = hasColor ? min(0.85, max(0.35, satSum[best] / max(1, weight[best]) * 0.6)) : 0.2;
+    // İkinci baskın renk yoksa ana tonun 150° ötesindeki uyumlu ton kullanılır.
+    final hue2 = second != null ? (second + 0.5) * 360 / buckets : (hue + 150) % 360;
+    final sat2 = second != null ? min(0.75, max(0.3, satSum[second] / max(1, weight[second]) * 0.6)) : sat * 0.7;
 
-    String h(double s, double l) => colorHex(HSLColor.fromAHSL(1, hue, s.clamp(0, 1), l).toColor());
+    String h(double hu, double s, double l) => colorHex(HSLColor.fromAHSL(1, hu, s.clamp(0, 1), l).toColor());
     return [
-      h(sat * 0.45, 0.93), // açık
-      h(sat * 0.25, 0.78), // yumuşak
-      h(sat, 0.50), // canlı
-      h(sat * 0.9, 0.30), // zengin
-      h(sat * 0.3, 0.13), // koyu
+      h(hue, sat * 0.45, 0.93), // 0 açık
+      h(hue, sat * 0.25, 0.78), // 1 yumuşak
+      h(hue, sat, 0.50), // 2 canlı
+      h(hue, sat * 0.9, 0.30), // 3 zengin
+      h(hue, sat * 0.3, 0.13), // 4 koyu
+      h(hue, sat * 0.7, 0.87), // 5 pastel
+      h(hue, sat * 0.35, 0.55), // 6 toprak
+      h(hue, sat * 0.75, 0.21), // 7 derin
+      h(hue2, sat2 * 0.55, 0.88), // 8 ikinci renk açık
+      h(hue2, sat2, 0.48), // 9 ikinci renk canlı
     ];
   }
 }

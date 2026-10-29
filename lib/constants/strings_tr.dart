@@ -22,7 +22,8 @@ class S {
   static const tabBasket = 'Sepet';
   static const tabAccount = 'Hesap';
   static const myDesigns = 'Tasarımlarım';
-  static const homeDescription = 'Anıların için güvenli bir yuva.\nYeni bir şey başlat ya da mevcut bir tasarımı düzenle.';
+  static const homeDescription =
+      'Anıların için güvenli bir yuva.\nYeni bir şey başlat ya da mevcut bir tasarımı düzenle.';
   static const newDesign = 'Yeni Tasarım';
   static const noDesignsTitle = 'Henüz bir tasarımın yok';
   static const noDesignsBody = 'Fotoğraflarından birkaç dakikada bir fotoğraf kitabı oluştur.';

@@ -23,11 +23,11 @@ class HomeScreen extends StatelessWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     Widget basketIcon(bool selected) => Badge(
-          isLabelVisible: app.basketCount > 0,
-          label: Text('${app.basketCount}'),
-          backgroundColor: AppColors.failure,
-          child: Icon(selected ? Icons.shopping_cart : Icons.shopping_cart_outlined),
-        );
+      isLabelVisible: app.basketCount > 0,
+      label: Text('${app.basketCount}'),
+      backgroundColor: AppColors.failure,
+      child: Icon(selected ? Icons.shopping_cart : Icons.shopping_cart_outlined),
+    );
     return Scaffold(
       body: IndexedStack(
         index: app.tabIndex,
@@ -71,32 +71,40 @@ class _RemindersTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: ListView(padding: const EdgeInsets.fromLTRB(20, 24, 20, 32), children: [
-        const Text(S.tabReminders, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 6),
-        Text(S.remindersBody, style: TextStyle(fontSize: 15, color: context.mutedText)),
-        const SizedBox(height: 24),
-        for (final (icon, title, date) in const [
-          (Icons.cake_outlined, 'Doğum günü', 'Sevdiklerinin doğum günlerini ekle'),
-          (Icons.favorite_border, 'Yıl dönümü', 'Özel günlerini unutma'),
-          (Icons.celebration_outlined, 'Yılbaşı', '31 Aralık'),
-        ])
-          Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(16)),
-            child: Row(children: [
-              Icon(icon, color: AppColors.accent),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                  Text(date, style: TextStyle(color: context.mutedText)),
-                ]),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+        children: [
+          const Text(S.tabReminders, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 6),
+          Text(S.remindersBody, style: TextStyle(fontSize: 15, color: context.mutedText)),
+          const SizedBox(height: 24),
+          for (final (icon, title, date) in const [
+            (Icons.cake_outlined, 'Doğum günü', 'Sevdiklerinin doğum günlerini ekle'),
+            (Icons.favorite_border, 'Yıl dönümü', 'Özel günlerini unutma'),
+            (Icons.celebration_outlined, 'Yılbaşı', '31 Aralık'),
+          ])
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(16)),
+              child: Row(
+                children: [
+                  Icon(icon, color: AppColors.accent),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                        Text(date, style: TextStyle(color: context.mutedText)),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ]),
-          ),
-      ]),
+            ),
+        ],
+      ),
     );
   }
 }

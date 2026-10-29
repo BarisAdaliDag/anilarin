@@ -25,40 +25,44 @@ class BookMockup extends StatelessWidget {
     };
     return AspectRatio(
       aspectRatio: canvas.width / canvas.height,
-      child: LayoutBuilder(builder: (context, c) {
-        final k = c.maxWidth / canvas.width;
-        final r = Rect.fromLTRB(quad.left * k, quad.top * k, quad.right * k, quad.bottom * k);
-        return Stack(children: [
-          Positioned.fromRect(
-            rect: r,
-            child: DecoratedBox(
-              decoration: const BoxDecoration(
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 12, offset: Offset(0, 6))],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(2),
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  clipBehavior: Clip.hardEdge,
-                  child: SizedBox(
-                    width: 400,
-                    child: PrintPageView(book: book, pageIndex: 0, catalog: catalog, thumbSize: 500),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final k = c.maxWidth / canvas.width;
+          final r = Rect.fromLTRB(quad.left * k, quad.top * k, quad.right * k, quad.bottom * k);
+          return Stack(
+            children: [
+              Positioned.fromRect(
+                rect: r,
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 12, offset: Offset(0, 6))],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: FittedBox(
+                      fit: BoxFit.cover,
+                      clipBehavior: Clip.hardEdge,
+                      child: SizedBox(
+                        width: 400,
+                        child: PrintPageView(book: book, pageIndex: 0, catalog: catalog, thumbSize: 500),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Image.asset(
-                'assets/ref/mockups/topdown/${product.mockupKey}_LIGHTING.webp',
-                fit: BoxFit.fill,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Image.asset(
+                    'assets/ref/mockups/topdown/${product.mockupKey}_LIGHTING.webp',
+                    fit: BoxFit.fill,
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ]);
-      }),
+            ],
+          );
+        },
+      ),
     );
   }
 }

@@ -14,8 +14,12 @@ void main() {
     addTearDown(() => dir.delete(recursive: true));
     final repo = DesignRepository(root: dir);
     final catalog = loadTestCatalog();
-    final book = AutoLayoutService(catalog, random: Random(3))
-        .create(product: catalog.product('PBK-8'), photos: testPhotos(40), title: 'Tatil', options: ProductOptions(giftBox: true));
+    final book = AutoLayoutService(catalog, random: Random(3)).create(
+      product: catalog.product('PBK-8'),
+      photos: testPhotos(40),
+      title: 'Tatil',
+      options: ProductOptions(giftBox: true),
+    );
 
     await repo.saveBook(book);
     final loaded = await repo.loadBooks();
@@ -29,10 +33,7 @@ void main() {
     final catalog = loadTestCatalog();
     final p = catalog.product('PBK-8');
     final o = ProductOptions(giftBox: true, layflat: true, foil: 'gold');
-    expect(
-      p.totalPrice(p.pagesDefault + 4, o),
-      p.priceCents + 4 * p.incrementPriceCents + 14900 + 19900 + 9900,
-    );
+    expect(p.totalPrice(p.pagesDefault + 4, o), p.priceCents + 4 * p.incrementPriceCents + 14900 + 19900 + 9900);
     final soft = catalog.product('PBK-3');
     expect(soft.optionsPrice(o), 14900); // yumuşak kapakta yalnız hediye kutusu
   });

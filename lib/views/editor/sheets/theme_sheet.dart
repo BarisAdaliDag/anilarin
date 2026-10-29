@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../config/theme.dart';
 import '../../../constants/strings_tr.dart';
 import '../../../models/catalog.dart';
+import '../../../services/palette_service.dart';
 import '../../../view_model/editor_view_model.dart';
-import '../../widgets/print_page_view.dart';
 
 /// Tema paneli (Popsa ThemeSelectorBottomSheet): kapsam seçimi; Dinamik ve Nötr görünür, yukarı çekince
 /// Pastel, Koyu, Canlı ve Dokular açılır. Arkadaki editör kararmaz, seçim anında sayfalarda görünür.
@@ -14,7 +14,10 @@ Future<void> showThemeSheet(BuildContext context, EditorViewModel vm, {int? page
     context: context,
     isScrollControlled: true,
     barrierColor: Colors.transparent,
-    builder: (_) => ChangeNotifierProvider.value(value: vm, child: _ThemeSheet(pageIndex: pageIndex)),
+    builder: (_) => ChangeNotifierProvider.value(
+      value: vm,
+      child: _ThemeSheet(pageIndex: pageIndex),
+    ),
   );
 }
 
@@ -34,27 +37,21 @@ class _ThemeSheetState extends State<_ThemeSheet> {
     _ => ThemeScope.page,
   };
 
-  static const _groups = [
-    ('neutral', S.neutralThemes),
-    ('pastel', 'Pastel'),
-    ('deep', 'Koyu'),
-    ('vivid', 'Canlı'),
-    ('textures', 'Dokular'),
-  ];
+  static const _groups = [('neutral', S.neutralThemes), ('pastel', 'Pastel'), ('deep', 'Koyu'), ('vivid', 'Canlı')];
 
   String _scopeLabel(ThemeScope s) => switch (s) {
-        ThemeScope.cover => S.frontCover,
-        ThemeScope.inside => S.allInnerPages,
-        ThemeScope.all => S.allPages,
-        ThemeScope.page => S.pageN(widget.pageIndex ?? 1),
-      };
+    ThemeScope.cover => S.frontCover,
+    ThemeScope.inside => S.allInnerPages,
+    ThemeScope.all => S.allPages,
+    ThemeScope.page => S.pageN(widget.pageIndex ?? 1),
+  };
 
   String _current(EditorViewModel vm) => switch (_scope) {
-        ThemeScope.cover => vm.book.themeIdOf(0),
-        ThemeScope.page => vm.book.themeIdOf(widget.pageIndex!),
-        ThemeScope.inside => vm.book.pages.length > 1 ? vm.book.themeIdOf(1) : vm.book.themeId,
-        ThemeScope.all => vm.book.themeId,
-      };
+    ThemeScope.cover => vm.book.themeIdOf(0),
+    ThemeScope.page => vm.book.themeIdOf(widget.pageIndex!),
+    ThemeScope.inside => vm.book.pages.length > 1 ? vm.book.themeIdOf(1) : vm.book.themeId,
+    ThemeScope.all => vm.book.themeId,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -106,14 +103,14 @@ class _ThemeSheetState extends State<_ThemeSheet> {
               IconButton.filledTonal(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
             ],
           ),
-          if (palette.length >= 5) ...[
+          if (palette.length >= 5 && (_scope == ThemeScope.inside || _scope == ThemeScope.all)) ...[
             const SizedBox(height: 18),
             const Text(S.dynamicThemes, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
             Text(S.dynamicThemesBody, style: TextStyle(color: context.mutedText, fontSize: 14)),
             const SizedBox(height: 12),
             _SwatchRow(
               children: [
-                for (var i = 0; i < 5; i++)
+                for (final i in PaletteService.displayOrder.where((i) => i < palette.length))
                   _Swatch(
                     selected: current == 'DYN:$i',
                     onTap: () => _apply(vm, 'dyn:$i'),
@@ -130,12 +127,7 @@ class _ThemeSheetState extends State<_ThemeSheet> {
             _SwatchRow(
               children: [
                 for (final c in Catalog.themeGroups[id]!)
-                  _Swatch(
-                    selected: current == c.toUpperCase(),
-                    texture: c.startsWith('tex:'),
-                    colors: [hexColor(c.replaceFirst('tex:', ''))],
-                    onTap: () => _apply(vm, c),
-                  ),
+                  _Swatch(selected: current == c.toUpperCase(), colors: [hexColor(c)], onTap: () => _apply(vm, c)),
               ],
             ),
           ],
@@ -180,11 +172,10 @@ class _SwatchRow extends StatelessWidget {
 }
 
 class _Swatch extends StatelessWidget {
-  const _Swatch({required this.colors, required this.selected, required this.onTap, this.texture = false});
+  const _Swatch({required this.colors, required this.selected, required this.onTap});
 
   final List<Color> colors;
   final bool selected;
-  final bool texture;
   final VoidCallback onTap;
 
   @override
@@ -209,7 +200,6 @@ class _Swatch extends StatelessWidget {
                 : null,
             border: Border.all(color: Colors.black12),
           ),
-          child: texture ? const ClipOval(child: PaperTexture()) : null,
         ),
       ),
     );
