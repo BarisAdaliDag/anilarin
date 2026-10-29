@@ -227,6 +227,43 @@ class S {
   static const neutral = 'Nötr';
   static const basketTitle = 'Sepet';
   static const basketEmpty = 'Sepetin boş';
+  static const newAddress = 'Yeni Adres';
+  static const addressSavedNote = 'Bu adres hesabına kaydedilir; sonraki siparişlerde yeniden kullanabilirsin.';
+  static const country = 'Ülke';
+  static const firstName = 'Ad';
+  static const lastName = 'Soyad';
+  static const addressLine1 = 'Adres Satırı 1';
+  static const addressLine2 = 'Adres Satırı 2 (isteğe bağlı)';
+  static const postCode = 'Posta Kodu';
+  static const district = 'İlçe';
+  static const city = 'Şehir';
+  static const phone = 'Telefon';
+  static const required = 'Bu alan gerekli';
+  static const shipping = 'Kargo';
+  static const shippingOptions = 'Kargo Seçenekleri';
+  static String shippingOptionsBody(String city) =>
+      '${city.isEmpty ? 'Adresine' : '$city adresine'} teslimat için bir kargo yöntemi seç.';
+  static const shippingInfo =
+      'Standart Kargo en uygun fiyatlı seçenektir. Takipli Kargo daha hızlıdır ve paketini adım adım izleyebilirsin. Teslim tarihleri tahminidir.';
+  static const estDelivery = 'TAHMİNİ TESLİM';
+  static const paymentOptions = 'Ödeme Seçenekleri';
+  static const cardPayment = 'Kredi / Banka Kartı';
+  static const securePayments = 'Güvenli Ödeme';
+  static const securePaymentsBody =
+      'Bilgilerin en güncel teknolojiyle tamamen şifrelenir; ödemen güvende, gizliliğin korunur.';
+  static const orderRefByEmail = 'Ödeme tamamlandığında sipariş numaran e-postayla gönderilir.';
+  static const summary = 'Özet';
+  static const orderSummaryBody = 'Siparişini onaylamadan önce aşağıdaki bilgilerin doğru olduğunu kontrol et.';
+  static const deliverTo = 'Teslimat Adresi';
+  static const shippingMethod = 'Kargo Yöntemi';
+  static const items = 'Ürünler';
+  static const payWith = 'Ödeme Yöntemi';
+  static const vatIncluded = 'KDV dahil';
+  static const confirmOrder = 'Siparişi Onayla';
+  static const thankYou = 'Teşekkürler';
+  static const thankYouBody = 'Siparişin alındı. Baskıya hazırlandığında ve kargoya verildiğinde sana haber vereceğiz.';
+  static const orderReference = 'Sipariş Numarası';
+  static const backToDesigns = 'Tasarımlarıma Dön';
   static const basketBody = 'İndirimlerden yararlanmak ve kargoda tasarruf etmek için sepetine ürün ekle.';
   static String itemsN(int n) => 'Ürünler ($n)';
   static String copiesN(int n) => '$n kopya';

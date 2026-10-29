@@ -1,4 +1,6 @@
+import 'package:anilarin/models/address.dart';
 import 'package:anilarin/models/basket_item.dart';
+import 'package:anilarin/models/order.dart';
 import 'dart:io';
 import 'dart:math';
 
@@ -44,5 +46,38 @@ void main() {
     expect(Coupon.byCode('YANLIS'), isNull);
     expect(Coupon.welcome.apply(129800), 103840); // Popsa: 1.298 → 1.038,40
     expect(Coupon.welcome.discountOf(129800), 25960);
+  });
+
+  test('teslimat adresi kaydedilip yüklenir', () async {
+    final dir = await Directory.systemTemp.createTemp('anilarin_address');
+    final repo = DesignRepository(root: dir);
+    expect(await repo.loadAddress(), isNull);
+    await repo.saveAddress(
+      Address(firstName: 'Ali', lastName: 'Veli', line1: 'Sultan Ahmet', postCode: '34122', city: 'İstanbul'),
+    );
+    final back = await repo.loadAddress();
+    expect(back!.fullName, 'Ali Veli');
+    expect(back.lines, contains('34122 İstanbul'));
+    await dir.delete(recursive: true);
+  });
+
+  test('sipariş kaydedilip yüklenir', () async {
+    final dir = await Directory.systemTemp.createTemp('anilarin_orders');
+    final repo = DesignRepository(root: dir);
+    final order = Order(
+      reference: 'AN-1',
+      createdAtMs: 1,
+      items: [BasketItem(bookId: 'b', title: 'K', productCode: 'PBK-8', pages: 20, options: ProductOptions())],
+      address: Address(firstName: 'Ali', lastName: 'Veli'),
+      shippingId: ShippingOption.tracked.id,
+      paymentMethod: 'gpay',
+      totalCents: 100,
+    );
+    await repo.saveOrders([order]);
+    final back = (await repo.loadOrders()).single;
+    expect(back.reference, 'AN-1');
+    expect(back.paymentMethod, 'gpay');
+    expect(ShippingOption.byId(back.shippingId), ShippingOption.tracked);
+    await dir.delete(recursive: true);
   });
 }

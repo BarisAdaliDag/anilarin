@@ -3,7 +3,9 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import '../models/address.dart';
 import '../models/basket_item.dart';
+import '../models/order.dart';
 import '../models/photo_book.dart';
 
 /// Tasarımları ve sepeti uygulama belgeler dizininde JSON dosyaları olarak saklar.
@@ -73,6 +75,36 @@ class DesignRepository {
 
   Future<void> saveCoupon(String? code) async {
     await File('${(await _dir('basket')).path}/coupon.json').writeAsString(jsonEncode({'code': code}));
+  }
+
+  Future<Address?> loadAddress() async {
+    final f = File('${(await _dir('checkout')).path}/address.json');
+    if (!await f.exists()) return null;
+    try {
+      return Address.fromJson(jsonDecode(await f.readAsString()));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveAddress(Address a) async {
+    await File('${(await _dir('checkout')).path}/address.json').writeAsString(jsonEncode(a.toJson()));
+  }
+
+  Future<List<Order>> loadOrders() async {
+    final f = File('${(await _dir('checkout')).path}/orders.json');
+    if (!await f.exists()) return [];
+    try {
+      return (jsonDecode(await f.readAsString()) as List).map((e) => Order.fromJson(e)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> saveOrders(List<Order> orders) async {
+    await File(
+      '${(await _dir('checkout')).path}/orders.json',
+    ).writeAsString(jsonEncode(orders.map((e) => e.toJson()).toList()));
   }
 
   Future<void> saveBasket(List<BasketItem> items) async {

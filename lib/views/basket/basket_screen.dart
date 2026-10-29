@@ -7,6 +7,7 @@ import '../../models/basket_item.dart';
 import '../../models/catalog.dart';
 import '../../view_model/app_view_model.dart';
 import '../../view_model/editor_view_model.dart';
+import '../checkout/checkout_screens.dart';
 import '../editor/editor_screen.dart';
 import '../home/designs_tab.dart' show openProducts;
 import '../order/order_details_screen.dart';
@@ -66,9 +67,7 @@ class _BasketScreenState extends State<BasketScreen> {
                 minimumSize: const Size(0, 42),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              onPressed: items.isEmpty
-                  ? null
-                  : () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(S.checkoutSoon))),
+              onPressed: items.isEmpty ? null : () => startCheckout(context),
               iconAlignment: IconAlignment.end,
               icon: const Icon(Icons.arrow_forward, size: 20),
               label: const Text(S.checkout, style: TextStyle(fontSize: 16)),

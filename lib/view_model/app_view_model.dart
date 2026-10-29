@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../models/address.dart';
 import '../models/basket_item.dart';
 import '../models/catalog.dart';
+import '../models/order.dart';
 import '../models/photo_book.dart';
 import '../repositories/catalog_repository.dart';
 import '../repositories/design_repository.dart';
@@ -22,12 +24,16 @@ class AppViewModel extends ChangeNotifier {
   bool loading = true;
   int tabIndex = 0;
   Coupon? coupon;
+  Address? address;
+  List<Order> orders = [];
 
   Future<void> load() async {
     catalog = await _catalogRepository.load();
     books = await designs.loadBooks();
     basket = await designs.loadBasket();
     coupon = Coupon.byCode(await designs.loadCoupon());
+    address = await designs.loadAddress();
+    orders = await designs.loadOrders();
     for (final b in books) {
       _syncBasketItem(b);
     }
@@ -127,6 +133,34 @@ class AppViewModel extends ChangeNotifier {
     coupon = null;
     notifyListeners();
     await designs.saveCoupon(null);
+  }
+
+  Future<void> saveAddress(Address a) async {
+    address = a;
+    notifyListeners();
+    await designs.saveAddress(a);
+  }
+
+  /// Siparişi verir (ödeme alınmış sayılır): kaydedilir, sepet ve indirim kodu temizlenir.
+  Future<Order> placeOrder(ShippingOption shipping, String paymentMethod) async {
+    final now = DateTime.now();
+    final order = Order(
+      reference: 'AN-${now.millisecondsSinceEpoch.toRadixString(36).toUpperCase()}',
+      createdAtMs: now.millisecondsSinceEpoch,
+      items: [...basket],
+      address: address!,
+      shippingId: shipping.id,
+      paymentMethod: paymentMethod,
+      totalCents: basketTotal + shipping.priceCents,
+    );
+    orders.insert(0, order);
+    basket.clear();
+    coupon = null;
+    notifyListeners();
+    await designs.saveOrders(orders);
+    await designs.saveBasket(basket);
+    await designs.saveCoupon(null);
+    return order;
   }
 
   Future<void> removeFromBasket(BasketItem item) => setQuantity(item, 0);
