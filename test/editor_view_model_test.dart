@@ -160,6 +160,22 @@ void main() {
     expect(TextStyleId.heading3.charLimit, 24);
   });
 
+  test('şablon yazı alanı biçimi kaydedilir', () {
+    final vm = make();
+    vm.changeTemplate(1, 41); // fotoğraf + yazı sütunu
+    vm.setCaption(
+      1,
+      0,
+      'Merhaba',
+      style: TextSlotStyle(style: TextStyleId.heading4, align: TextAlign.right, valign: TextVAlign.center),
+    );
+    final p = PrintPage.fromJson(vm.book.pages[1].toJson());
+    expect(p.texts.first, 'Merhaba');
+    expect(p.textStyles[0]!.style, TextStyleId.heading4);
+    expect(p.textStyles[0]!.valign, TextVAlign.center);
+    expect(p.textStyles[0]!.align, TextAlign.right);
+  });
+
   test('json gidiş-dönüş', () {
     final vm = make();
     final copy = PhotoBook.fromJson(vm.book.toJson());

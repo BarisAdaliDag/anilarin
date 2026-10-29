@@ -24,9 +24,11 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
     final vm = context.watch<EditorViewModel>();
     final isCover = vm.book.pages[widget.pageIndex].isCover;
     final all = vm.templatesFor(widget.pageIndex);
+    // Popsa sırası: Tümü, Minimal, Kolaj, Yazılı, Üst üste; ardından fotoğraf sayıları.
+    const order = ['all', 'minimal', 'collage', 'text', 'overlapping', 'p1', 'p2', 'p3', 'p4', 'p5'];
     final categories = [
-      'all',
-      ...S.templateCategories.keys.where((k) => k != 'all' && all.any((t) => t.categories.contains(k))),
+      for (final k in order)
+        if (k == 'all' || all.any((t) => t.categories.contains(k))) k,
     ];
     final list = _category == 'all' ? all : all.where((t) => t.categories.contains(_category)).toList();
     final current = vm.book.pages[widget.pageIndex].templateId;
@@ -43,7 +45,7 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
         if (!isCover)
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 46,
+              height: 54,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -51,15 +53,10 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
                   for (final c in categories)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: ChoiceChip(
-                        label: Text(S.templateCategories[c]!),
+                      child: _CategoryChip(
+                        label: S.templateCategories[c]!,
                         selected: c == _category,
-                        showCheckmark: false,
-                        selectedColor: context.isDark ? const Color(0xFF555555) : const Color(0xFFDADADA),
-                        backgroundColor: context.pillColor,
-                        side: BorderSide.none,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        onSelected: (_) => setState(() => _category = c),
+                        onTap: () => setState(() => _category = c),
                       ),
                     ),
                 ],
@@ -89,6 +86,40 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
           ),
         ),
       ]),
+    );
+  }
+}
+
+const _lorem = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt '
+    'ut labore et dolore magna aliqua.\n\nUt enim ad minim veniam, quis nostrud exercitation ullamco '
+    'laboris nisi.\n\nSapien faucibus et molestie ac feugiat. Dui faucibus in ornare quam viverra orci.';
+
+/// Popsa'daki gibi çerçeveli hap kategori çipi; seçili olan turkuaz.
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({required this.label, required this.selected, required this.onTap});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.accent.withValues(alpha: 0.22) : Colors.transparent,
+      shape: StadiumBorder(
+        side: BorderSide(color: selected ? AppColors.accent : context.divider, width: selected ? 2.5 : 1.5),
+      ),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 17, color: selected ? AppColors.accent : context.strongText),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -127,7 +158,11 @@ class TemplateThumb extends StatelessWidget {
                     : Container(
                         decoration: BoxDecoration(
                           color: photo,
-                          border: e.border ? Border.all(color: Colors.white, width: w * 0.015) : null,
+                          border: e.border
+                              ? Border.all(color: Colors.white, width: w * 0.015)
+                              : e.overlay
+                                  ? Border.all(color: tile, width: w * 0.02)
+                                  : null,
                         ),
                       ),
               ),
@@ -169,12 +204,15 @@ class TemplateThumb extends StatelessWidget {
     };
     Widget child;
     if (e.role == 'caption') {
-      child = FractionallySizedBox(
-        widthFactor: 0.9,
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          for (var k = 0; k < 4; k++)
-            Container(height: 1.6, margin: const EdgeInsets.symmetric(vertical: 1.4), color: color.withValues(alpha: 0.8)),
-        ]),
+      child = Text(
+        _lorem,
+        textAlign: e.align,
+        overflow: TextOverflow.clip,
+        style: TextStyle(color: color, fontSize: h * 0.028, height: 1.25, fontWeight: FontWeight.w500),
+      );
+      return Align(
+        alignment: e.align == TextAlign.center ? Alignment.topCenter : Alignment.topLeft,
+        child: ClipRect(child: child),
       );
     } else {
       child = Padding(

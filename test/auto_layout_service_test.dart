@@ -83,6 +83,14 @@ void main() {
     });
   });
 
+  test('fotoğraf alandan azsa en büyük alan doldurulur', () {
+    final tpl = catalog.template(53); // üst üste: büyük arka + küçük ön
+    final slots = tpl.photoSlots('landscape');
+    final result = AutoLayoutService.assignToSlots(slots, 1.3, [BookPhoto(id: 'a', width: 4000, height: 3000)]);
+    final big = slots[0].frame.width * slots[0].frame.height > slots[1].frame.width * slots[1].frame.height ? 0 : 1;
+    expect(result[big]?.id, 'a');
+  });
+
   test('tarih aralığı etiketi', () {
     final photos = [
       BookPhoto(id: 'a', width: 1, height: 1, takenAtMs: DateTime(2024, 9, 3).millisecondsSinceEpoch),

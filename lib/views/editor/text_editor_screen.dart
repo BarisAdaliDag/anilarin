@@ -13,6 +13,7 @@ class TextEditValue {
   final TextAlign align;
   final String? fontId;
   final bool top;
+  final TextVAlign valign;
 
   const TextEditValue({
     required this.text,
@@ -20,6 +21,7 @@ class TextEditValue {
     this.align = TextAlign.left,
     this.fontId,
     this.top = false,
+    this.valign = TextVAlign.top,
   });
 }
 
@@ -36,6 +38,8 @@ class TextEditorScreen extends StatefulWidget {
     this.styles = TextStyleId.values,
     this.pageHeightCm = 21,
     this.showPosition = false,
+    this.showVAlign = false,
+    this.limit,
     this.hint = 'Sayfanda fotoğrafların altında ya da üstünde görünecek bir metin yaz',
   });
 
@@ -46,6 +50,8 @@ class TextEditorScreen extends StatefulWidget {
   final List<TextStyleId> styles;
   final double pageHeightCm; // stil listesinde baskı punto boyutunu hesaplamak için
   final bool showPosition; // üstte/altta seçimi (sayfa yazısı)
+  final bool showVAlign; // alan içinde üst/orta/alt (şablon yazı alanı)
+  final int? limit; // verilirse stil sınırının yerine geçer (ör. yazılı şablon alanı 600)
   final String hint;
 
   @override
@@ -58,6 +64,7 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
   late TextAlign _align = widget.initial.align;
   late String? _fontId = widget.initial.fontId;
   late bool _top = widget.initial.top;
+  late TextVAlign _valign = widget.initial.valign;
   final _undo = <String>[];
   final _redo = <String>[];
   late String _last = widget.initial.text;
@@ -97,11 +104,20 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
 
   int get _length => _controller.text.trim().length;
 
-  bool get _over => _length > _style.charLimit;
+  int get _limit => widget.limit ?? _style.charLimit;
+
+  bool get _over => _length > _limit;
 
   void _save() => Navigator.pop(
         context,
-        TextEditValue(text: _controller.text, style: _style, align: _align, fontId: _fontId, top: _top),
+        TextEditValue(
+          text: _controller.text,
+          style: _style,
+          align: _align,
+          fontId: _fontId,
+          top: _top,
+          valign: _valign,
+        ),
       );
 
   /// Stilin baskıdaki yaklaşık punto boyutu.
@@ -279,7 +295,7 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
                         ),
                       ),
                       TextSpan(
-                        text: ' / ${_style.charLimit}',
+                        text: ' / $_limit',
                         style: TextStyle(color: context.mutedText),
                       ),
                     ],
@@ -327,6 +343,20 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
                       _ => Icons.format_align_center,
                     }),
                   ),
+                  if (widget.showVAlign) ...[
+                    const SizedBox(width: 12),
+                    _ToolButton(
+                      tooltip: S.verticalPosition,
+                      onTap: () => setState(() {
+                        _valign = TextVAlign.values[(_valign.index + 1) % TextVAlign.values.length];
+                      }),
+                      child: Icon(switch (_valign) {
+                        TextVAlign.top => Icons.vertical_align_top,
+                        TextVAlign.center => Icons.vertical_align_center,
+                        TextVAlign.bottom => Icons.vertical_align_bottom,
+                      }),
+                    ),
+                  ],
                   if (widget.showPosition) ...[
                     const SizedBox(width: 12),
                     _ToolButton(

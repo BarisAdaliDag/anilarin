@@ -5,6 +5,7 @@ import '../../../constants/strings_tr.dart';
 import '../../../models/catalog.dart';
 import '../../../models/photo_book.dart';
 import '../../../view_model/editor_view_model.dart';
+import '../../widgets/print_page_view.dart';
 import '../text_editor_screen.dart';
 
 Future<void> editTitleDialog(BuildContext context, EditorViewModel vm) async {
@@ -69,28 +70,41 @@ Future<void> editCaptionFlow(BuildContext context, EditorViewModel vm, int pageI
   );
 }
 
-/// Şablonun kendi yazı alanını (ör. yazılı şablonlardaki metin) düzenler; -1 sayfa altyazısıdır.
+/// Şablonun kendi yazı alanını düzenler (yazılı şablonlar, Popsa "Edit Text"); -1 sayfa yazısıdır.
 Future<void> editCaptionDialog(BuildContext context, EditorViewModel vm, int pageIndex, int textIndex) async {
   if (textIndex < 0) return editCaptionFlow(context, vm, pageIndex);
   final page = vm.book.pages[pageIndex];
   final slots = vm.templateOf(pageIndex).textSlots(vm.format);
   if (textIndex >= slots.length) return;
-  final isTitle = slots[textIndex].role == 'title';
+  final slot = slots[textIndex];
+  final isTitle = slot.role == 'title';
+  final current = page.textStyles[textIndex] ?? defaultSlotStyle(slot);
   final result = await Navigator.of(context).push<TextEditValue>(MaterialPageRoute(
     fullscreenDialog: true,
     builder: (_) => TextEditorScreen(
-      title: isTitle ? 'Başlık Ekle' : S.addCaption,
+      title: textIndex < page.texts.length && page.texts[textIndex].isNotEmpty ? S.editText : S.addText,
       initial: TextEditValue(
         text: textIndex < page.texts.length ? page.texts[textIndex] : '',
-        style: isTitle ? TextStyleId.heading4 : TextStyleId.body,
+        style: current.style,
+        align: current.align,
+        fontId: current.font,
+        valign: current.valign,
       ),
-      styles: [isTitle ? TextStyleId.heading4 : TextStyleId.body],
+      limit: isTitle ? 40 : 600,
+      showVAlign: true,
       pageHeightCm: vm.pageHeightCm,
       fonts: vm.catalog.textAppearances,
       bookFontId: vm.book.textAppearanceId,
+      hint: 'Bu alanda görünecek metni yaz',
     ),
   ));
-  if (result != null) vm.setCaption(pageIndex, textIndex, result.text);
+  if (result == null) return;
+  vm.setCaption(
+    pageIndex,
+    textIndex,
+    result.text,
+    style: TextSlotStyle(style: result.style, align: result.align, valign: result.valign, font: result.fontId),
+  );
 }
 
 Future<bool> confirmDelete(BuildContext context) async {

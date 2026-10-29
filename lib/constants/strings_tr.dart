@@ -110,6 +110,7 @@ class S {
   static const edit = 'Düzenle';
   static const textOverflowHint = 'Metin alana sığmayabilir, taşma durumunu kontrol edin.';
   static const positionTop = 'Üstte';
+  static const verticalPosition = 'Dikey konum';
   static const positionBottom = 'Altta';
 
   static String pageN(int n) => 'Sayfa $n';
@@ -123,6 +124,8 @@ class S {
   static const changeFont = 'Yazı Tipini Değiştir';
   static const editTitle = 'Başlığı Düzenle';
   static const addCaption = 'Yazı Ekle';
+  static const addText = 'Metin Ekle';
+  static const editText = 'Metni Düzenle';
   static const editCaption = 'Yazıyı Düzenle';
   static const removeCaption = 'Yazıyı Kaldır';
   static const insertNewPage = 'Yeni Sayfa Ekle';
@@ -164,6 +167,7 @@ class S {
   static const tapToAddCaption = 'Yazı eklemek için dokun';
   static const templateCategories = {
     'all': 'Tümü',
+    'p0': 'Yalnız yazı',
     'p1': '1 fotoğraf',
     'p2': '2 fotoğraf',
     'p3': '3 fotoğraf',

@@ -174,11 +174,16 @@ class AutoLayoutService {
     if (list.isEmpty) return result;
     final slotAspects = slots.map((s) => s.frame.width * pageAspect / s.frame.height).toList();
     double cost(BookPhoto p, int slot) => (log(p.aspect) - log(slotAspects[slot])).abs();
+    // Fotoğraf alandan azsa önce en büyük alanlar doldurulur (ör. üst üste şablonda arkadaki büyük alan).
+    final usable = List<int>.generate(n, (i) => i)
+      ..sort((a, b) => (slots[b].frame.width * slots[b].frame.height)
+          .compareTo(slots[a].frame.width * slots[a].frame.height));
+    final candidates = list.length < n ? (usable.take(list.length).toList()..sort()) : List<int>.generate(n, (i) => i);
 
-    if (n <= 6) {
+    if (candidates.length <= 6) {
       var best = double.infinity;
       List<int>? bestPerm;
-      for (final perm in _permutations(List<int>.generate(n, (i) => i))) {
+      for (final perm in _permutations(candidates)) {
         var c = 0.0;
         for (var i = 0; i < list.length; i++) {
           c += cost(list[i], perm[i]);
@@ -193,7 +198,7 @@ class AutoLayoutService {
       }
     } else {
       // Büyük şablonlarda açgözlü eşleştirme.
-      final free = List<int>.generate(n, (i) => i);
+      final free = [...candidates];
       for (final p in list) {
         free.sort((a, b) => cost(p, a).compareTo(cost(p, b)));
         result[free.removeAt(0)] = p;

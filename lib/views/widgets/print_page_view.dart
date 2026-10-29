@@ -65,6 +65,10 @@ class PrintPageView extends StatelessWidget {
               final bw = w * 0.012;
               child = Container(color: Colors.white, padding: EdgeInsets.all(bw), child: child);
             }
+            if (e.overlay) {
+              // Üst üste şablon: öndeki fotoğraf sayfa renginde ince bir çerçeveyle arkadakinden ayrılır.
+              child = Container(color: bg, padding: EdgeInsets.all(w * 0.012), child: child);
+            }
             if (highlightSlot == i) {
               child = DecoratedBox(
                 position: DecorationPosition.foreground,
@@ -98,18 +102,33 @@ class PrintPageView extends StatelessWidget {
                 ),
               ));
             }
-            Widget textView = _TextSlotView(
+            Widget textView;
+            if (page.isCover) {
+              textView = _TextSlotView(
                 text: coverTitle ? book.title : value,
                 subtitle: coverTitle ? book.subtitle : '',
                 role: e.role,
                 align: e.align,
                 pageHeight: h,
-                color: onPhoto ? Colors.white : (e.role == 'title' ? (page.isCover ? theme.coverText : theme.title) : theme.text),
+                color: onPhoto ? Colors.white : (e.role == 'title' ? theme.coverText : theme.text),
                 shadow: onPhoto,
                 font: font,
                 placeholder: showPlaceholders && value.isEmpty,
                 onTap: onTextTap == null ? null : () => onTextTap!(i),
               );
+            } else {
+              final st = page.textStyles[i] ?? defaultSlotStyle(e);
+              textView = _StyledTextSlot(
+                text: value,
+                style: st,
+                font: st.font == null ? font : catalog.textAppearance(st.font!),
+                pageHeight: h,
+                color: onPhoto ? Colors.white : (st.style.heading ? theme.title : theme.text),
+                shadow: onPhoto,
+                placeholder: showPlaceholders && value.isEmpty,
+                onTap: onTextTap == null ? null : () => onTextTap!(i),
+              );
+            }
             if (e.vertical) textView = RotatedBox(quarterTurns: 3, child: textView);
             children.add(Positioned.fromRect(rect: r, child: textView));
           }
@@ -216,6 +235,78 @@ class _PhotoSlotView extends StatelessWidget {
   }
 }
 
+/// Şablon yazı alanının varsayılan biçimi: başlıklar Başlık 3 ve ortada, metin alanları Gövde ve üstte.
+TextSlotStyle defaultSlotStyle(TemplateElement e) => e.role == 'title'
+    ? TextSlotStyle(style: TextStyleId.heading3, align: e.align, valign: TextVAlign.center)
+    : TextSlotStyle(style: TextStyleId.body, align: e.align, valign: TextVAlign.top);
+
+/// İç sayfa yazı alanı: seçilen stil, hizalama ve dikey konumla; boşsa editörde gri "Aa" kutusu.
+class _StyledTextSlot extends StatelessWidget {
+  const _StyledTextSlot({
+    required this.text,
+    required this.style,
+    required this.font,
+    required this.pageHeight,
+    required this.color,
+    required this.shadow,
+    required this.placeholder,
+    this.onTap,
+  });
+
+  final String text;
+  final TextSlotStyle style;
+  final TextAppearance font;
+  final double pageHeight;
+  final Color color;
+  final bool shadow;
+  final bool placeholder;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child;
+    if (text.isEmpty) {
+      child = placeholder
+          ? Container(
+              color: const Color(0xFFE6E6E6),
+              alignment: Alignment.center,
+              child: Text('Aa', style: TextStyle(fontSize: pageHeight * 0.07, color: const Color(0xFF555555))),
+            )
+          : const SizedBox.expand();
+    } else {
+      final st = style.style;
+      final x = switch (style.align) {
+        TextAlign.left => -1.0,
+        TextAlign.right => 1.0,
+        _ => 0.0,
+      };
+      final y = switch (style.valign) {
+        TextVAlign.top => -1.0,
+        TextVAlign.bottom => 1.0,
+        TextVAlign.center => 0.0,
+      };
+      child = Align(
+        alignment: Alignment(x, y),
+        child: Text(
+          font.apply(text),
+          textAlign: style.align,
+          overflow: TextOverflow.fade,
+          style: TextStyle(
+            fontFamily: st.heading ? font.titleFont : font.bodyFont,
+            fontWeight: st.heading ? font.titleWeight : FontWeight.w400,
+            fontSize: pageHeight * st.sizeFactor,
+            height: 1.3,
+            color: color,
+            shadows: shadow ? const [Shadow(blurRadius: 6, color: Colors.black54)] : null,
+          ),
+        ),
+      );
+      child = ClipRect(child: child);
+    }
+    return onTap == null ? child : GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap, child: child);
+  }
+}
+
 /// Yazının tahmini satır sayısı (sayfa en-boy oranına ve stile göre).
 int captionLines(PrintPage page, double aspect) {
   final st = page.captionStyle;
@@ -242,15 +333,7 @@ List<TemplateElement> pageLayout(PrintPage page, PageTemplate tpl, String format
     final offset = page.captionTop ? band : 0.0;
     elements = [
       for (final e in elements)
-        TemplateElement(
-          type: e.type,
-          role: e.role,
-          frame: Rect.fromLTWH(e.frame.left, offset + e.frame.top * k, e.frame.width, e.frame.height * k),
-          align: e.align,
-          border: e.border,
-          vertical: e.vertical,
-          scrim: e.scrim,
-        ),
+        e.withFrame(Rect.fromLTWH(e.frame.left, offset + e.frame.top * k, e.frame.width, e.frame.height * k)),
     ];
   }
   return elements;
@@ -298,7 +381,7 @@ List<TemplateElement> tightenGutters(List<TemplateElement> elements) {
   var i = 0;
   return [
     for (final e in elements)
-      TemplateElement(type: e.type, role: e.role, frame: out[i++], align: e.align, border: e.border),
+      e.withFrame(out[i++]),
   ];
 }
 
@@ -316,7 +399,7 @@ List<TemplateElement> borderlessElements(List<TemplateElement> elements) {
       );
   return [
     for (final e in elements)
-      e.isPhoto ? TemplateElement(type: e.type, role: e.role, frame: map(e.frame), align: e.align, border: e.border) : e,
+      e.isPhoto ? e.withFrame(map(e.frame)) : e,
   ];
 }
 

@@ -287,13 +287,14 @@ class EditorViewModel extends ChangeNotifier {
     });
   }
 
-  void setCaption(int pageIndex, int textIndex, String text) {
+  void setCaption(int pageIndex, int textIndex, String text, {TextSlotStyle? style}) {
     _mutate((book) {
       final page = book.pages[pageIndex];
       while (page.texts.length <= textIndex) {
         page.texts.add('');
       }
       page.texts[textIndex] = text.trim();
+      if (style != null) page.textStyles[textIndex] = style;
     });
   }
 

@@ -4,12 +4,12 @@ import 'package:flutter/painting.dart' show TextAlign;
 
 /// Popsa'daki metin stilleri; boyut sayfa yüksekliğine oranla, sınır karakter sayısıdır.
 enum TextStyleId {
-  heading2('Başlık 2', 0.075, 20, true),
-  heading3('Başlık 3', 0.062, 24, true),
-  heading4('Başlık 4', 0.052, 30, true),
-  subheading1('Alt Başlık 1', 0.044, 45, false),
-  subheading2('Alt Başlık 2', 0.038, 60, false),
-  body('Gövde', 0.032, 90, false);
+  heading2('Başlık 2', 0.058, 20, true),
+  heading3('Başlık 3', 0.048, 24, true),
+  heading4('Başlık 4', 0.040, 30, true),
+  subheading1('Alt Başlık 1', 0.032, 45, false),
+  subheading2('Alt Başlık 2', 0.026, 60, false),
+  body('Gövde', 0.021, 90, false);
 
   const TextStyleId(this.label, this.sizeFactor, this.charLimit, this.heading);
 
@@ -17,6 +17,38 @@ enum TextStyleId {
   final double sizeFactor;
   final int charLimit;
   final bool heading;
+}
+
+/// Yazının alan içindeki dikey konumu.
+enum TextVAlign { top, center, bottom }
+
+/// Şablondaki bir yazı alanının biçimi (Popsa metin düzenleyicisindeki seçenekler).
+class TextSlotStyle {
+  TextStyleId style;
+  TextAlign align;
+  TextVAlign valign;
+  String? font; // null = kitabın yazı grubu
+
+  TextSlotStyle({
+    this.style = TextStyleId.body,
+    this.align = TextAlign.left,
+    this.valign = TextVAlign.top,
+    this.font,
+  });
+
+  Map<String, dynamic> toJson() => {
+        's': style.name,
+        'a': align.name,
+        'v': valign.name,
+        if (font != null) 'f': font,
+      };
+
+  factory TextSlotStyle.fromJson(Map<String, dynamic> j) => TextSlotStyle(
+        style: TextStyleId.values.asNameMap()[j['s']] ?? TextStyleId.body,
+        align: TextAlign.values.asNameMap()[j['a']] ?? TextAlign.left,
+        valign: TextVAlign.values.asNameMap()[j['v']] ?? TextVAlign.top,
+        font: j['f'],
+      );
 }
 
 /// Kitapta kullanılan bir fotoğraf (cihaz galerisindeki asset).
@@ -81,6 +113,7 @@ class PrintPage {
   int templateId;
   List<PhotoSlot?> photos; // şablonun fotoğraf alanı sırasına göre
   List<String> texts; // şablonun metin alanı sırasına göre (kapakta başlık kitap başlığından gelir)
+  Map<int, TextSlotStyle> textStyles; // yazı alanı indeksi → biçim (yoksa şablon varsayılanı)
   String? themeOverride;
   bool borderless; // kenarlıksız: fotoğraf alanları sayfa kenarına kadar uzar
   String caption; // sayfa yazısı: şablondan bağımsız, sayfanın altında ya da üstünde şerit (Popsa page caption)
@@ -95,6 +128,7 @@ class PrintPage {
     required this.templateId,
     required this.photos,
     required this.texts,
+    Map<int, TextSlotStyle>? textStyles,
     this.themeOverride,
     this.borderless = false,
     this.caption = '',
@@ -102,7 +136,7 @@ class PrintPage {
     this.captionAlign = TextAlign.left,
     this.captionFont,
     this.captionTop = false,
-  });
+  }) : textStyles = textStyles ?? {};
 
   bool get isCover => tag == 'layout-front';
 
@@ -114,6 +148,7 @@ class PrintPage {
         'tpl': templateId,
         'photos': photos.map((p) => p?.toJson()).toList(),
         'texts': texts,
+        if (textStyles.isNotEmpty) 'ts': {for (final e in textStyles.entries) '${e.key}': e.value.toJson()},
         'theme': themeOverride,
         if (borderless) 'bl': true,
         if (caption.isNotEmpty) 'cap': caption,
@@ -129,6 +164,10 @@ class PrintPage {
         templateId: j['tpl'],
         photos: (j['photos'] as List).map((e) => e == null ? null : PhotoSlot.fromJson(e)).toList(),
         texts: List<String>.from(j['texts'] ?? const []),
+        textStyles: {
+          for (final e in ((j['ts'] as Map<String, dynamic>?) ?? const {}).entries)
+            int.parse(e.key): TextSlotStyle.fromJson(e.value),
+        },
         themeOverride: j['theme'],
         borderless: j['bl'] ?? false,
         caption: j['cap'] ?? '',

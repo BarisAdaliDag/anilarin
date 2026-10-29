@@ -145,6 +145,7 @@ class TemplateElement {
   final bool border; // fotoğraf etrafında beyaz çerçeve (Popsa kapak görünümü)
   final bool vertical; // yazı 90° döndürülmüş (aşağıdan yukarı)
   final bool scrim; // fotoğraf üstündeki yazının arkasında koyu geçiş
+  final bool overlay; // üst üste şablonlarda öndeki fotoğraf: sayfa renginde çerçeve alır
 
   const TemplateElement({
     required this.type,
@@ -154,9 +155,21 @@ class TemplateElement {
     this.border = false,
     this.vertical = false,
     this.scrim = false,
+    this.overlay = false,
   });
 
   bool get isPhoto => type == 'photo';
+
+  TemplateElement withFrame(Rect f) => TemplateElement(
+        type: type,
+        role: role,
+        frame: f,
+        align: align,
+        border: border,
+        vertical: vertical,
+        scrim: scrim,
+        overlay: overlay,
+      );
 
   factory TemplateElement.fromJson(Map<String, dynamic> j) {
     final f = (j['frame'] as List).map((e) => (e as num).toDouble()).toList();
@@ -172,6 +185,7 @@ class TemplateElement {
       border: j['border'] ?? false,
       vertical: j['vertical'] ?? false,
       scrim: j['scrim'] ?? false,
+      overlay: j['overlay'] ?? false,
     );
   }
 }
