@@ -176,6 +176,21 @@ void main() {
     expect(p.textStyles[0]!.align, TextAlign.right);
   });
 
+  test('kapak başlığı biçimi kaydedilir', () {
+    final vm = make();
+    vm.setTitle(
+      'Yaz 2026',
+      'Haz – Ağu 2026',
+      style: TextSlotStyle(style: TextStyleId.heading2, align: TextAlign.left, valign: TextVAlign.bottom),
+    );
+    final b = PhotoBook.fromJson(vm.book.toJson());
+    expect(b.title, 'Yaz 2026');
+    expect(b.cover.textStyles[0]!.style, TextStyleId.heading2);
+    expect(b.cover.textStyles[0]!.valign, TextVAlign.bottom);
+    vm.undo();
+    expect(vm.book.cover.textStyles[0], isNull);
+  });
+
   test('json gidiş-dönüş', () {
     final vm = make();
     final copy = PhotoBook.fromJson(vm.book.toJson());

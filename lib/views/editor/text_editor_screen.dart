@@ -14,6 +14,7 @@ class TextEditValue {
   final String? fontId;
   final bool top;
   final TextVAlign valign;
+  final String? subtitle; // kapak başlığında ikinci satır (tarih vb.)
 
   const TextEditValue({
     required this.text,
@@ -22,6 +23,7 @@ class TextEditValue {
     this.fontId,
     this.top = false,
     this.valign = TextVAlign.top,
+    this.subtitle,
   });
 }
 
@@ -65,6 +67,9 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
   late String? _fontId = widget.initial.fontId;
   late bool _top = widget.initial.top;
   late TextVAlign _valign = widget.initial.valign;
+  late final TextEditingController? _subtitle = widget.initial.subtitle == null
+      ? null
+      : TextEditingController(text: widget.initial.subtitle);
   final _undo = <String>[];
   final _redo = <String>[];
   late String _last = widget.initial.text;
@@ -96,6 +101,7 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _subtitle?.dispose();
     super.dispose();
   }
 
@@ -109,16 +115,17 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
   bool get _over => _length > _limit;
 
   void _save() => Navigator.pop(
-        context,
-        TextEditValue(
-          text: _controller.text,
-          style: _style,
-          align: _align,
-          fontId: _fontId,
-          top: _top,
-          valign: _valign,
-        ),
-      );
+    context,
+    TextEditValue(
+      text: _controller.text,
+      style: _style,
+      align: _align,
+      fontId: _fontId,
+      top: _top,
+      valign: _valign,
+      subtitle: _subtitle?.text,
+    ),
+  );
 
   /// Stilin baskıdaki yaklaşık punto boyutu.
   int _points(TextStyleId s) => (s.sizeFactor * widget.pageHeightCm / 2.54 * 72).round();
@@ -224,23 +231,41 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: TextField(
-                  controller: _controller,
-                  autofocus: true,
-                  maxLines: null,
-                  textAlign: _align,
-                  textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(
-                    fontFamily: heading ? font.titleFont : font.bodyFont,
-                    fontWeight: heading ? font.titleWeight : FontWeight.w400,
-                    fontSize: 14 + _style.sizeFactor * 260,
-                    height: 1.3,
-                  ),
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: widget.hint,
-                    hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.6), fontSize: 16),
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _controller,
+                      autofocus: true,
+                      maxLines: null,
+                      textAlign: _align,
+                      textCapitalization: TextCapitalization.sentences,
+                      style: TextStyle(
+                        fontFamily: heading ? font.titleFont : font.bodyFont,
+                        fontWeight: heading ? font.titleWeight : FontWeight.w400,
+                        fontSize: 14 + _style.sizeFactor * 260,
+                        height: 1.3,
+                      ),
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: widget.hint,
+                        hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.6), fontSize: 16),
+                      ),
+                    ),
+                    if (_subtitle != null)
+                      TextField(
+                        controller: _subtitle,
+                        maxLength: 60,
+                        textAlign: _align,
+                        style: TextStyle(fontFamily: font.bodyFont, fontSize: 16, color: context.mutedText),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: S.subtitleHint,
+                          hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.5), fontSize: 15),
+                          counterText: '',
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -253,10 +278,7 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
                   const Icon(Icons.info_outline, size: 18, color: AppColors.failure),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      S.textOverflowHint,
-                      style: const TextStyle(color: AppColors.failure, fontSize: 13),
-                    ),
+                    child: Text(S.textOverflowHint, style: const TextStyle(color: AppColors.failure, fontSize: 13)),
                   ),
                 ],
               ),

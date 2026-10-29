@@ -8,34 +8,44 @@ import '../../../view_model/editor_view_model.dart';
 import '../../widgets/print_page_view.dart';
 import '../text_editor_screen.dart';
 
+/// Kapak başlığı ve alt başlığı: metin düzenleyicide boyut, yazı tipi, hizalama ve dikey konumla.
 Future<void> editTitleDialog(BuildContext context, EditorViewModel vm) async {
-  final title = TextEditingController(text: vm.book.title);
-  final subtitle = TextEditingController(text: vm.book.subtitle);
-  final ok = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    builder: (c) => Padding(
-      padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.of(c).viewInsets.bottom + 20),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const Text(S.editTitle, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
-        const SizedBox(height: 12),
-        TextField(
-          controller: title,
-          autofocus: true,
-          maxLength: 40,
-          decoration: const InputDecoration(labelText: S.titleHint),
-        ),
-        TextField(
-          controller: subtitle,
-          maxLength: 60,
-          decoration: const InputDecoration(labelText: S.subtitleHint),
-        ),
-        const SizedBox(height: 12),
-        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text(S.save)),
-      ]),
+  final cover = vm.book.cover;
+  final current = cover.textStyles[0] ??
+      TextSlotStyle(style: TextStyleId.heading3, align: TextAlign.center, valign: TextVAlign.center);
+  final result = await Navigator.of(context).push<TextEditValue>(MaterialPageRoute(
+    fullscreenDialog: true,
+    builder: (_) => TextEditorScreen(
+      title: S.editTitle,
+      initial: TextEditValue(
+        text: vm.book.title,
+        subtitle: vm.book.subtitle,
+        style: current.style,
+        align: current.align,
+        valign: current.valign,
+        fontId: current.font,
+      ),
+      styles: const [
+        TextStyleId.heading2,
+        TextStyleId.heading3,
+        TextStyleId.heading4,
+        TextStyleId.subheading1,
+        TextStyleId.subheading2,
+      ],
+      limit: 40,
+      showVAlign: true,
+      pageHeightCm: vm.pageHeightCm,
+      fonts: vm.catalog.textAppearances,
+      bookFontId: vm.book.textAppearanceId,
+      hint: S.titleHint,
     ),
+  ));
+  if (result == null) return;
+  vm.setTitle(
+    result.text,
+    result.subtitle ?? vm.book.subtitle,
+    style: TextSlotStyle(style: result.style, align: result.align, valign: result.valign, font: result.fontId),
   );
-  if (ok == true) vm.setTitle(title.text, subtitle.text);
 }
 
 /// Sayfaya yazı ekler/düzenler. Düzeni bozmaz: yazı sayfanın altında ya da üstünde şerit olarak durur.

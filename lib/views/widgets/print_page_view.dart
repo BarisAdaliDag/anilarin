@@ -104,15 +104,17 @@ class PrintPageView extends StatelessWidget {
             }
             Widget textView;
             if (page.isCover) {
+              final cs = coverTitle ? page.textStyles[0] : null;
               textView = _TextSlotView(
                 text: coverTitle ? book.title : value,
                 subtitle: coverTitle ? book.subtitle : '',
+                slotStyle: cs,
                 role: e.role,
-                align: e.align,
+                align: cs?.align ?? e.align,
                 pageHeight: h,
                 color: onPhoto ? Colors.white : (e.role == 'title' ? theme.coverText : theme.text),
                 shadow: onPhoto,
-                font: font,
+                font: cs?.font == null ? font : catalog.textAppearance(cs!.font!),
                 placeholder: showPlaceholders && value.isEmpty,
                 onTap: onTextTap == null ? null : () => onTextTap!(i),
               );
@@ -436,11 +438,13 @@ class _TextSlotView extends StatelessWidget {
     required this.shadow,
     required this.font,
     required this.placeholder,
+    this.slotStyle,
     this.onTap,
   });
 
   final String text;
   final String subtitle;
+  final TextSlotStyle? slotStyle; // kullanıcı kapak başlığını biçimlendirdiyse
   final String role;
   final TextAlign align;
   final double pageHeight;
@@ -457,16 +461,25 @@ class _TextSlotView extends StatelessWidget {
       fontFamily: isTitle ? font.titleFont : font.bodyFont,
       fontWeight: isTitle ? font.titleWeight : FontWeight.w400,
       letterSpacing: font.letterSpacing * pageHeight / 400,
-      fontSize: isTitle ? pageHeight * (subtitle.isEmpty ? 0.06 : 0.048) : pageHeight * 0.03,
+      fontSize: slotStyle != null
+          ? pageHeight * slotStyle!.style.sizeFactor
+          : (isTitle ? pageHeight * (subtitle.isEmpty ? 0.06 : 0.048) : pageHeight * 0.03),
       height: 1.2,
       color: placeholder ? color.withValues(alpha: 0.45) : color,
       shadows: shadow ? const [Shadow(blurRadius: 6, color: Colors.black54)] : null,
     );
-    final alignment = switch (align) {
-      TextAlign.left => Alignment.centerLeft,
-      TextAlign.right => Alignment.centerRight,
-      _ => Alignment.center,
-    };
+    final alignment = Alignment(
+      switch (align) {
+        TextAlign.left => -1.0,
+        TextAlign.right => 1.0,
+        _ => 0.0,
+      },
+      switch (slotStyle?.valign) {
+        TextVAlign.top => -1.0,
+        TextVAlign.bottom => 1.0,
+        _ => 0.0,
+      },
+    );
     Widget child;
     if (text.isEmpty && !placeholder) {
       child = const SizedBox.expand();
@@ -490,7 +503,7 @@ class _TextSlotView extends StatelessWidget {
               style: style.copyWith(
                 fontFamily: font.bodyFont,
                 fontWeight: FontWeight.w400,
-                fontSize: pageHeight * 0.022,
+                fontSize: pageHeight * (slotStyle == null ? 0.022 : slotStyle!.style.sizeFactor * 0.45),
                 letterSpacing: 0,
               ),
             ),

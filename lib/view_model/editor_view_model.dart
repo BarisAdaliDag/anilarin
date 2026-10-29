@@ -280,10 +280,12 @@ class EditorViewModel extends ChangeNotifier {
 
   void setTextAppearance(String id) => _mutate((book) => book.textAppearanceId = id);
 
-  void setTitle(String title, String subtitle) {
+  /// Kapak başlığı ve alt başlığı; [style] verilirse kapaktaki başlığın biçimi de değişir.
+  void setTitle(String title, String subtitle, {TextSlotStyle? style}) {
     _mutate((book) {
       book.title = title.trim();
       book.subtitle = subtitle.trim();
+      if (style != null) book.cover.textStyles[0] = style;
     });
   }
 
