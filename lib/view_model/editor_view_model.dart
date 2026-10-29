@@ -68,8 +68,49 @@ class EditorViewModel extends ChangeNotifier {
 
   PageTemplate templateOf(int pageIndex) => catalog.template(_book.pages[pageIndex].templateId);
 
-  BookTheme themeOf(int pageIndex) =>
-      catalog.theme(_book.pages[pageIndex].themeOverride ?? _book.themeId);
+  BookTheme themeOf(int pageIndex) => catalog.resolve(
+        _book.themeIdOf(pageIndex),
+        pagePalette: _book.pages[pageIndex].palette,
+        bookPalette: _book.palette,
+      );
+
+  /// Fotoğrafları değişen sayfaların dinamik paletini arka planda yeniden hesaplar (geri al geçmişine girmez).
+  /// Popsa'da dinamik tema her sayfada o sayfanın fotoğraflarının renklerini alır.
+  Future<void> refreshPagePalettes(Future<List<String>> Function(List<String> photoIds) compute) async {
+    _paletteCompute = compute;
+    if (_paletteBusy) {
+      _paletteDirty = true; // çalışma bitince yeniden bakılır
+      return;
+    }
+    _paletteBusy = true;
+    var changed = false;
+    try {
+      for (var i = 0; i < _book.pages.length; i++) {
+        final page = _book.pages[i];
+        final key = page.photoKey;
+        if (key.isEmpty || key == page.paletteKey) continue;
+        final pal = await compute(page.photoIds.toList());
+        if (i >= _book.pages.length || _book.pages[i].id != page.id || _disposed) continue;
+        page
+          ..palette = pal
+          ..paletteKey = key;
+        changed = true;
+        notifyListeners();
+      }
+      if (changed && onSave != null && !_disposed) await onSave!(_book);
+    } finally {
+      _paletteBusy = false;
+    }
+    if (_paletteDirty && !_disposed) {
+      _paletteDirty = false;
+      await refreshPagePalettes(compute);
+    }
+  }
+
+  bool _paletteBusy = false;
+  bool _paletteDirty = false;
+  Future<List<String>> Function(List<String>)? _paletteCompute;
+  bool _disposed = false;
 
   TextAppearance get textAppearance => catalog.textAppearance(_book.textAppearanceId);
 
@@ -105,6 +146,8 @@ class EditorViewModel extends ChangeNotifier {
 
   void _changed() {
     notifyListeners();
+    final compute = _paletteCompute;
+    if (compute != null) refreshPagePalettes(compute);
     if (onSave == null) return;
     _saveTimer?.cancel();
     _saveTimer = Timer(saveDelay, () => onSave!(_book));
@@ -123,6 +166,7 @@ class EditorViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     // Bekleyen kaydı, ağaç kapanırken dinleyicileri tetiklememek için bir sonraki mikro göreve bırak.
     if (_saveTimer?.isActive ?? false) {
       _saveTimer!.cancel();

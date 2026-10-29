@@ -83,7 +83,7 @@ class _DesignCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cover = catalog.theme(book.cover.themeOverride ?? book.themeId);
+    final cover = catalog.resolve(book.themeIdOf(0), pagePalette: book.cover.palette, bookPalette: book.palette);
     // Kart rengi kapak renginin koyulaştırılmışı (Popsa'da kartlar tasarımın rengini alır).
     final hsl = HSLColor.fromColor(cover.background);
     final cardColor = book.cover.themeOverride == null

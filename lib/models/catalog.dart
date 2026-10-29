@@ -235,13 +235,22 @@ class BookTheme {
   final Color title;
   final Color text;
 
-  const BookTheme({required this.id, required this.background, required this.title, required this.text});
+  final bool texture; // kâğıt dokusu (Popsa "Textures")
 
-  factory BookTheme.fromHex(String hex) {
+  const BookTheme({
+    required this.id,
+    required this.background,
+    required this.title,
+    required this.text,
+    this.texture = false,
+  });
+
+  factory BookTheme.fromHex(String hex, {String? id, bool texture = false}) {
     final bg = hexColor(hex);
     final light = bg.computeLuminance() > 0.45;
     return BookTheme(
-      id: hex.toUpperCase(),
+      id: id ?? hex.toUpperCase(),
+      texture: texture,
       background: bg,
       title: light ? const Color(0xFF3A3A3A) : Colors.white,
       text: light ? const Color(0xFF555555) : const Color(0xFFE6E6E6),
@@ -316,6 +325,28 @@ class Catalog {
   PageTemplate template(int id) => templates.firstWhere((t) => t.id == id, orElse: () => templates.first);
 
   BookTheme theme(String id) => BookTheme.fromHex(id.startsWith('#') ? id : neutralColors.first);
+
+  /// Popsa tema grupları (renkler Popsa'nın tema panelinden ölçüldü). Dinamik grup fotoğraflardan gelir.
+  static const themeGroups = <String, List<String>>{
+    'neutral': ['#FFFFFF', '#FAFAFA', '#ECF0F3', '#9E9E9E', '#5F7D8C', '#283238', '#212121'],
+    'pastel': ['#FFEAED', '#FBE5EC', '#F3E5F5', '#EEE8F5', '#E8EAF7', '#E4F2FD', '#E2F4FE'],
+    'deep': ['#AF1919', '#880E50', '#4A148D', '#301B91', '#1B237E', '#0D47A3', '#00579B'],
+    'vivid': ['#F44235', '#E91F63', '#9C29B2', '#663BB7', '#3F51B6', '#2196F3', '#04A9F5'],
+    'textures': ['tex:#F2F2F2', 'tex:#EFE9E4', 'tex:#8C7E73', 'tex:#262626'],
+  };
+
+  /// Bir sayfanın teması: `#RRGGBB` düz renk, `tex:#RRGGBB` doku, `dyn:N` sayfanın kendi fotoğraflarından
+  /// çıkan paletin N'inci rengi (açık, yumuşak, canlı, zengin, koyu); sayfa paleti yoksa kitabınki.
+  BookTheme resolve(String id, {List<String> pagePalette = const [], List<String> bookPalette = const []}) {
+    if (id.startsWith('dyn:')) {
+      final n = int.tryParse(id.substring(4)) ?? 0;
+      final pal = pagePalette.length > n ? pagePalette : bookPalette;
+      if (pal.length > n) return BookTheme.fromHex(pal[n], id: id);
+      return theme(neutralColors.first);
+    }
+    if (id.startsWith('tex:')) return BookTheme.fromHex(id.substring(4), id: id, texture: true);
+    return theme(id);
+  }
 
   TextAppearance textAppearance(String id) =>
       textAppearances.firstWhere((t) => t.id == id, orElse: () => textAppearances.first);

@@ -116,6 +116,8 @@ class PrintPage {
   Map<int, TextSlotStyle> textStyles; // yazı alanı indeksi → biçim (yoksa şablon varsayılanı)
   String? themeOverride;
   bool borderless; // kenarlıksız: fotoğraf alanları sayfa kenarına kadar uzar
+  List<String> palette; // bu sayfanın fotoğraflarından çıkan dinamik renkler (Popsa dynamicPageTheme)
+  String paletteKey; // paletin hangi fotoğraflardan hesaplandığı (değişince yeniden hesaplanır)
   String caption; // sayfa yazısı: şablondan bağımsız, sayfanın altında ya da üstünde şerit (Popsa page caption)
   TextStyleId captionStyle;
   TextAlign captionAlign;
@@ -131,6 +133,8 @@ class PrintPage {
     Map<int, TextSlotStyle>? textStyles,
     this.themeOverride,
     this.borderless = false,
+    this.palette = const [],
+    this.paletteKey = '',
     this.caption = '',
     this.captionStyle = TextStyleId.body,
     this.captionAlign = TextAlign.left,
@@ -142,6 +146,8 @@ class PrintPage {
 
   Iterable<String> get photoIds => photos.whereType<PhotoSlot>().map((s) => s.photoId);
 
+  String get photoKey => photoIds.join(',');
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'tag': tag,
@@ -151,6 +157,8 @@ class PrintPage {
         if (textStyles.isNotEmpty) 'ts': {for (final e in textStyles.entries) '${e.key}': e.value.toJson()},
         'theme': themeOverride,
         if (borderless) 'bl': true,
+        if (palette.isNotEmpty) 'pal': palette,
+        if (paletteKey.isNotEmpty) 'palKey': paletteKey,
         if (caption.isNotEmpty) 'cap': caption,
         if (captionStyle != TextStyleId.body) 'capStyle': captionStyle.name,
         if (captionAlign != TextAlign.left) 'capAlign': captionAlign.name,
@@ -170,6 +178,8 @@ class PrintPage {
         },
         themeOverride: j['theme'],
         borderless: j['bl'] ?? false,
+        palette: List<String>.from(j['pal'] ?? const []),
+        paletteKey: j['palKey'] ?? '',
         caption: j['cap'] ?? '',
         captionStyle: TextStyleId.values.asNameMap()[j['capStyle']] ?? TextStyleId.body,
         captionAlign: TextAlign.values.asNameMap()[j['capAlign']] ?? TextAlign.left,
@@ -229,6 +239,9 @@ class PhotoBook {
   });
 
   PrintPage get cover => pages.first;
+
+  /// Sayfanın geçerli tema kimliği.
+  String themeIdOf(int pageIndex) => pages[pageIndex].themeOverride ?? themeId;
 
   List<PrintPage> get innerPages => pages.where((p) => !p.isCover).toList();
 

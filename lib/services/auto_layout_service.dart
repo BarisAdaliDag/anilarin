@@ -65,7 +65,7 @@ class AutoLayoutService {
     unused.addAll(rest.sublist(cursor).map((p) => p.id));
 
     // Kapak fotoğraflardan gelen zengin renkte, iç sayfalar beyaz (Popsa'nın ilk görünümü).
-    if (palette.length >= 4) cover.themeOverride = palette[3];
+    if (palette.length >= 4) cover.themeOverride = 'dyn:3';
     return PhotoBook(
       id: _uuid.v4(),
       productCode: product.code,

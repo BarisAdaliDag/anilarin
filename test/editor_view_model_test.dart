@@ -191,6 +191,25 @@ void main() {
     expect(vm.book.cover.textStyles[0], isNull);
   });
 
+  test('dinamik tema her sayfada o sayfanın paletini kullanır', () async {
+    final vm = make();
+    await vm.refreshPagePalettes((ids) async => ['#111111', '#222222', ids.first == vm.book.pages[1].photoIds.first ? '#AA0000' : '#00AA00', '#333333', '#444444']);
+    vm.setTheme('dyn:2', scope: ThemeScope.inside);
+    expect(vm.themeOf(1).background, const Color(0xFFAA0000));
+    expect(vm.themeOf(2).background, const Color(0xFF00AA00));
+    // fotoğraflar değişince palet yeniden hesaplanır
+    final key = vm.book.pages[1].paletteKey;
+    vm.swap(SlotRef(1, 0), SlotRef(2, 0));
+    await Future<void>.delayed(Duration.zero);
+    expect(vm.book.pages[1].paletteKey, isNot(key));
+  });
+
+  test('doku teması', () {
+    final t = loadTestCatalog().resolve('tex:#EFE9E4');
+    expect(t.texture, isTrue);
+    expect(t.background, const Color(0xFFEFE9E4));
+  });
+
   test('json gidiş-dönüş', () {
     final vm = make();
     final copy = PhotoBook.fromJson(vm.book.toJson());

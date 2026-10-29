@@ -35,7 +35,7 @@ class PrintPageView extends StatelessWidget {
     final product = catalog.product(book.productCode);
     final page = book.pages[pageIndex];
     final tpl = catalog.template(page.templateId);
-    final theme = catalog.theme(page.themeOverride ?? book.themeId);
+    final theme = catalog.resolve(book.themeIdOf(pageIndex), pagePalette: page.palette, bookPalette: book.palette);
     final font = catalog.textAppearance(book.textAppearanceId);
     final elements = pageLayout(page, tpl, product.format, product.aspect);
     final bg = page.isCover ? theme.coverBackground : theme.background;
@@ -177,7 +177,19 @@ class PrintPageView extends StatelessWidget {
             ),
           ));
         }
-        return ClipRect(child: ColoredBox(color: bg, child: Stack(children: children)));
+        // Tema değişince arka plan rengi yumuşakça geçer (Popsa'daki gibi).
+        return ClipRect(
+          child: TweenAnimationBuilder<Color?>(
+            tween: ColorTween(end: bg),
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeInOut,
+            builder: (context, color, child) => ColoredBox(color: color ?? bg, child: child),
+            child: Stack(children: [
+              if (theme.texture) const Positioned.fill(child: IgnorePointer(child: PaperTexture())),
+              ...children,
+            ]),
+          ),
+        );
       }),
     );
   }
@@ -525,4 +537,38 @@ class _TextSlotView extends StatelessWidget {
     }
     return onTap == null ? child : GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap, child: child);
   }
+}
+
+
+/// Kâğıt dokusu: arka plan rengi üzerinde ince, rastgele lekeler (Popsa "Textures" temaları).
+class PaperTexture extends StatelessWidget {
+  const PaperTexture({super.key});
+
+  @override
+  Widget build(BuildContext context) => const RepaintBoundary(child: CustomPaint(painter: _PaperPainter()));
+}
+
+class _PaperPainter extends CustomPainter {
+  const _PaperPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    var seed = 7;
+    double rnd() {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    }
+
+    final light = Paint()..color = const Color(0x14FFFFFF);
+    final dark = Paint()..color = const Color(0x12000000);
+    final count = (size.width * size.height / 90).clamp(200, 6000).toInt();
+    for (var i = 0; i < count; i++) {
+      final o = Offset(rnd() * size.width, rnd() * size.height);
+      final r = 0.4 + rnd() * 1.6;
+      canvas.drawCircle(o, r, rnd() > 0.5 ? light : dark);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -103,7 +103,8 @@ void main() {
     final palette = PaletteService.fromRgb([200, 30, 30, 180, 20, 20, 240, 240, 240]);
     expect(palette.length, 5);
     final book = service.create(product: catalog.product('PBK-8'), photos: testPhotos(30), title: 'x', palette: palette);
-    expect(book.cover.themeOverride, palette[3]);
+    expect(book.cover.themeOverride, 'dyn:3');
+    expect(catalog.resolve('dyn:3', bookPalette: book.palette).background, catalog.theme(palette[3]).background);
     expect(book.themeId, '#FFFFFF');
     // baskın ton kırmızı olmalı
     final vibrant = HSLColor.fromColor(catalog.theme(palette[2]).background);

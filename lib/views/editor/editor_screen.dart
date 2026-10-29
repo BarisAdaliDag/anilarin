@@ -6,6 +6,7 @@ import '../../config/theme.dart';
 import '../../constants/strings_tr.dart';
 import '../../models/photo_book.dart';
 import '../../view_model/app_view_model.dart';
+import '../../services/palette_service.dart';
 import '../../view_model/editor_view_model.dart';
 import '../basket/basket_screen.dart';
 import '../photo_picker/photo_picker_screen.dart';
@@ -42,7 +43,8 @@ class EditorScreen extends StatelessWidget {
     final book = app.book(bookId);
     if (book == null) return const Scaffold(body: Center(child: Text('Tasarım bulunamadı')));
     return ChangeNotifierProvider(
-      create: (_) => EditorViewModel(book: book.clone(), catalog: app.catalog!, onSave: app.saveBook),
+      create: (_) => EditorViewModel(book: book.clone(), catalog: app.catalog!, onSave: app.saveBook)
+        ..refreshPagePalettes(PaletteService.forPhotos),
       child: _EditorBody(firstCreation: firstCreation),
     );
   }
