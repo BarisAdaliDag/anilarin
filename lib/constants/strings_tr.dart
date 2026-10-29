@@ -68,6 +68,9 @@ class S {
   static const selectPhotos = 'Fotoğrafları Seç';
   static const allPhotos = 'Tüm Fotoğraflar';
   static const albums = 'Albümler';
+  static const suggestedForYou = 'Senin için önerilenler';
+  static const smartAlbums = 'Akıllı Albümler';
+  static String selectMinimumToContinue(int n) => 'Devam etmek için en az $n fotoğraf seç';
   static const cancel = 'İptal';
   static String minimumRequired(int n) => 'En az $n fotoğraf gerekli';
   static String selectUpTo(int n) => '$n fotoğrafa kadar seçebilirsin';

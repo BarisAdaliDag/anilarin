@@ -5,6 +5,7 @@ import '../constants/strings_tr.dart';
 import '../models/catalog.dart';
 import '../models/photo_book.dart';
 import '../repositories/photo_repository.dart';
+import '../services/smart_album_service.dart';
 
 enum PickerPermission { unknown, granted, denied }
 
@@ -41,6 +42,10 @@ class PhotoPickerViewModel extends ChangeNotifier {
   final Map<String, int> albumCounts = {};
   final Map<String, AssetEntity> albumCovers = {};
   AssetPathEntity? album;
+  SmartAlbum? smart;
+  List<SmartAlbum> smartAlbums = [];
+  final Map<String, AssetEntity> _recent = {};
+  static const smartScanLimit = 3000;
   final List<AssetEntity> assets = [];
   final List<AssetEntity> selected = [];
   bool loading = false;
@@ -71,12 +76,47 @@ class PhotoPickerViewModel extends ChangeNotifier {
       if (first.isNotEmpty) albumCovers[a.id] = first.first;
       notifyListeners();
     }
+    await _buildSmartAlbums();
   }
+
+  /// Son fotoğrafları aylara göre gruplayıp akıllı albüm önerileri üretir.
+  Future<void> _buildSmartAlbums() async {
+    if (albums.isEmpty) return;
+    final all = albums.firstWhere((a) => a.isAll, orElse: () => albums.first);
+    final recent = await all.getAssetListRange(start: 0, end: smartScanLimit);
+    for (final a in recent) {
+      _recent[a.id] = a;
+    }
+    smartAlbums = SmartAlbumService.build([
+      for (final a in recent)
+        SmartPhoto(
+          id: a.id,
+          takenAt: a.createDateTime,
+          screenshot: SmartAlbumService.isScreenshotPath(a.relativePath),
+        ),
+    ]);
+    notifyListeners();
+  }
+
+  AssetEntity? smartCover(SmartAlbum s) => _recent[s.photoIds.first];
+
+  void openSmart(SmartAlbum s) {
+    smart = s;
+    album = null;
+    assets
+      ..clear()
+      ..addAll(s.photoIds.map((id) => _recent[id]).whereType<AssetEntity>());
+    _hasMore = false;
+    notifyListeners();
+  }
+
+  bool get inGrid => album != null || smart != null;
 
   Future<void> openSettings() => _repo.openSettings();
 
   Future<void> selectAlbum(AssetPathEntity a) async {
     album = a;
+    smart = null;
     assets.clear();
     _page = 0;
     _hasMore = true;
@@ -86,6 +126,7 @@ class PhotoPickerViewModel extends ChangeNotifier {
 
   void closeAlbum() {
     album = null;
+    smart = null;
     notifyListeners();
   }
 

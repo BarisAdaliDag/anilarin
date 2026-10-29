@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../constants/strings_tr.dart';
 import '../../models/catalog.dart';
 import '../../models/photo_book.dart';
+import '../../services/smart_album_service.dart';
 import '../../view_model/photo_picker_view_model.dart';
 import '../title/title_screen.dart';
 
@@ -99,7 +100,7 @@ class _PickerBodyState extends State<_PickerBody> {
         if (mounted) _next(vm);
       });
     }
-    final inAlbum = vm.album != null;
+    final inAlbum = vm.inGrid;
     return PopScope(
       canPop: !inAlbum,
       onPopInvokedWithResult: (didPop, _) {
@@ -111,11 +112,8 @@ class _PickerBodyState extends State<_PickerBody> {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => inAlbum ? vm.closeAlbum() : Navigator.pop(context),
           ),
-          title: Text(inAlbum ? _albumName(vm, vm.album!) : (widget.single ? S.replacePhoto : S.selectPhotos)),
-          actions: [
-            if (inAlbum && !widget.single)
-              TextButton(onPressed: vm.selectAllVisible, child: const Text('Tümünü Seç')),
-          ],
+          // Popsa gibi: albüm içindeyken başlık yok, yalnız geri oku.
+          title: inAlbum ? null : Text(widget.single ? S.replacePhoto : S.selectPhotos),
         ),
         body: switch (vm.permission) {
           PickerPermission.unknown => const Center(child: CircularProgressIndicator()),
@@ -123,9 +121,13 @@ class _PickerBodyState extends State<_PickerBody> {
           PickerPermission.granted => inAlbum ? _Grid(vm: vm) : _Albums(vm: vm),
         },
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButton: vm.permission == PickerPermission.granted && !widget.single && vm.selected.isNotEmpty
-            ? _SelectionBar(vm: vm, onNext: vm.canContinue ? () => _next(vm) : null)
-            : null,
+        floatingActionButton: vm.permission != PickerPermission.granted || widget.single
+            ? null
+            : vm.selected.isNotEmpty
+                ? _SelectionBar(vm: vm, onNext: vm.canContinue ? () => _next(vm) : null)
+                : widget.product != null
+                    ? _StartHint(product: widget.product!)
+                    : null,
       ),
     );
   }
@@ -176,22 +178,56 @@ class _Albums extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
           child: Row(children: [
             Container(
-              padding: const EdgeInsets.only(bottom: 6),
-              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.accent, width: 3))),
-              child: const Icon(Icons.smartphone, size: 26),
+              padding: const EdgeInsets.only(bottom: 8, left: 6, right: 6),
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.strongText, width: 2.5))),
+              child: const Icon(Icons.stay_current_portrait, size: 26, color: Color(0xFFE5537B)),
             ),
             const SizedBox(width: 22),
-            for (final icon in const [Icons.photo_outlined, Icons.cloud_outlined, Icons.facebook])
+            for (final (icon, color, name) in const [
+              (Icons.camera, Color(0xFFFBBC05), 'Google Fotoğraflar'),
+              (Icons.inventory_2, Color(0xFF0061FF), 'Dropbox'),
+              (Icons.facebook, Color(0xFF1877F2), 'Facebook'),
+            ])
               Padding(
-                padding: const EdgeInsets.only(right: 22, bottom: 6),
-                child: Tooltip(message: 'Yakında', child: Icon(icon, size: 26, color: context.mutedText.withValues(alpha: 0.5))),
+                padding: const EdgeInsets.only(right: 26, bottom: 8),
+                child: Tooltip(
+                  message: '$name yakında',
+                  triggerMode: TooltipTriggerMode.tap,
+                  child: Icon(icon, size: 26, color: color),
+                ),
               ),
           ]),
         ),
       ),
+      if (vm.smartAlbums.isNotEmpty) ...[
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 2),
+            child: Text(S.suggestedForYou, style: TextStyle(fontSize: 13, color: context.mutedText)),
+          ),
+        ),
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+            child: Text(S.smartAlbums, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height: 200,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: vm.smartAlbums.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemBuilder: (_, i) => _SmartAlbumCard(vm: vm, album: vm.smartAlbums[i]),
+            ),
+          ),
+        ),
+      ],
       const SliverToBoxAdapter(
         child: Padding(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
+          padding: EdgeInsets.fromLTRB(20, 24, 20, 12),
           child: Text(S.albums, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
         ),
       ),
@@ -293,6 +329,76 @@ class _Grid extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _SmartAlbumCard extends StatelessWidget {
+  const _SmartAlbumCard({required this.vm, required this.album});
+
+  final PhotoPickerViewModel vm;
+  final SmartAlbum album;
+
+  @override
+  Widget build(BuildContext context) {
+    final cover = vm.smartCover(album);
+    return GestureDetector(
+      onTap: () => vm.openSmart(album),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: SizedBox(
+          width: 250,
+          child: Stack(fit: StackFit.expand, children: [
+            if (cover != null) _thumb(cover, 500) else ColoredBox(color: context.cardColor),
+            const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x00000000), Color(0xAA000000)],
+                  stops: [0.4, 1],
+                ),
+              ),
+            ),
+            Positioned(
+              left: 12,
+              right: 12,
+              bottom: 10,
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(album.title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                Text(album.dateLabel, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                Text('${album.count} fotoğraf', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              ]),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+/// Henüz seçim yokken Popsa'nın alttaki kartı: ürün adı ve en az kaç fotoğraf gerektiği.
+class _StartHint extends StatelessWidget {
+  const _StartHint({required this.product});
+
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 14),
+      decoration: BoxDecoration(
+        color: context.isDark ? const Color(0xFF2E2E2E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 16, offset: Offset(0, 4))],
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(product.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+        const SizedBox(height: 2),
+        Text(S.selectMinimumToContinue(product.photoMin), style: TextStyle(color: context.mutedText, fontSize: 13)),
+      ]),
     );
   }
 }
