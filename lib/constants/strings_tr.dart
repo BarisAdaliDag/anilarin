@@ -108,12 +108,9 @@ class S {
   static const font = 'Yazı Tipi';
   static const alignment = 'Hizalama';
   static const edit = 'Düzenle';
-  static const saveAnyway = 'Yine de Kaydet';
-  static const textLimitTitle = 'Metin sınırı aşıldı';
-  static String textLimitBody(String style, int limit, int over) =>
-      '"$style" stili için önerilen sınır $limit karakter; metnin $over karakter fazla. '
-      'Baskıda küçük görünebilir ya da sayfaya sığmayabilir. Lütfen önizlemede kontrol et.';
-  static String textLimitHint(int limit) => 'Önerilen sınır $limit karakter. Kaydedebilirsin ama baskıda kontrol et.';
+  static const textOverflowHint = 'Metin alana sığmayabilir, taşma durumunu kontrol edin.';
+  static const positionTop = 'Üstte';
+  static const positionBottom = 'Altta';
 
   static String pageN(int n) => 'Sayfa $n';
   static String pagesCount(int n) => '$n sayfa';
@@ -125,9 +122,9 @@ class S {
   static const changeTheme = 'Temayı Değiştir';
   static const changeFont = 'Yazı Tipini Değiştir';
   static const editTitle = 'Başlığı Düzenle';
-  static const addCaption = 'Altyazı Ekle';
-  static const editCaption = 'Altyazıyı Düzenle';
-  static const removeCaption = 'Altyazıyı Kaldır';
+  static const addCaption = 'Yazı Ekle';
+  static const editCaption = 'Yazıyı Düzenle';
+  static const removeCaption = 'Yazıyı Kaldır';
   static const insertNewPage = 'Yeni Sayfa Ekle';
   static const duplicatePage = 'Bu Sayfayı Çoğalt';
   static const deletePage = 'Bu Sayfayı Sil';
@@ -164,7 +161,7 @@ class S {
   static const editCopy = 'Kopyasını Düzenle';
   static const dragToSwap = 'Fotoğrafa basılı tut ve sayfaya sürükle; düzenlemek için dokun.';
   static const tapToAddPhoto = 'Fotoğraf eklemek için dokun';
-  static const tapToAddCaption = 'Altyazı eklemek için dokun';
+  static const tapToAddCaption = 'Yazı eklemek için dokun';
   static const templateCategories = {
     'all': 'Tümü',
     'p1': '1 fotoğraf',

@@ -63,6 +63,9 @@ class EditorViewModel extends ChangeNotifier {
 
   int get price => product.priceFor(_book.pageCount);
 
+  /// Baskıdaki sayfa yüksekliği (cm), ör. "27 × 21" → 21.
+  double get pageHeightCm => double.tryParse(product.dimensionsCm.split('×').last.trim()) ?? 21;
+
   PageTemplate templateOf(int pageIndex) => catalog.template(_book.pages[pageIndex].templateId);
 
   BookTheme themeOf(int pageIndex) =>
@@ -295,13 +298,22 @@ class EditorViewModel extends ChangeNotifier {
   }
 
   /// Sayfa altyazısı: düzeni değiştirmez, sayfanın altına şerit olarak eklenir.
-  void setPageCaption(int pageIndex, String text, {TextStyleId? style, TextAlign? align, String? font, bool clearFont = false}) =>
+  void setPageCaption(
+    int pageIndex,
+    String text, {
+    TextStyleId? style,
+    TextAlign? align,
+    String? font,
+    bool clearFont = false,
+    bool? top,
+  }) =>
       _mutate((book) {
         final p = book.pages[pageIndex];
         p.caption = text.trim();
         if (style != null) p.captionStyle = style;
         if (align != null) p.captionAlign = align;
         if (font != null || clearFont) p.captionFont = font;
+        if (top != null) p.captionTop = top;
       });
 
   /// Sayfanın, varsa yazı alanı olan aynı fotoğraf sayısındaki şablona geçerek altyazı eklemesi.

@@ -37,7 +37,7 @@ Future<void> editTitleDialog(BuildContext context, EditorViewModel vm) async {
   if (ok == true) vm.setTitle(title.text, subtitle.text);
 }
 
-/// Sayfaya altyazı ekler/düzenler. Popsa gibi düzeni bozmaz: altyazı sayfanın altında şerit olarak durur.
+/// Sayfaya yazı ekler/düzenler. Düzeni bozmaz: yazı sayfanın altında ya da üstünde şerit olarak durur.
 Future<void> editCaptionFlow(BuildContext context, EditorViewModel vm, int pageIndex) async {
   final page = vm.book.pages[pageIndex];
   final result = await Navigator.of(context).push<TextEditValue>(MaterialPageRoute(
@@ -49,9 +49,12 @@ Future<void> editCaptionFlow(BuildContext context, EditorViewModel vm, int pageI
         style: page.captionStyle,
         align: page.captionAlign,
         fontId: page.captionFont,
+        top: page.captionTop,
       ),
       fonts: vm.catalog.textAppearances,
       bookFontId: vm.book.textAppearanceId,
+      pageHeightCm: vm.pageHeightCm,
+      showPosition: true,
     ),
   ));
   if (result == null) return;
@@ -62,6 +65,7 @@ Future<void> editCaptionFlow(BuildContext context, EditorViewModel vm, int pageI
     align: result.align,
     font: result.fontId,
     clearFont: result.fontId == null,
+    top: result.top,
   );
 }
 
@@ -81,6 +85,7 @@ Future<void> editCaptionDialog(BuildContext context, EditorViewModel vm, int pag
         style: isTitle ? TextStyleId.heading4 : TextStyleId.body,
       ),
       styles: [isTitle ? TextStyleId.heading4 : TextStyleId.body],
+      pageHeightCm: vm.pageHeightCm,
       fonts: vm.catalog.textAppearances,
       bookFontId: vm.book.textAppearanceId,
     ),

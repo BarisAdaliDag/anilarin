@@ -83,10 +83,11 @@ class PrintPage {
   List<String> texts; // şablonun metin alanı sırasına göre (kapakta başlık kitap başlığından gelir)
   String? themeOverride;
   bool borderless; // kenarlıksız: fotoğraf alanları sayfa kenarına kadar uzar
-  String caption; // sayfa altyazısı: şablondan bağımsız, sayfanın altında şerit (Popsa page caption)
+  String caption; // sayfa yazısı: şablondan bağımsız, sayfanın altında ya da üstünde şerit (Popsa page caption)
   TextStyleId captionStyle;
   TextAlign captionAlign;
   String? captionFont; // null = kitabın yazı grubu
+  bool captionTop; // yazı sayfanın üstünde mi (varsayılan altta)
 
   PrintPage({
     required this.id,
@@ -100,6 +101,7 @@ class PrintPage {
     this.captionStyle = TextStyleId.body,
     this.captionAlign = TextAlign.left,
     this.captionFont,
+    this.captionTop = false,
   });
 
   bool get isCover => tag == 'layout-front';
@@ -118,6 +120,7 @@ class PrintPage {
         if (captionStyle != TextStyleId.body) 'capStyle': captionStyle.name,
         if (captionAlign != TextAlign.left) 'capAlign': captionAlign.name,
         if (captionFont != null) 'capFont': captionFont,
+        if (captionTop) 'capTop': true,
       };
 
   factory PrintPage.fromJson(Map<String, dynamic> j) => PrintPage(
@@ -132,6 +135,7 @@ class PrintPage {
         captionStyle: TextStyleId.values.asNameMap()[j['capStyle']] ?? TextStyleId.body,
         captionAlign: TextAlign.values.asNameMap()[j['capAlign']] ?? TextAlign.left,
         captionFont: j['capFont'],
+        captionTop: j['capTop'] ?? false,
       );
 }
 

@@ -6,19 +6,26 @@ import '../../models/catalog.dart';
 import '../../models/photo_book.dart';
 import 'sheets/font_sheet.dart';
 
-/// Metin düzenleyicinin sonucu: metin, stil (boyut), hizalama ve (varsa) özel yazı tipi.
+/// Metin düzenleyicinin sonucu: metin, stil (boyut), hizalama, (varsa) özel yazı tipi ve sayfadaki konum.
 class TextEditValue {
   final String text;
   final TextStyleId style;
   final TextAlign align;
   final String? fontId;
+  final bool top;
 
-  const TextEditValue({required this.text, this.style = TextStyleId.body, this.align = TextAlign.left, this.fontId});
+  const TextEditValue({
+    required this.text,
+    this.style = TextStyleId.body,
+    this.align = TextAlign.left,
+    this.fontId,
+    this.top = false,
+  });
 }
 
 /// Tam ekran metin düzenleyici (Popsa TextEditorActivity): geri al/yinele, yazı tipi (Aa),
 /// metin stili (AA), hizalama, silme ve karakter sayacı.
-/// Popsa sınır aşılınca kaydetmeyi engeller; burada kaydedilir ama kullanıcı uyarılır.
+/// Popsa sınır aşılınca kaydetmeyi engeller; burada kaydedilir, altta yalnızca taşma uyarısı gösterilir.
 class TextEditorScreen extends StatefulWidget {
   const TextEditorScreen({
     super.key,
@@ -27,7 +34,9 @@ class TextEditorScreen extends StatefulWidget {
     required this.fonts,
     required this.bookFontId,
     this.styles = TextStyleId.values,
-    this.hint = 'Tasarımında fotoğrafların altında görünecek bir metin yaz',
+    this.pageHeightCm = 21,
+    this.showPosition = false,
+    this.hint = 'Sayfanda fotoğrafların altında ya da üstünde görünecek bir metin yaz',
   });
 
   final String title;
@@ -35,6 +44,8 @@ class TextEditorScreen extends StatefulWidget {
   final List<TextAppearance> fonts;
   final String bookFontId;
   final List<TextStyleId> styles;
+  final double pageHeightCm; // stil listesinde baskı punto boyutunu hesaplamak için
+  final bool showPosition; // üstte/altta seçimi (sayfa yazısı)
   final String hint;
 
   @override
@@ -46,6 +57,7 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
   late TextStyleId _style = widget.initial.style;
   late TextAlign _align = widget.initial.align;
   late String? _fontId = widget.initial.fontId;
+  late bool _top = widget.initial.top;
   final _undo = <String>[];
   final _redo = <String>[];
   late String _last = widget.initial.text;
@@ -87,23 +99,13 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
 
   bool get _over => _length > _style.charLimit;
 
-  Future<void> _save() async {
-    if (_over) {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: const Text(S.textLimitTitle),
-          content: Text(S.textLimitBody(_style.label, _style.charLimit, _length - _style.charLimit)),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.edit)),
-            TextButton(onPressed: () => Navigator.pop(c, true), child: const Text(S.saveAnyway)),
-          ],
-        ),
+  void _save() => Navigator.pop(
+        context,
+        TextEditValue(text: _controller.text, style: _style, align: _align, fontId: _fontId, top: _top),
       );
-      if (ok != true || !mounted) return;
-    }
-    Navigator.pop(context, TextEditValue(text: _controller.text, style: _style, align: _align, fontId: _fontId));
-  }
+
+  /// Stilin baskıdaki yaklaşık punto boyutu.
+  int _points(TextStyleId s) => (s.sizeFactor * widget.pageHeightCm / 2.54 * 72).round();
 
   Future<void> _pickStyle() async {
     final picked = await showDialog<TextStyleId>(
@@ -134,13 +136,24 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
                   onTap: () => Navigator.pop(c, s),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    child: Text(
-                      s.label,
-                      style: TextStyle(
-                        fontFamily: s.heading ? _font.titleFont : _font.bodyFont,
-                        fontWeight: s.heading ? FontWeight.w600 : FontWeight.w400,
-                        fontSize: 16 + s.sizeFactor * 140,
-                      ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          s.label,
+                          style: TextStyle(
+                            fontFamily: s.heading ? _font.titleFont : _font.bodyFont,
+                            fontWeight: s.heading ? FontWeight.w600 : FontWeight.w400,
+                            fontSize: 16 + s.sizeFactor * 140,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '${_points(s)} pt',
+                          style: TextStyle(fontSize: 14, color: c.mutedText.withValues(alpha: 0.7)),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -225,7 +238,7 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      S.textLimitHint(_style.charLimit),
+                      S.textOverflowHint,
                       style: const TextStyle(color: AppColors.failure, fontSize: 13),
                     ),
                   ),
@@ -314,6 +327,20 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
                       _ => Icons.format_align_center,
                     }),
                   ),
+                  if (widget.showPosition) ...[
+                    const SizedBox(width: 12),
+                    _ToolButton(
+                      tooltip: _top ? S.positionTop : S.positionBottom,
+                      onTap: () => setState(() => _top = !_top),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(_top ? Icons.vertical_align_top : Icons.vertical_align_bottom, size: 22),
+                          Text(_top ? S.positionTop : S.positionBottom, style: const TextStyle(fontSize: 10)),
+                        ],
+                      ),
+                    ),
+                  ],
                   const Spacer(),
                   _ToolButton(tooltip: S.delete, onTap: _controller.clear, child: const Icon(Icons.delete_outline)),
                 ],

@@ -37,7 +37,7 @@ class PrintPageView extends StatelessWidget {
     final tpl = catalog.template(page.templateId);
     final theme = catalog.theme(page.themeOverride ?? book.themeId);
     final font = catalog.textAppearance(book.textAppearanceId);
-    final elements = pageLayout(page, tpl, product.format);
+    final elements = pageLayout(page, tpl, product.format, product.aspect);
     final bg = page.isCover ? theme.coverBackground : theme.background;
 
     return AspectRatio(
@@ -122,11 +122,12 @@ class PrintPageView extends StatelessWidget {
             TextAlign.right => Alignment.centerRight,
             _ => Alignment.center,
           };
+          final band = captionBandFor(page, product.aspect);
           children.add(Positioned(
             left: w * 0.045,
             right: w * 0.045,
-            top: h * (100 - captionBand + 1) / 100,
-            bottom: h * 0.02,
+            top: h * (page.captionTop ? 1.5 : 100 - band + 0.5) / 100,
+            height: h * (band - 2) / 100,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: onTextTap == null ? null : () => onTextTap!(-1),
@@ -140,7 +141,7 @@ class PrintPageView extends StatelessWidget {
                     child: Text(
                       capFont.apply(page.caption),
                       textAlign: page.captionAlign,
-                      maxLines: st.heading ? 1 : 2,
+                      maxLines: captionLines(page, product.aspect),
                       style: TextStyle(
                         fontFamily: st.heading ? capFont.titleFont : capFont.bodyFont,
                         fontWeight: st.heading ? capFont.titleWeight : FontWeight.w400,
@@ -215,22 +216,36 @@ class _PhotoSlotView extends StatelessWidget {
   }
 }
 
-/// Sayfa altyazısı için sayfanın altında ayrılan şeridin yüksekliği (yüzde).
-const captionBand = 13.0;
+/// Yazının tahmini satır sayısı (sayfa en-boy oranına ve stile göre).
+int captionLines(PrintPage page, double aspect) {
+  final st = page.captionStyle;
+  final charsPerLine = 0.91 * aspect / (0.5 * st.sizeFactor);
+  final lines = (page.caption.length / charsPerLine).ceil();
+  return lines.clamp(1, st.heading ? 2 : 3);
+}
 
-/// Şablon öğelerini sayfaya uygular: kenarlıksız, Popsa'nın dar boşlukları ve altyazı şeridi.
-List<TemplateElement> pageLayout(PrintPage page, PageTemplate tpl, String format) {
+/// Sayfa yazısı için ayrılan şeridin yüksekliği (sayfa yüksekliğinin yüzdesi). Yazı yoksa 0.
+/// Küçük stil ve kısa metin daha dar şerit demektir.
+double captionBandFor(PrintPage page, double aspect) {
+  if (page.isCover || page.caption.isEmpty) return 0;
+  return captionLines(page, aspect) * page.captionStyle.sizeFactor * 100 * 1.25 + 3.5;
+}
+
+/// Şablon öğelerini sayfaya uygular: kenarlıksız, Popsa'nın dar boşlukları ve yazı şeridi (üstte ya da altta).
+List<TemplateElement> pageLayout(PrintPage page, PageTemplate tpl, String format, double aspect) {
   var elements = tpl.elementsFor(format);
   if (!page.isCover && tpl.automaticUse) elements = tightenGutters(elements);
   if (page.borderless) elements = borderlessElements(elements);
-  if (!page.isCover && page.caption.isNotEmpty) {
-    final k = (100 - captionBand) / 100;
+  final band = captionBandFor(page, aspect);
+  if (band > 0) {
+    final k = (100 - band) / 100;
+    final offset = page.captionTop ? band : 0.0;
     elements = [
       for (final e in elements)
         TemplateElement(
           type: e.type,
           role: e.role,
-          frame: Rect.fromLTWH(e.frame.left, e.frame.top * k, e.frame.width, e.frame.height * k),
+          frame: Rect.fromLTWH(e.frame.left, offset + e.frame.top * k, e.frame.width, e.frame.height * k),
           align: e.align,
           border: e.border,
           vertical: e.vertical,
@@ -373,7 +388,7 @@ class _TextSlotView extends StatelessWidget {
     if (text.isEmpty && !placeholder) {
       child = const SizedBox.expand();
     } else {
-      final value = placeholder ? (isTitle ? 'Başlık' : 'Altyazı eklemek için dokun') : font.apply(text);
+      final value = placeholder ? (isTitle ? 'Başlık' : 'Yazı eklemek için dokun') : font.apply(text);
       Widget titleBlock = Text(value, textAlign: align, style: style);
       if (isTitle && subtitle.isNotEmpty && !placeholder) {
         titleBlock = Column(

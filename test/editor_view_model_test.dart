@@ -136,9 +136,16 @@ void main() {
     expect(tight[1].left - tight[0].right, closeTo(1.8, 0.01));
     expect(tight[2].top - tight[0].bottom, closeTo(2.4, 0.01));
     final page = PrintPage(id: 'x', tag: 'layout-regular', templateId: 5, photos: [], texts: [], caption: 'Merhaba');
-    final laid = pageLayout(page, tpl, 'square');
+    final laid = pageLayout(page, tpl, 'square', 1);
+    final band = captionBandFor(page, 1);
     final bottom = laid.map((e) => e.frame.bottom).reduce((a, b) => a > b ? a : b);
-    expect(bottom, lessThanOrEqualTo(100 - captionBand));
+    expect(bottom, lessThanOrEqualTo(100 - band));
+    // Gövde stili başlıktan daha dar şerit kaplar; üstteki yazı fotoğrafları aşağı iter.
+    page.captionStyle = TextStyleId.heading2;
+    expect(captionBandFor(page, 1), greaterThan(band));
+    page.captionTop = true;
+    final top = pageLayout(page, tpl, 'square', 1).map((e) => e.frame.top).reduce((a, b) => a < b ? a : b);
+    expect(top, greaterThanOrEqualTo(captionBandFor(page, 1)));
   });
 
   test('altyazı stili, hizalama ve yazı tipi kaydedilir', () {
