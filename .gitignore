@@ -47,3 +47,6 @@ app.*.map.json
 # Referans uygulamadan (Popsa) çıkarılan varlıklar — yalnızca yerel, telifli, repoya girmez
 /reference/
 *.apk
+/assets/ref/**
+!/assets/ref/**/
+!/assets/ref/**/.gitkeep

@@ -1,0 +1,67 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:path_provider/path_provider.dart';
+
+import '../models/basket_item.dart';
+import '../models/photo_book.dart';
+
+/// Tasarımları ve sepeti uygulama belgeler dizininde JSON dosyaları olarak saklar.
+class DesignRepository {
+  DesignRepository({Directory? root}) : _root = root;
+
+  Directory? _root;
+
+  Future<Directory> _dir(String name) async {
+    _root ??= await getApplicationDocumentsDirectory();
+    final d = Directory('${_root!.path}/$name');
+    if (!await d.exists()) await d.create(recursive: true);
+    return d;
+  }
+
+  Future<List<PhotoBook>> loadBooks() async {
+    final d = await _dir('designs');
+    final books = <PhotoBook>[];
+    await for (final f in d.list()) {
+      if (f is File && f.path.endsWith('.json')) {
+        try {
+          books.add(PhotoBook.fromJson(jsonDecode(await f.readAsString())));
+        } catch (_) {
+          // bozuk dosyayı atla
+        }
+      }
+    }
+    books.sort((a, b) => b.updatedAtMs.compareTo(a.updatedAtMs));
+    return books;
+  }
+
+  Future<void> saveBook(PhotoBook book) async {
+    final d = await _dir('designs');
+    final f = File('${d.path}/${book.id}.json');
+    final tmp = File('${f.path}.tmp');
+    await tmp.writeAsString(book.encode());
+    await tmp.rename(f.path);
+  }
+
+  Future<void> deleteBook(String id) async {
+    final d = await _dir('designs');
+    final f = File('${d.path}/$id.json');
+    if (await f.exists()) await f.delete();
+  }
+
+  Future<List<BasketItem>> loadBasket() async {
+    final d = await _dir('basket');
+    final f = File('${d.path}/basket.json');
+    if (!await f.exists()) return [];
+    try {
+      return (jsonDecode(await f.readAsString()) as List).map((e) => BasketItem.fromJson(e)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> saveBasket(List<BasketItem> items) async {
+    final d = await _dir('basket');
+    await File('${d.path}/basket.json').writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()));
+  }
+}

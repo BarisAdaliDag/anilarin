@@ -34,6 +34,15 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  provider: ^6.1.5+1
+  photo_manager: ^3.12.0
+  path_provider: ^2.1.6
+  uuid: ^4.6.0
+  video_player: ^2.11.1
+  intl: ^0.20.2
+  photo_manager_image_provider: ^2.2.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +68,42 @@ flutter:
 
   assets:
     - assets/placeholder/
+    - assets/catalog/
+    - assets/ref/
+    - assets/ref/home/
+    - assets/ref/themes/
+    - assets/ref/mockups/topdown/
+    - assets/ref/mockups/scene/
+    - assets/ref/media/
+
+  fonts:
+    - family: DMSans
+      fonts:
+        - asset: assets/fonts/DMSans-Regular.ttf
+        - asset: assets/fonts/DMSans-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/DMSans-Bold.ttf
+          weight: 700
+    - family: DMSerifDisplay
+      fonts:
+        - asset: assets/fonts/DMSerifDisplay-Regular.ttf
+    - family: DMSerifText
+      fonts:
+        - asset: assets/fonts/DMSerifText-Regular.ttf
+    - family: LibreBaskerville
+      fonts:
+        - asset: assets/fonts/LibreBaskerville-Regular.ttf
+        - asset: assets/fonts/LibreBaskerville-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/LibreBaskerville-Italic.ttf
+          style: italic
+    - family: Quicksand
+      fonts:
+        - asset: assets/fonts/Quicksand-SemiBold.ttf
+          weight: 600
+    - family: NewsCycle
+      fonts:
+        - asset: assets/fonts/NewsCycle-Regular.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

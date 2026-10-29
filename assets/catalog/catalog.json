@@ -1,0 +1,805 @@
+{
+ "currency": "TRY",
+ "products": [
+  {
+   "code": "PBK-1",
+   "type": "booklet",
+   "format": "landscape",
+   "size": "small",
+   "priceCents": 34900,
+   "incrementPriceCents": 0,
+   "pagesMin": 20,
+   "pagesMax": 20,
+   "pagesDefault": 20,
+   "pageIncrement": 2,
+   "photoMin": 21,
+   "photoRecommend": 40,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 80,
+   "aspect": 1.3065,
+   "dimensionsCm": "20 × 15",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 20,
+     "maximum": 20
+    }
+   ]
+  },
+  {
+   "code": "PBK-2",
+   "type": "booklet",
+   "format": "square",
+   "size": "small",
+   "priceCents": 34900,
+   "incrementPriceCents": 0,
+   "pagesMin": 20,
+   "pagesMax": 20,
+   "pagesDefault": 20,
+   "pageIncrement": 2,
+   "photoMin": 21,
+   "photoRecommend": 40,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 80,
+   "aspect": 1.0,
+   "dimensionsCm": "15 × 15",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 20,
+     "maximum": 20
+    }
+   ]
+  },
+  {
+   "code": "PBK-3",
+   "type": "softcover",
+   "format": "landscape",
+   "size": "medium",
+   "priceCents": 54900,
+   "incrementPriceCents": 1200,
+   "pagesMin": 24,
+   "pagesMax": 100,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.3065,
+   "dimensionsCm": "28 × 21",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 100
+    }
+   ]
+  },
+  {
+   "code": "PBK-4",
+   "type": "softcover",
+   "format": "landscape",
+   "size": "large",
+   "priceCents": 69900,
+   "incrementPriceCents": 1500,
+   "pagesMin": 24,
+   "pagesMax": 100,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.3065,
+   "dimensionsCm": "35 × 26",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 100
+    }
+   ]
+  },
+  {
+   "code": "PBK-5",
+   "type": "softcover",
+   "format": "square",
+   "size": "small",
+   "priceCents": 44900,
+   "incrementPriceCents": 1000,
+   "pagesMin": 24,
+   "pagesMax": 100,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.0,
+   "dimensionsCm": "20 × 20",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 100
+    }
+   ]
+  },
+  {
+   "code": "PBK-6",
+   "type": "softcover",
+   "format": "square",
+   "size": "medium",
+   "priceCents": 59900,
+   "incrementPriceCents": 1300,
+   "pagesMin": 24,
+   "pagesMax": 100,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.0,
+   "dimensionsCm": "25 × 25",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 100
+    }
+   ]
+  },
+  {
+   "code": "PBK-7",
+   "type": "hardback",
+   "format": "landscape",
+   "size": "small",
+   "priceCents": 64900,
+   "incrementPriceCents": 1500,
+   "pagesMin": 24,
+   "pagesMax": 120,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.3065,
+   "dimensionsCm": "20 × 15",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 120
+    }
+   ]
+  },
+  {
+   "code": "PBK-8",
+   "type": "hardback",
+   "format": "landscape",
+   "size": "medium",
+   "priceCents": 84900,
+   "incrementPriceCents": 1800,
+   "pagesMin": 24,
+   "pagesMax": 120,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.3065,
+   "dimensionsCm": "28 × 21",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 120
+    }
+   ]
+  },
+  {
+   "code": "PBK-9",
+   "type": "hardback",
+   "format": "landscape",
+   "size": "large",
+   "priceCents": 109900,
+   "incrementPriceCents": 2200,
+   "pagesMin": 24,
+   "pagesMax": 120,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.3065,
+   "dimensionsCm": "35 × 26",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 120
+    }
+   ]
+  },
+  {
+   "code": "PBK-10",
+   "type": "hardback",
+   "format": "square",
+   "size": "small",
+   "priceCents": 59900,
+   "incrementPriceCents": 1400,
+   "pagesMin": 24,
+   "pagesMax": 120,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.0,
+   "dimensionsCm": "20 × 20",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 120
+    }
+   ]
+  },
+  {
+   "code": "PBK-11",
+   "type": "hardback",
+   "format": "square",
+   "size": "medium",
+   "priceCents": 79900,
+   "incrementPriceCents": 1700,
+   "pagesMin": 24,
+   "pagesMax": 120,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.0,
+   "dimensionsCm": "25 × 25",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 120
+    }
+   ]
+  },
+  {
+   "code": "PBK-12",
+   "type": "hardback",
+   "format": "square",
+   "size": "large",
+   "priceCents": 99900,
+   "incrementPriceCents": 2000,
+   "pagesMin": 24,
+   "pagesMax": 120,
+   "pagesDefault": 24,
+   "pageIncrement": 2,
+   "photoMin": 25,
+   "photoRecommend": 48,
+   "photosPerExtraPage": 2,
+   "photoMaxBase": 96,
+   "aspect": 1.0,
+   "dimensionsCm": "30 × 30",
+   "deliveryDays": [
+    5,
+    8
+   ],
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 24,
+     "maximum": 120
+    }
+   ]
+  }
+ ],
+ "themes": [
+  {
+   "id": "purewhite",
+   "group": "colors",
+   "name": "Saf Beyaz",
+   "background": "#FFFFFF",
+   "title": "#212121",
+   "text": "#424242",
+   "coverBackground": "#FFFFFF",
+   "coverText": "#212121",
+   "preview": "purewhite"
+  },
+  {
+   "id": "babyblue",
+   "group": "colors",
+   "name": "Bebek Mavisi",
+   "background": "#FFFFFF",
+   "title": "#019CE1",
+   "text": "#424242",
+   "coverBackground": "#019CE1",
+   "coverText": "#FFFFFF",
+   "preview": "babyblue"
+  },
+  {
+   "id": "skyblue",
+   "group": "colors",
+   "name": "Gök Mavisi",
+   "background": "#FFFFFF",
+   "title": "#1D88EA",
+   "text": "#424242",
+   "coverBackground": "#1D88EA",
+   "coverText": "#FFFFFF",
+   "preview": "skyblue"
+  },
+  {
+   "id": "sapphire",
+   "group": "colors",
+   "name": "Safir",
+   "background": "#FFFFFF",
+   "title": "#3A47AE",
+   "text": "#424242",
+   "coverBackground": "#3A47AE",
+   "coverText": "#FFFFFF",
+   "preview": "sapphire"
+  },
+  {
+   "id": "marineblue",
+   "group": "colors",
+   "name": "Deniz Mavisi",
+   "background": "#FFFFFF",
+   "title": "#00AEBE",
+   "text": "#424242",
+   "coverBackground": "#00AEBE",
+   "coverText": "#FFFFFF",
+   "preview": "marineblue"
+  },
+  {
+   "id": "mintgreen",
+   "group": "colors",
+   "name": "Nane",
+   "background": "#FFFFFF",
+   "title": "#02BEAA",
+   "text": "#424242",
+   "coverBackground": "#02BEAA",
+   "coverText": "#FFFFFF",
+   "preview": "mintgreen"
+  },
+  {
+   "id": "grassgreen",
+   "group": "colors",
+   "name": "Çimen",
+   "background": "#FFFFFF",
+   "title": "#79B546",
+   "text": "#424242",
+   "coverBackground": "#79B546",
+   "coverText": "#FFFFFF",
+   "preview": "grassgreen"
+  },
+  {
+   "id": "dollargreen",
+   "group": "colors",
+   "name": "Yeşil",
+   "background": "#FFFFFF",
+   "title": "#44A044",
+   "text": "#424242",
+   "coverBackground": "#44A044",
+   "coverText": "#FFFFFF",
+   "preview": "dollargreen"
+  },
+  {
+   "id": "citrus",
+   "group": "colors",
+   "name": "Narenciye",
+   "background": "#FFFFFF",
+   "title": "#C1CA2E",
+   "text": "#424242",
+   "coverBackground": "#C1CA2E",
+   "coverText": "#FFFFFF",
+   "preview": "citrus"
+  },
+  {
+   "id": "sunshine",
+   "group": "colors",
+   "name": "Güneş",
+   "background": "#FFFFFF",
+   "title": "#E8C21A",
+   "text": "#424242",
+   "coverBackground": "#E8C21A",
+   "coverText": "#FFFFFF",
+   "preview": "sunshine"
+  },
+  {
+   "id": "honey",
+   "group": "colors",
+   "name": "Bal",
+   "background": "#FFFFFF",
+   "title": "#FFB204",
+   "text": "#424242",
+   "coverBackground": "#FFB204",
+   "coverText": "#FFFFFF",
+   "preview": "honey"
+  },
+  {
+   "id": "tangerine",
+   "group": "colors",
+   "name": "Mandalina",
+   "background": "#FFFFFF",
+   "title": "#FF8B00",
+   "text": "#424242",
+   "coverBackground": "#FF8B00",
+   "coverText": "#FFFFFF",
+   "preview": "tangerine"
+  },
+  {
+   "id": "peach",
+   "group": "colors",
+   "name": "Şeftali",
+   "background": "#FFFFFF",
+   "title": "#F64E21",
+   "text": "#424242",
+   "coverBackground": "#F64E21",
+   "coverText": "#FFFFFF",
+   "preview": "peach"
+  },
+  {
+   "id": "rose",
+   "group": "colors",
+   "name": "Gül",
+   "background": "#FFFFFF",
+   "title": "#E23B36",
+   "text": "#424242",
+   "coverBackground": "#E23B36",
+   "coverText": "#FFFFFF",
+   "preview": "rose"
+  },
+  {
+   "id": "bubblegum",
+   "group": "colors",
+   "name": "Sakız",
+   "background": "#FFFFFF",
+   "title": "#DA1C5C",
+   "text": "#424242",
+   "coverBackground": "#DA1C5C",
+   "coverText": "#FFFFFF",
+   "preview": "bubblegum"
+  },
+  {
+   "id": "fuchsia",
+   "group": "colors",
+   "name": "Fuşya",
+   "background": "#FFFFFF",
+   "title": "#9123A5",
+   "text": "#424242",
+   "coverBackground": "#9123A5",
+   "coverText": "#FFFFFF",
+   "preview": "fuchsia"
+  },
+  {
+   "id": "lavender",
+   "group": "colors",
+   "name": "Lavanta",
+   "background": "#FFFFFF",
+   "title": "#5A37AE",
+   "text": "#424242",
+   "coverBackground": "#5A37AE",
+   "coverText": "#FFFFFF",
+   "preview": "lavender"
+  },
+  {
+   "id": "cappuccino",
+   "group": "colors",
+   "name": "Kapuçino",
+   "background": "#FFFFFF",
+   "title": "#6B4E3D",
+   "text": "#424242",
+   "coverBackground": "#6B4E3D",
+   "coverText": "#FFFFFF",
+   "preview": "cappuccino"
+  },
+  {
+   "id": "bluegrey",
+   "group": "colors",
+   "name": "Mavi Gri",
+   "background": "#FFFFFF",
+   "title": "#536F76",
+   "text": "#424242",
+   "coverBackground": "#536F76",
+   "coverText": "#FFFFFF",
+   "preview": "bluegrey"
+  },
+  {
+   "id": "grey",
+   "group": "colors",
+   "name": "Gri",
+   "background": "#FFFFFF",
+   "title": "#767676",
+   "text": "#424242",
+   "coverBackground": "#767676",
+   "coverText": "#FFFFFF",
+   "preview": "grey"
+  },
+  {
+   "id": "allwhite",
+   "group": "solid",
+   "name": "Tamamen Beyaz",
+   "background": "#FFFFFF",
+   "title": "#212121",
+   "text": "#424242",
+   "coverBackground": "#FFFFFF",
+   "coverText": "#212121",
+   "preview": "allwhite"
+  },
+  {
+   "id": "light",
+   "group": "solid",
+   "name": "Açık",
+   "background": "#F5F5F5",
+   "title": "#212121",
+   "text": "#424242",
+   "coverBackground": "#F5F5F5",
+   "coverText": "#212121",
+   "preview": "light"
+  },
+  {
+   "id": "dark",
+   "group": "solid",
+   "name": "Koyu",
+   "background": "#2F2F2F",
+   "title": "#FFFFFF",
+   "text": "#E0E0E0",
+   "coverBackground": "#2F2F2F",
+   "coverText": "#FFFFFF",
+   "preview": "dark"
+  },
+  {
+   "id": "dynamiclight",
+   "group": "dynamic",
+   "name": "Pastel",
+   "background": "#F3EDFF",
+   "title": "#5A37AE",
+   "text": "#424242",
+   "coverBackground": "#EDE6FF",
+   "coverText": "#5A37AE",
+   "preview": "dynamiclight"
+  },
+  {
+   "id": "dynamicmuted",
+   "group": "dynamic",
+   "name": "Yumuşak",
+   "background": "#E5DAFF",
+   "title": "#361AB5",
+   "text": "#424242",
+   "coverBackground": "#D7CAFF",
+   "coverText": "#361AB5",
+   "preview": "dynamicmuted"
+  },
+  {
+   "id": "dynamicvibrant",
+   "group": "dynamic",
+   "name": "Canlı",
+   "background": "#FFFFFF",
+   "title": "#866EFF",
+   "text": "#424242",
+   "coverBackground": "#866EFF",
+   "coverText": "#FFFFFF",
+   "preview": "dynamicvibrant"
+  },
+  {
+   "id": "dynamicrich",
+   "group": "dynamic",
+   "name": "Zengin",
+   "background": "#FFFFFF",
+   "title": "#361AB5",
+   "text": "#424242",
+   "coverBackground": "#361AB5",
+   "coverText": "#FFFFFF",
+   "preview": "dynamicrich"
+  },
+  {
+   "id": "dynamicdark",
+   "group": "dynamic",
+   "name": "Gece",
+   "background": "#110947",
+   "title": "#FFFFFF",
+   "text": "#D7CAFF",
+   "coverBackground": "#110947",
+   "coverText": "#FFFFFF",
+   "preview": "dynamicdark"
+  }
+ ],
+ "themeGroups": [
+  {
+   "id": "colors",
+   "name": "Renkler"
+  },
+  {
+   "id": "solid",
+   "name": "Düz"
+  },
+  {
+   "id": "dynamic",
+   "name": "Dinamik"
+  }
+ ],
+ "textAppearances": [
+  {
+   "id": "modern",
+   "name": "Modern",
+   "title": "DMSans",
+   "titleWeight": 700,
+   "body": "DMSans",
+   "transform": "none"
+  },
+  {
+   "id": "classic",
+   "name": "Klasik",
+   "title": "LibreBaskerville",
+   "titleWeight": 400,
+   "body": "LibreBaskerville",
+   "transform": "none"
+  },
+  {
+   "id": "confident",
+   "name": "Kendinden Emin",
+   "title": "DMSans",
+   "titleWeight": 700,
+   "body": "DMSans",
+   "transform": "upper"
+  },
+  {
+   "id": "traditional",
+   "name": "Geleneksel",
+   "title": "DMSerifDisplay",
+   "titleWeight": 400,
+   "body": "DMSerifText",
+   "transform": "none"
+  },
+  {
+   "id": "rounded",
+   "name": "Yuvarlak",
+   "title": "Quicksand",
+   "titleWeight": 600,
+   "body": "Quicksand",
+   "transform": "none"
+  },
+  {
+   "id": "expansive",
+   "name": "Geniş",
+   "title": "DMSerifDisplay",
+   "titleWeight": 400,
+   "body": "DMSans",
+   "transform": "upper",
+   "letterSpacing": 2.0
+  },
+  {
+   "id": "geometric",
+   "name": "Geometrik",
+   "title": "NewsCycle",
+   "titleWeight": 400,
+   "body": "NewsCycle",
+   "transform": "none"
+  }
+ ],
+ "preferredThemes": [
+  "purewhite",
+  "skyblue",
+  "mintgreen",
+  "honey",
+  "rose",
+  "lavender",
+  "dark"
+ ]
+}
