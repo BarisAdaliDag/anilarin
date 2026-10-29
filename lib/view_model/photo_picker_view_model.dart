@@ -93,12 +93,13 @@ class PhotoPickerViewModel extends ChangeNotifier {
           id: a.id,
           takenAt: a.createDateTime,
           screenshot: SmartAlbumService.isScreenshotPath(a.relativePath),
+          camera: SmartAlbumService.isCameraPath(a.relativePath),
         ),
     ]);
     notifyListeners();
   }
 
-  AssetEntity? smartCover(SmartAlbum s) => _recent[s.photoIds.first];
+  AssetEntity? smartCover(SmartAlbum s) => _recent[s.coverId];
 
   void openSmart(SmartAlbum s) {
     smart = s;

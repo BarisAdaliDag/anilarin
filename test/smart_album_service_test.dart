@@ -31,6 +31,29 @@ void main() {
     );
   });
 
+  test('yalnız kamera klasörü kabul edilir, tekrar eden başlıklar değişir', () {
+    expect(SmartAlbumService.isCameraPath('DCIM/Camera/'), isTrue);
+    expect(SmartAlbumService.isCameraPath('Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/'), isFalse);
+    expect(SmartAlbumService.isCameraPath('Download/'), isFalse);
+    expect(SmartAlbumService.isCameraPath(null), isTrue);
+    final albums = SmartAlbumService.build([
+      ...event(DateTime(2026, 10, 20), 15),
+      ...event(DateTime(2026, 10, 5), 15),
+    ]);
+    expect(albums[0].title, isNot(albums[1].title));
+  });
+
+  test('kapak ortaya en yakın kamera fotoğrafı, en fazla 6 öneri', () {
+    final e = [
+      for (var i = 0; i < 12; i++)
+        SmartPhoto(id: 'p$i', takenAt: DateTime(2026, 10, 1, 12, i), camera: i == 2 || i == 9),
+    ];
+    final album = SmartAlbumService.build(e).single;
+    expect(album.coverId, anyOf('p2', 'p9'));
+    final many = [for (var d = 0; d < 10; d++) ...event(DateTime(2026, 1, 1 + d * 2), 15)];
+    expect(SmartAlbumService.build(many).length, 6);
+  });
+
   test('ekran görüntüsü yolu tanınır', () {
     expect(SmartAlbumService.isScreenshotPath('Pictures/Screenshots/'), isTrue);
     expect(SmartAlbumService.isScreenshotPath('DCIM/Camera/'), isFalse);
