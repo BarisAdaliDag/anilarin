@@ -16,20 +16,25 @@ import '../widgets/ref_image.dart';
 
 /// Editörde "İleri"ye basınca açılan Sipariş Ayrıntıları (Popsa Order Details):
 /// boyut (elde tutulan kitap sahnesi), kapak türü ve kâğıt yüzeyi kartları; altta ara toplam.
-Future<void> showOrderDetails(BuildContext context, EditorViewModel vm) {
+/// [fromBasket]: sepetten açıldıysa İleri yalnız pencereyi kapatır (sepet zaten arkada).
+Future<void> showOrderDetails(BuildContext context, EditorViewModel vm, {bool fromBasket = false}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => FractionallySizedBox(heightFactor: 0.97, child: OrderDetailsScreen(vm: vm)),
+    builder: (_) => FractionallySizedBox(
+      heightFactor: 0.97,
+      child: OrderDetailsScreen(vm: vm, fromBasket: fromBasket),
+    ),
   );
 }
 
 class OrderDetailsScreen extends StatefulWidget {
-  const OrderDetailsScreen({super.key, required this.vm});
+  const OrderDetailsScreen({super.key, required this.vm, this.fromBasket = false});
 
   final EditorViewModel vm;
+  final bool fromBasket;
 
   @override
   State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
@@ -43,7 +48,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   Future<void> _next() async {
     final nav = Navigator.of(context);
     nav.pop();
-    await buyBook(nav.context, vm);
+    if (!widget.fromBasket) await buyBook(nav.context, vm);
   }
 
   @override

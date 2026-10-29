@@ -35,3 +35,26 @@ class BasketItem {
     quantity: j['qty'] ?? 1,
   );
 }
+
+/// İndirim kodu (test sürümünde sabit liste; Popsa'da sunucudan gelir).
+class Coupon {
+  final String code;
+  final int percent;
+
+  const Coupon(this.code, this.percent);
+
+  static const welcome = Coupon('HOSGELDIN', 20);
+  static const all = [welcome];
+
+  static Coupon? byCode(String? code) {
+    final c = code?.trim().toUpperCase();
+    for (final k in all) {
+      if (k.code == c) return k;
+    }
+    return null;
+  }
+
+  int apply(int cents) => cents - discountOf(cents);
+
+  int discountOf(int cents) => (cents * percent / 100).round();
+}

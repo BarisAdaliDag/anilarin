@@ -60,6 +60,21 @@ class DesignRepository {
     }
   }
 
+  /// Uygulanan indirim kodu. Dosya yoksa (ilk kullanım) Popsa'daki gibi hoş geldin indirimi gelir.
+  Future<String?> loadCoupon() async {
+    final f = File('${(await _dir('basket')).path}/coupon.json');
+    if (!await f.exists()) return Coupon.welcome.code;
+    try {
+      return (jsonDecode(await f.readAsString()) as Map)['code'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveCoupon(String? code) async {
+    await File('${(await _dir('basket')).path}/coupon.json').writeAsString(jsonEncode({'code': code}));
+  }
+
   Future<void> saveBasket(List<BasketItem> items) async {
     final d = await _dir('basket');
     await File('${d.path}/basket.json').writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()));

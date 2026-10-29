@@ -1,3 +1,4 @@
+import 'package:anilarin/models/basket_item.dart';
 import 'dart:io';
 import 'dart:math';
 
@@ -36,5 +37,12 @@ void main() {
     expect(p.totalPrice(p.pagesDefault + 4, o), p.priceCents + 4 * p.incrementPriceCents + 14900 + 19900 + 9900);
     final soft = catalog.product('PBK-3');
     expect(soft.optionsPrice(o), 14900); // yumuşak kapakta yalnız hediye kutusu
+  });
+
+  test('indirim kodu: hoş geldin %20, geçersiz kod reddedilir', () {
+    expect(Coupon.byCode('hosgeldin'), Coupon.welcome);
+    expect(Coupon.byCode('YANLIS'), isNull);
+    expect(Coupon.welcome.apply(129800), 103840); // Popsa: 1.298 → 1.038,40
+    expect(Coupon.welcome.discountOf(129800), 25960);
   });
 }

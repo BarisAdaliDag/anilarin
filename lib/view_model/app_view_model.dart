@@ -21,11 +21,16 @@ class AppViewModel extends ChangeNotifier {
   List<BasketItem> basket = [];
   bool loading = true;
   int tabIndex = 0;
+  Coupon? coupon;
 
   Future<void> load() async {
     catalog = await _catalogRepository.load();
     books = await designs.loadBooks();
     basket = await designs.loadBasket();
+    coupon = Coupon.byCode(await designs.loadCoupon());
+    for (final b in books) {
+      _syncBasketItem(b);
+    }
     loading = false;
     notifyListeners();
   }
@@ -33,6 +38,21 @@ class AppViewModel extends ChangeNotifier {
   void setTab(int i) {
     tabIndex = i;
     notifyListeners();
+  }
+
+  /// Popsa'daki gibi sepetteki ürün tasarımla eşit kalır (tür, boyut, sayfa, seçenekler). Sepetteyse true.
+  bool _syncBasketItem(PhotoBook book) {
+    final i = basket.indexWhere((b) => b.bookId == book.id);
+    if (i < 0) return false;
+    basket[i] = BasketItem(
+      bookId: book.id,
+      title: book.title,
+      productCode: book.productCode,
+      pages: book.pageCount,
+      options: book.options.copy(),
+      quantity: basket[i].quantity,
+    );
+    return true;
   }
 
   PhotoBook? book(String id) {
@@ -51,8 +71,10 @@ class AppViewModel extends ChangeNotifier {
       books.insert(0, book);
     }
     books.sort((a, b) => b.updatedAtMs.compareTo(a.updatedAtMs));
+    final inBasket = _syncBasketItem(book);
     notifyListeners();
     await designs.saveBook(book);
+    if (inBasket) await designs.saveBasket(basket);
   }
 
   Future<PhotoBook?> duplicateBook(String id) async {
@@ -76,10 +98,44 @@ class AppViewModel extends ChangeNotifier {
 
   int get basketCount => basket.fold(0, (s, i) => s + i.quantity);
 
-  int itemPrice(BasketItem item) =>
-      catalog!.product(item.productCode).totalPrice(item.pages, item.options) * item.quantity;
+  /// Ürünün ödenecek fiyatı (adet ve indirim kodu dahil).
+  int itemPrice(BasketItem item) {
+    final full = catalog!.product(item.productCode).totalPrice(item.pages, item.options) * item.quantity;
+    return coupon?.apply(full) ?? full;
+  }
+
+  /// Üstü çizili fiyat: kampanyasız fiyat (Popsa sepetindeki gibi).
+  int itemCompareAt(BasketItem item) =>
+      catalog!.product(item.productCode).compareTotal(item.pages, item.options) * item.quantity;
 
   int get basketTotal => basket.fold(0, (s, i) => s + itemPrice(i));
+
+  /// Toplam indirim: üstü çizili fiyatlarla ödenecek fiyatlar arasındaki fark.
+  int get basketDiscount => basket.fold(0, (s, i) => s + itemCompareAt(i) - itemPrice(i));
+
+  /// Kod geçerliyse uygular; değilse false.
+  Future<bool> redeem(String code) async {
+    final c = Coupon.byCode(code);
+    if (c == null) return false;
+    coupon = c;
+    notifyListeners();
+    await designs.saveCoupon(c.code);
+    return true;
+  }
+
+  Future<void> removeCoupon() async {
+    coupon = null;
+    notifyListeners();
+    await designs.saveCoupon(null);
+  }
+
+  Future<void> removeFromBasket(BasketItem item) => setQuantity(item, 0);
+
+  Future<void> clearBasket() async {
+    basket.clear();
+    notifyListeners();
+    await designs.saveBasket(basket);
+  }
 
   Future<void> addToBasket(PhotoBook book) async {
     final existing = basket.indexWhere((b) => b.bookId == book.id);
