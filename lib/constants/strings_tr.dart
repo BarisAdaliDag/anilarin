@@ -201,6 +201,9 @@ class S {
 
   // Önizleme / sepet
   static const background = 'Arka plan';
+  static const backgroundColours = 'Arka Plan Renkleri';
+  static const themeBackground = 'Tema';
+  static const neutral = 'Nötr';
   static const basketTitle = 'Sepet';
   static const basketEmpty = 'Sepetin boş';
   static const total = 'Toplam';
