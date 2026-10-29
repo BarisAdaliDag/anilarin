@@ -152,6 +152,13 @@ class S {
   static const discardUnused = 'Kullanılmayanları At';
   static const editPhoto = 'Fotoğrafı Düzenle';
   static const photoQuality = 'FOTOĞRAF KALİTESİ';
+  static const grid = 'Izgara';
+  static const ok = 'Tamam';
+  static const qualityExplanationA =
+      'Bu puan, fotoğrafının baskıda nasıl görüneceğini gösterir. Puan düştükçe fotoğraf daha pikselli görünür.';
+  static const qualityExplanationB =
+      'Düşük puan, orijinal fotoğrafın çok küçük olduğunu ya da fazla yakınlaştırıldığını gösterir.';
+  static String qualityExplanationC(int pct) => 'Bu fotoğrafı orijinal boyutunun %$pct\'ine ölçeklememiz gerekecek.';
   static const qualityGood = 'İyi';
   static const qualityOk = 'Orta';
   static const qualityPoor = 'Düşük';
