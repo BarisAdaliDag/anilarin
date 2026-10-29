@@ -29,6 +29,8 @@ class Product {
   final String format; // landscape | square
   final String size; // small | medium | large
   final int priceCents;
+  final int compareAtCents; // üstü çizili fiyat
+  final bool mostPopular;
   final int incrementPriceCents;
   final int pagesMin;
   final int pagesMax;
@@ -49,6 +51,8 @@ class Product {
     required this.format,
     required this.size,
     required this.priceCents,
+    required this.compareAtCents,
+    required this.mostPopular,
     required this.incrementPriceCents,
     required this.pagesMin,
     required this.pagesMax,
@@ -70,6 +74,8 @@ class Product {
         format: j['format'],
         size: j['size'],
         priceCents: j['priceCents'],
+        compareAtCents: j['compareAtCents'] ?? j['priceCents'],
+        mostPopular: j['mostPopular'] ?? false,
         incrementPriceCents: j['incrementPriceCents'],
         pagesMin: j['pagesMin'],
         pagesMax: j['pagesMax'],
@@ -117,6 +123,7 @@ class Product {
   String get sizeLabel => switch (size) {
         'small' => S.small,
         'medium' => S.medium,
+        'xlarge' => S.xlarge,
         _ => S.large,
       };
 
@@ -192,48 +199,34 @@ class PageTemplate {
   List<TemplateElement> textSlots(String format) => elementsFor(format).where((e) => !e.isPhoto).toList();
 }
 
+/// Sayfa teması: arka plan rengi ve ondan türetilen yazı renkleri.
+/// Popsa'daki gibi temalar birer renktir; kimlikleri `#RRGGBB` biçimindedir.
 class BookTheme {
   final String id;
-  final String group;
-  final String name;
   final Color background;
   final Color title;
   final Color text;
-  final Color coverBackground;
-  final Color coverText;
-  final String preview;
 
-  const BookTheme({
-    required this.id,
-    required this.group,
-    required this.name,
-    required this.background,
-    required this.title,
-    required this.text,
-    required this.coverBackground,
-    required this.coverText,
-    required this.preview,
-  });
+  const BookTheme({required this.id, required this.background, required this.title, required this.text});
 
-  factory BookTheme.fromJson(Map<String, dynamic> j) => BookTheme(
-        id: j['id'],
-        group: j['group'],
-        name: j['name'],
-        background: hexColor(j['background']),
-        title: hexColor(j['title']),
-        text: hexColor(j['text']),
-        coverBackground: hexColor(j['coverBackground']),
-        coverText: hexColor(j['coverText']),
-        preview: j['preview'],
-      );
+  factory BookTheme.fromHex(String hex) {
+    final bg = hexColor(hex);
+    final light = bg.computeLuminance() > 0.45;
+    return BookTheme(
+      id: hex.toUpperCase(),
+      background: bg,
+      title: light ? const Color(0xFF3A3A3A) : Colors.white,
+      text: light ? const Color(0xFF555555) : const Color(0xFFE6E6E6),
+    );
+  }
+
+  // Kapak ve iç sayfalar aynı kuralı kullanır; ayrı alanlar eski kodla uyum için.
+  Color get coverBackground => background;
+  Color get coverText => title;
 }
 
-class ThemeGroup {
-  final String id;
-  final String name;
-
-  const ThemeGroup(this.id, this.name);
-}
+String colorHex(Color c) =>
+    '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
 
 class TextAppearance {
   final String id;
@@ -273,41 +266,37 @@ class TextAppearance {
 class Catalog {
   final List<Product> products;
   final List<PageTemplate> templates;
-  final List<BookTheme> themes;
-  final List<ThemeGroup> themeGroups;
+  final List<String> neutralColors;
   final List<TextAppearance> textAppearances;
-  final List<String> preferredThemes;
 
   Catalog({
     required this.products,
     required this.templates,
-    required this.themes,
-    required this.themeGroups,
+    required this.neutralColors,
     required this.textAppearances,
-    required this.preferredThemes,
   });
 
   factory Catalog.fromJson(Map<String, dynamic> catalog, Map<String, dynamic> templates) => Catalog(
         products: (catalog['products'] as List).map((e) => Product.fromJson(e)).toList(),
         templates: (templates['templates'] as List).map((e) => PageTemplate.fromJson(e)).toList(),
-        themes: (catalog['themes'] as List).map((e) => BookTheme.fromJson(e)).toList(),
-        themeGroups: (catalog['themeGroups'] as List).map((e) => ThemeGroup(e['id'], e['name'])).toList(),
+        neutralColors: List<String>.from(catalog['neutralColors']),
         textAppearances: (catalog['textAppearances'] as List).map((e) => TextAppearance.fromJson(e)).toList(),
-        preferredThemes: List<String>.from(catalog['preferredThemes']),
       );
 
   Product product(String code) => products.firstWhere((p) => p.code == code);
 
   PageTemplate template(int id) => templates.firstWhere((t) => t.id == id, orElse: () => templates.first);
 
-  BookTheme theme(String id) => themes.firstWhere((t) => t.id == id, orElse: () => themes.first);
+  BookTheme theme(String id) => BookTheme.fromHex(id.startsWith('#') ? id : neutralColors.first);
 
   TextAppearance textAppearance(String id) =>
       textAppearances.firstWhere((t) => t.id == id, orElse: () => textAppearances.first);
 
-  List<String> get productTypes => const ['booklet', 'softcover', 'hardback'];
+  List<String> get productTypes => const ['hardback', 'softcover', 'booklet'];
 
   List<Product> productsOfType(String type) => products.where((p) => p.type == type).toList();
 
   int get lowestPrice => products.map((p) => p.priceCents).reduce((a, b) => a < b ? a : b);
+
+  int get lowestCompareAt => products.map((p) => p.compareAtCents).reduce((a, b) => a < b ? a : b);
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/basket_item.dart';
 import '../models/catalog.dart';
@@ -19,7 +20,7 @@ class AppViewModel extends ChangeNotifier {
   List<PhotoBook> books = [];
   List<BasketItem> basket = [];
   bool loading = true;
-  int tabIndex = 1;
+  int tabIndex = 0;
 
   Future<void> load() async {
     catalog = await _catalogRepository.load();
@@ -52,6 +53,17 @@ class AppViewModel extends ChangeNotifier {
     books.sort((a, b) => b.updatedAtMs.compareTo(a.updatedAtMs));
     notifyListeners();
     await designs.saveBook(book);
+  }
+
+  Future<PhotoBook?> duplicateBook(String id) async {
+    final original = book(id);
+    if (original == null) return null;
+    final copy = original.clone()
+      ..id = const Uuid().v4()
+      ..title = '${original.title} (kopya)'
+      ..createdAtMs = DateTime.now().millisecondsSinceEpoch;
+    await saveBook(copy);
+    return copy;
   }
 
   Future<void> deleteBook(String id) async {

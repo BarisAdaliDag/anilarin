@@ -23,7 +23,7 @@ class SlotRef {
   int get hashCode => Object.hash(page, slot);
 }
 
-enum ThemeScope { all, page, inside }
+enum ThemeScope { all, page, inside, cover }
 
 /// Fotoğraf kitabı editörü. Her değişiklik geri alınabilir ve otomatik kaydedilir.
 class EditorViewModel extends ChangeNotifier {
@@ -244,6 +244,8 @@ class EditorViewModel extends ChangeNotifier {
           }
         case ThemeScope.page:
           book.pages[pageIndex!].themeOverride = themeId;
+        case ThemeScope.cover:
+          book.cover.themeOverride = themeId;
       }
     });
   }
@@ -255,6 +257,17 @@ class EditorViewModel extends ChangeNotifier {
       }
     });
   }
+
+  bool get allBorderless => _book.pages.every((p) => p.borderless);
+
+  void toggleBorderless(int pageIndex) =>
+      _mutate((book) => book.pages[pageIndex].borderless = !book.pages[pageIndex].borderless);
+
+  void setAllBorderless(bool value) => _mutate((book) {
+        for (final p in book.pages) {
+          p.borderless = value;
+        }
+      });
 
   void setTextAppearance(String id) => _mutate((book) => book.textAppearanceId = id);
 

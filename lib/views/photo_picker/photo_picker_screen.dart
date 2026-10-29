@@ -43,15 +43,7 @@ class _PickerBody extends StatefulWidget {
   State<_PickerBody> createState() => _PickerBodyState();
 }
 
-class _PickerBodyState extends State<_PickerBody> with SingleTickerProviderStateMixin {
-  late final _tabs = TabController(length: 2, vsync: this);
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
-
+class _PickerBodyState extends State<_PickerBody> {
   bool _returned = false;
 
   void _next(PhotoPickerViewModel vm) {
@@ -67,6 +59,29 @@ class _PickerBodyState extends State<_PickerBody> with SingleTickerProviderState
     ));
   }
 
+  Future<void> _maxDialog(PhotoPickerViewModel vm) async {
+    final add = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('En fazlaya ulaşıldı', textAlign: TextAlign.center),
+        content: Text(S.maxReached(vm.pageCount), textAlign: TextAlign.center),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          if (vm.canAddPages)
+            FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text(S.addMorePages)),
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
+        ],
+      ),
+    );
+    if (add == true && mounted) await _addPagesDialog(vm);
+  }
+
+  Future<void> _addPagesDialog(PhotoPickerViewModel vm) async {
+    final p = widget.product!;
+    final n = await showAddPagesDialog(context, increment: p.incrementPriceCents, photosPerPage: p.photosPerExtraPage, max: p.pagesMax - vm.pageCount);
+    if (n != null && n > 0) vm.addPages(n);
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<PhotoPickerViewModel>();
@@ -78,48 +93,52 @@ class _PickerBodyState extends State<_PickerBody> with SingleTickerProviderState
           ..showSnackBar(SnackBar(content: Text(msg)));
       });
     }
+    if (vm.takeMaxReached()) WidgetsBinding.instance.addPostFrameCallback((_) => _maxDialog(vm));
     if (widget.single && vm.selected.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _next(vm);
       });
     }
-    return Scaffold(
-      appBar: AppBar(
-        leadingWidth: 80,
-        leading: TextButton(onPressed: () => Navigator.pop(context), child: const Text(S.cancel)),
-        title: Text(widget.single ? S.replace : S.selectPhotos),
-        actions: [
-          if (!widget.single)
-            TextButton(
-              onPressed: vm.canContinue ? () => _next(vm) : null,
-              child: Text(S.next, style: TextStyle(fontWeight: FontWeight.w700, color: vm.canContinue ? AppColors.accent : null)),
-            ),
-        ],
-        bottom: vm.permission == PickerPermission.granted
-            ? TabBar(
-                controller: _tabs,
-                labelColor: AppColors.textStrong,
-                indicatorColor: AppColors.accent,
-                tabs: const [Tab(text: S.allPhotos), Tab(text: S.albums)],
-              )
+    final inAlbum = vm.album != null;
+    return PopScope(
+      canPop: !inAlbum,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && inAlbum) vm.closeAlbum();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => inAlbum ? vm.closeAlbum() : Navigator.pop(context),
+          ),
+          title: Text(inAlbum ? _albumName(vm, vm.album!) : (widget.single ? S.replacePhoto : S.selectPhotos)),
+          actions: [
+            if (inAlbum && !widget.single)
+              TextButton(onPressed: vm.selectAllVisible, child: const Text('Tümünü Seç')),
+          ],
+        ),
+        body: switch (vm.permission) {
+          PickerPermission.unknown => const Center(child: CircularProgressIndicator()),
+          PickerPermission.denied => _PermissionView(vm: vm),
+          PickerPermission.granted => inAlbum ? _Grid(vm: vm) : _Albums(vm: vm),
+        },
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        floatingActionButton: vm.permission == PickerPermission.granted && !widget.single && vm.selected.isNotEmpty
+            ? _SelectionBar(vm: vm, onNext: vm.canContinue ? () => _next(vm) : null)
             : null,
       ),
-      body: switch (vm.permission) {
-        PickerPermission.unknown => const Center(child: CircularProgressIndicator()),
-        PickerPermission.denied => _PermissionView(vm: vm),
-        PickerPermission.granted => TabBarView(
-            controller: _tabs,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              _Grid(vm: vm),
-              _AlbumList(vm: vm, onPicked: () => _tabs.animateTo(0)),
-            ],
-          ),
-      },
-      bottomNavigationBar: vm.permission == PickerPermission.granted && !widget.single ? _SelectionBar(vm: vm) : null,
     );
   }
 }
+
+String _albumName(PhotoPickerViewModel vm, AssetPathEntity a) => a.isAll ? S.allPhotos : a.name;
+
+/// Albüm thumbnail'ı.
+Widget _thumb(AssetEntity a, int size) => Image(
+      image: AssetEntityImageProvider(a, isOriginal: false, thumbnailSize: ThumbnailSize.square(size)),
+      fit: BoxFit.cover,
+      gaplessPlayback: true,
+    );
 
 class _PermissionView extends StatelessWidget {
   const _PermissionView({required this.vm});
@@ -133,14 +152,82 @@ class _PermissionView extends StatelessWidget {
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         const Icon(Icons.photo_library_outlined, size: 64, color: AppColors.accent),
         const SizedBox(height: 16),
-        const Text(S.permissionTitle, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+        const Text(S.permissionTitle, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
-        const Text(S.permissionBody, textAlign: TextAlign.center, style: TextStyle(color: AppColors.text)),
+        Text(S.permissionBody, textAlign: TextAlign.center, style: TextStyle(color: context.mutedText)),
         const SizedBox(height: 24),
         FilledButton(onPressed: vm.init, child: const Text(S.allowAccess)),
         TextButton(onPressed: vm.openSettings, child: const Text(S.openSettings)),
       ]),
     );
+  }
+}
+
+class _Albums extends StatelessWidget {
+  const _Albums({required this.vm});
+
+  final PhotoPickerViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(slivers: [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+          child: Row(children: [
+            Container(
+              padding: const EdgeInsets.only(bottom: 6),
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.accent, width: 3))),
+              child: const Icon(Icons.smartphone, size: 26),
+            ),
+            const SizedBox(width: 22),
+            for (final icon in const [Icons.photo_outlined, Icons.cloud_outlined, Icons.facebook])
+              Padding(
+                padding: const EdgeInsets.only(right: 22, bottom: 6),
+                child: Tooltip(message: 'Yakında', child: Icon(icon, size: 26, color: context.mutedText.withValues(alpha: 0.5))),
+              ),
+          ]),
+        ),
+      ),
+      const SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Text(S.albums, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+        ),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+        sliver: SliverGrid.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 0.82,
+          ),
+          itemCount: vm.albums.length,
+          itemBuilder: (_, i) {
+            final a = vm.albums[i];
+            final cover = vm.albumCovers[a.id];
+            return GestureDetector(
+              onTap: () => vm.selectAlbum(a),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: SizedBox.expand(
+                      child: cover == null ? ColoredBox(color: context.cardColor) : _thumb(cover, 400),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(_albumName(vm, a), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text('${vm.albumCounts[a.id] ?? ''}', style: TextStyle(color: context.mutedText, fontSize: 13)),
+              ]),
+            );
+          },
+        ),
+      ),
+    ]);
   }
 }
 
@@ -160,41 +247,46 @@ class _Grid extends StatelessWidget {
         return false;
       },
       child: GridView.builder(
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.only(bottom: 120),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4,
-          mainAxisSpacing: 2,
-          crossAxisSpacing: 2,
+          crossAxisCount: 3,
+          mainAxisSpacing: 3,
+          crossAxisSpacing: 3,
         ),
         itemCount: vm.assets.length,
         itemBuilder: (context, i) {
           final a = vm.assets[i];
-          final idx = vm.indexOf(a);
+          final selected = vm.isSelected(a);
           return GestureDetector(
             onTap: () => vm.toggle(a),
             onLongPress: () => Navigator.of(context).push(MaterialPageRoute(
               fullscreenDialog: true,
-              builder: (_) => ChangeNotifierProvider.value(
-                value: vm,
-                child: _FullScreenPhotos(initial: i),
-              ),
+              builder: (_) => ChangeNotifierProvider.value(value: vm, child: _FullScreenPhotos(initial: i)),
             )),
             child: Stack(fit: StackFit.expand, children: [
-              Image(
-                image: AssetEntityImageProvider(a, isOriginal: false, thumbnailSize: const ThumbnailSize.square(250)),
-                fit: BoxFit.cover,
-                gaplessPlayback: true,
-              ),
-              if (idx >= 0) ColoredBox(color: Colors.white.withValues(alpha: 0.25)),
+              _thumb(a, 300),
               Positioned(
                 top: 6,
                 right: 6,
-                child: _SelectBadge(index: idx),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 120),
+                  opacity: selected ? 1 : 0,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.accent,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(Icons.check, size: 17, color: Colors.white),
+                  ),
+                ),
               ),
               if (PhotoPickerViewModel.isLowResolution(a))
                 const Positioned(
-                  left: 4,
-                  bottom: 4,
+                  left: 5,
+                  bottom: 5,
                   child: Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.warning),
                 ),
             ]),
@@ -205,124 +297,56 @@ class _Grid extends StatelessWidget {
   }
 }
 
-class _SelectBadge extends StatelessWidget {
-  const _SelectBadge({required this.index});
-
-  final int index;
-
-  @override
-  Widget build(BuildContext context) {
-    final selected = index >= 0;
-    return Container(
-      width: 24,
-      height: 24,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: selected ? AppColors.accent : Colors.black26,
-        border: Border.all(color: Colors.white, width: 2),
-      ),
-      child: selected
-          ? Text('${index + 1}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700))
-          : null,
-    );
-  }
-}
-
-class _AlbumList extends StatelessWidget {
-  const _AlbumList({required this.vm, required this.onPicked});
-
-  final PhotoPickerViewModel vm;
-  final VoidCallback onPicked;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: vm.albums.length,
-      itemBuilder: (_, i) {
-        final a = vm.albums[i];
-        return ListTile(
-          leading: const CircleAvatar(
-            backgroundColor: AppColors.background,
-            child: Icon(Icons.photo_album_outlined, color: AppColors.accent),
-          ),
-          title: Text(i == 0 ? S.allPhotos : a.name),
-          subtitle: Text('${vm.albumCounts[a.id] ?? 0}'),
-          trailing: vm.album?.id == a.id ? const Icon(Icons.check, color: AppColors.accent) : null,
-          onTap: () {
-            vm.selectAlbum(a);
-            onPicked();
-          },
-        );
-      },
-    );
-  }
-}
-
+/// Popsa'nın yüzen seçim kartı: küçük resim, sayı, ipucu, ilerleme ve İleri.
 class _SelectionBar extends StatelessWidget {
-  const _SelectionBar({required this.vm});
+  const _SelectionBar({required this.vm, required this.onNext});
 
   final PhotoPickerViewModel vm;
+  final VoidCallback? onNext;
 
   @override
   Widget build(BuildContext context) {
     final enough = vm.canContinue;
-    return SafeArea(
-      child: Container(
-        decoration: const BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)]),
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Row(children: [
-            Text(S.selectedCount(vm.selected.length), style: const TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                vm.meterText,
-                style: TextStyle(color: enough ? AppColors.text : AppColors.failure, fontSize: 13),
-                overflow: TextOverflow.ellipsis,
+    final last = vm.selected.last;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+      decoration: BoxDecoration(
+        color: context.isDark ? const Color(0xFF2E2E2E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 16, offset: Offset(0, 4))],
+      ),
+      child: Row(children: [
+        ClipRRect(borderRadius: BorderRadius.circular(6), child: SizedBox(width: 46, height: 46, child: _thumb(last, 150))),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('${vm.selected.length} fotoğraf seçildi', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+            Text(vm.meterText, style: TextStyle(color: enough ? context.mutedText : AppColors.failure, fontSize: 12)),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: vm.progress,
+                minHeight: 4,
+                backgroundColor: context.pillColor,
+                color: enough ? AppColors.warning : AppColors.failure,
               ),
             ),
           ]),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: vm.progress,
-              minHeight: 6,
-              backgroundColor: AppColors.grey,
-              color: enough ? AppColors.success : AppColors.warning,
-            ),
+        ),
+        const SizedBox(width: 10),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(72, 44),
+            backgroundColor: context.pillColor,
+            foregroundColor: context.strongText,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          if (vm.selected.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 52,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                reverse: true,
-                itemCount: vm.selected.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 6),
-                itemBuilder: (_, i) {
-                  final a = vm.selected[vm.selected.length - 1 - i];
-                  return GestureDetector(
-                    onTap: () => vm.toggle(a),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: SizedBox(
-                        width: 52,
-                        child: Image(
-                          image: AssetEntityImageProvider(a, isOriginal: false, thumbnailSize: const ThumbnailSize.square(150)),
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ]),
-      ),
+          onPressed: onNext,
+          child: const Text(S.next),
+        ),
+      ]),
     );
   }
 }
@@ -387,11 +411,60 @@ class _FullScreenPhotosState extends State<_FullScreenPhotos> {
               child: const Row(children: [
                 Icon(Icons.warning_amber_rounded, color: AppColors.warning),
                 SizedBox(width: 8),
-                Text(S.lowResolution, style: TextStyle(color: Colors.white)),
+                Expanded(
+                  child: Text(
+                    '${S.lowResolution}: bu fotoğrafın boyutu küçük, baskıda bulanık görünebilir.',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
               ]),
             ),
           ),
       ]),
     );
   }
+}
+
+/// "N sayfa eklensin mi?" penceresi (Popsa): adım düğmesi, ek fotoğraf alanı ve sayfa başı fiyat.
+Future<int?> showAddPagesDialog(
+  BuildContext context, {
+  required int increment,
+  required int photosPerPage,
+  required int max,
+  int initial = 1,
+}) {
+  var n = initial.clamp(1, max < 1 ? 1 : max);
+  return showDialog<int>(
+    context: context,
+    builder: (c) => StatefulBuilder(
+      builder: (c, setState) => AlertDialog(
+        title: Text(n == 1 ? '1 sayfa daha eklensin mi?' : '$n sayfa daha eklensin mi?', textAlign: TextAlign.center),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(
+            '${n * photosPerPage} ek fotoğraf için yer\nSayfa başı +${formatPrice(increment)}',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            IconButton.outlined(onPressed: n > 1 ? () => setState(() => n--) : null, icon: const Icon(Icons.remove)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Text('$n', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+            ),
+            IconButton.outlined(onPressed: n < max ? () => setState(() => n++) : null, icon: const Icon(Icons.add)),
+          ]),
+          const SizedBox(height: 12),
+          Text(
+            'Bunu daha sonra Seçenekler menüsündeki "Sayfaları Kaldır" ile geri alabilirsin.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: c.mutedText),
+          ),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c), child: const Text(S.cancel)),
+          TextButton(onPressed: () => Navigator.pop(c, n), child: const Text(S.done)),
+        ],
+      ),
+    ),
+  );
 }

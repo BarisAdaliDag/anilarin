@@ -80,7 +80,7 @@ class _RemovePagesScreenState extends State<RemovePagesScreen> {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
           child: Text(
             S.minPagesWarning(vm.product.pagesMin),
-            style: const TextStyle(color: AppColors.text),
+            style: TextStyle(color: context.mutedText),
           ),
         ),
         Expanded(
@@ -108,7 +108,7 @@ class _RemovePagesScreenState extends State<RemovePagesScreen> {
                       DecoratedBox(
                         position: DecorationPosition.foreground,
                         decoration: BoxDecoration(
-                          border: Border.all(color: selected ? AppColors.failure : AppColors.grey, width: selected ? 3 : 1),
+                          border: Border.all(color: selected ? AppColors.failure : context.divider, width: selected ? 3 : 1),
                         ),
                         child: PrintPageView(book: vm.book, pageIndex: index, catalog: vm.catalog, thumbSize: 200),
                       ),

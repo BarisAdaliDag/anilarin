@@ -15,9 +15,9 @@ class MemoriesTab extends StatelessWidget {
     const captions = ['Yolculuklar', 'Birlikte', 'Yılın Özeti'];
     return SafeArea(
       child: ListView(padding: const EdgeInsets.fromLTRB(20, 16, 20, 32), children: [
-        const Text(S.memoriesTitle, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700)),
+        const Text(S.memoriesTitle, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
         const SizedBox(height: 4),
-        const Text(S.memoriesBody, style: TextStyle(fontSize: 15, color: AppColors.text)),
+        Text(S.memoriesBody, style: TextStyle(fontSize: 15, color: context.mutedText)),
         const SizedBox(height: 20),
         for (var i = 0; i < AssetPaths.memoriesExamples.length; i++)
           Padding(
@@ -35,14 +35,14 @@ class MemoriesTab extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                    child: Text(captions[i], style: const TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text(captions[i], style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textStrong)),
                   ),
                 ),
               ]),
             ),
           ),
         const SizedBox(height: 8),
-        FilledButton(onPressed: () => openPhotoBook(context), child: const Text(S.createPhotoBook)),
+        FilledButton(onPressed: () => openProducts(context), child: const Text(S.createPhotoBook)),
       ]),
     );
   }

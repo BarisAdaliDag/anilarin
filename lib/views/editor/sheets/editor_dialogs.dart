@@ -4,6 +4,7 @@ import '../../../config/theme.dart';
 import '../../../constants/strings_tr.dart';
 import '../../../models/catalog.dart';
 import '../../../view_model/editor_view_model.dart';
+import '../text_editor_screen.dart';
 
 Future<void> editTitleDialog(BuildContext context, EditorViewModel vm) async {
   final title = TextEditingController(text: vm.book.title);
@@ -56,31 +57,16 @@ Future<void> editCaptionDialog(BuildContext context, EditorViewModel vm, int pag
   final slots = vm.templateOf(pageIndex).textSlots(vm.format);
   if (textIndex >= slots.length) return;
   final isTitle = slots[textIndex].role == 'title';
-  final limit = isTitle ? 40 : 240;
-  final controller = TextEditingController(text: textIndex < page.texts.length ? page.texts[textIndex] : '');
-  final ok = await showModalBottomSheet<bool>(
-    context: context,
-    isScrollControlled: true,
-    builder: (c) => Padding(
-      padding: EdgeInsets.fromLTRB(20, 0, 20, MediaQuery.of(c).viewInsets.bottom + 20),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text(isTitle ? S.editTitle : S.editCaption, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
-        const SizedBox(height: 12),
-        TextField(
-          controller: controller,
-          autofocus: true,
-          maxLength: limit,
-          maxLines: isTitle ? 1 : 5,
-          minLines: 1,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: InputDecoration(hintText: isTitle ? S.titleHint : 'Bu anı hakkında birkaç söz…'),
-        ),
-        const SizedBox(height: 12),
-        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text(S.save)),
-      ]),
+  final result = await Navigator.of(context).push<String>(MaterialPageRoute(
+    fullscreenDialog: true,
+    builder: (_) => TextEditorScreen(
+      title: isTitle ? 'Başlık Ekle' : S.addCaption,
+      initial: textIndex < page.texts.length ? page.texts[textIndex] : '',
+      limit: isTitle ? 40 : 240,
+      font: vm.textAppearance,
     ),
-  );
-  if (ok == true) vm.setCaption(pageIndex, textIndex, controller.text);
+  ));
+  if (result != null) vm.setCaption(pageIndex, textIndex, result);
 }
 
 Future<bool> confirmDelete(BuildContext context) async {
@@ -109,7 +95,7 @@ Future<void> showAboutBook(BuildContext context, EditorViewModel vm) {
     ('Boyut', '${p.sizeLabel} · ${p.formatLabel} · ${p.dimensionsCm} cm'),
     ('Sayfa', '${b.pageCount} (${p.pagesMin}–${p.pagesMax})'),
     ('Fotoğraf', '${b.usedPhotoIds.length} kullanıldı · ${b.unusedPhotoIds.length} kullanılmadı'),
-    ('Tema', vm.catalog.theme(b.themeId).name),
+    ('Tema', b.themeId),
     ('Yazı tipi', vm.textAppearance.name),
     ('Fiyat', formatPrice(p.totalPrice(b.pageCount, b.options))),
   ];
@@ -125,7 +111,7 @@ Future<void> showAboutBook(BuildContext context, EditorViewModel vm) {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(children: [
-                SizedBox(width: 90, child: Text(k, style: const TextStyle(color: AppColors.text))),
+                SizedBox(width: 90, child: Text(k, style: TextStyle(color: context.mutedText))),
                 Expanded(child: Text(v, style: const TextStyle(fontWeight: FontWeight.w600))),
               ]),
             ),

@@ -6,11 +6,11 @@ import '../../../constants/strings_tr.dart';
 import '../../../models/catalog.dart';
 import '../../../view_model/editor_view_model.dart';
 
-/// Tema seçici (Popsa ThemesActivity / ThemeSelectorBottomSheet).
+/// Tema seçici (Popsa ThemeSelectorBottomSheet): kapsam seçimi, dinamik ve nötr renkler.
 Future<void> showThemeSheet(BuildContext context, EditorViewModel vm, {int? pageIndex}) {
   return showModalBottomSheet(
     context: context,
-    isScrollControlled: true,
+    barrierColor: Colors.black26,
     builder: (_) => ChangeNotifierProvider.value(value: vm, child: _ThemeSheet(pageIndex: pageIndex)),
   );
 }
@@ -25,138 +25,123 @@ class _ThemeSheet extends StatefulWidget {
 }
 
 class _ThemeSheetState extends State<_ThemeSheet> {
-  late ThemeScope _scope = widget.pageIndex == null ? ThemeScope.all : ThemeScope.page;
-  String _group = 'colors';
+  late ThemeScope _scope = switch (widget.pageIndex) {
+    null => ThemeScope.all,
+    0 => ThemeScope.cover,
+    _ => ThemeScope.page,
+  };
+
+  String _scopeLabel(ThemeScope s) => switch (s) {
+        ThemeScope.cover => S.frontCover,
+        ThemeScope.inside => S.allInnerPages,
+        ThemeScope.all => S.allPages,
+        ThemeScope.page => S.pageN(widget.pageIndex ?? 1),
+      };
+
+  String _current(EditorViewModel vm) => switch (_scope) {
+        ThemeScope.cover => vm.themeOf(0).id,
+        ThemeScope.page => vm.themeOf(widget.pageIndex!).id,
+        ThemeScope.inside => vm.book.pages.length > 1 ? vm.themeOf(1).id : vm.book.themeId,
+        ThemeScope.all => vm.book.themeId,
+      };
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<EditorViewModel>();
-    final catalog = vm.catalog;
-    final current = widget.pageIndex != null && _scope == ThemeScope.page
-        ? vm.themeOf(widget.pageIndex!).id
-        : vm.book.themeId;
-    final themes = catalog.themes.where((t) => t.group == _group).toList();
+    final current = _current(vm).toUpperCase();
+    final scopes = [
+      if (widget.pageIndex != null && widget.pageIndex! > 0) ThemeScope.page,
+      ThemeScope.cover,
+      ThemeScope.inside,
+      ThemeScope.all,
+    ];
+    final palette = vm.book.palette;
     return SafeArea(
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.62,
-        child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(children: [
-              const Text(S.themes, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
-              const Spacer(),
-              TextButton(onPressed: vm.resetThemes, child: const Text(S.resetAll)),
-            ]),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-            child: SegmentedButton<ThemeScope>(
-              showSelectedIcon: false,
-              style: SegmentedButton.styleFrom(
-                selectedBackgroundColor: AppColors.accent,
-                selectedForegroundColor: Colors.white,
-              ),
-              segments: [
-                const ButtonSegment(value: ThemeScope.all, label: Text(S.applyAll)),
-                if (widget.pageIndex != null) const ButtonSegment(value: ThemeScope.page, label: Text(S.applyThisPage)),
-                const ButtonSegment(value: ThemeScope.inside, label: Text(S.applyInside)),
-              ],
-              selected: {_scope},
-              onSelectionChanged: (s) => setState(() => _scope = s.first),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 12, 20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+          Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text(S.themes, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w500)),
+                PopupMenuButton<ThemeScope>(
+                  initialValue: _scope,
+                  onSelected: (s) => setState(() => _scope = s),
+                  itemBuilder: (_) => [
+                    for (final s in scopes) CheckedPopupMenuItem(value: s, checked: s == _scope, child: Text(_scopeLabel(s))),
+                  ],
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Text(_scopeLabel(_scope), style: TextStyle(color: context.mutedText, fontSize: 15)),
+                    Icon(Icons.keyboard_arrow_down, color: context.mutedText),
+                  ]),
+                ),
+              ]),
             ),
-          ),
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                for (final g in catalog.themeGroups)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ChoiceChip(
-                      label: Text(g.name),
-                      selected: g.id == _group,
-                      showCheckmark: false,
-                      labelStyle: TextStyle(color: g.id == _group ? Colors.white : AppColors.textStrong),
-                      onSelected: (_) => setState(() => _group = g.id),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.82,
-              ),
-              itemCount: themes.length,
-              itemBuilder: (_, i) => _ThemeTile(
-                theme: themes[i],
-                selected: themes[i].id == current,
-                onTap: () => vm.setTheme(themes[i].id, scope: _scope, pageIndex: widget.pageIndex),
-              ),
-            ),
+            IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+          ]),
+          if (palette.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            const Text(S.dynamicThemes, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+            Text(S.dynamicThemesBody, style: TextStyle(color: context.mutedText, fontSize: 13)),
+            const SizedBox(height: 12),
+            _Swatches(colors: palette, current: current, onPick: (c) => _apply(vm, c)),
+          ],
+          const SizedBox(height: 18),
+          const Text(S.neutralThemes, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 12),
+          _Swatches(colors: vm.catalog.neutralColors, current: current, onPick: (c) => _apply(vm, c)),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(onPressed: vm.resetThemes, child: const Text(S.resetAll)),
           ),
         ]),
       ),
     );
   }
+
+  void _apply(EditorViewModel vm, String color) =>
+      vm.setTheme(color, scope: _scope, pageIndex: widget.pageIndex);
 }
 
-class _ThemeTile extends StatelessWidget {
-  const _ThemeTile({required this.theme, required this.selected, required this.onTap});
+class _Swatches extends StatelessWidget {
+  const _Swatches({required this.colors, required this.current, required this.onPick});
 
-  final BookTheme theme;
-  final bool selected;
-  final VoidCallback onTap;
+  final List<String> colors;
+  final String current;
+  final ValueChanged<String> onPick;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: selected ? AppColors.accent : AppColors.grey, width: selected ? 3 : 1),
+    return SizedBox(
+      height: 58,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: colors.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        itemBuilder: (_, i) {
+          final selected = colors[i].toUpperCase() == current;
+          return GestureDetector(
+            onTap: () => onPick(colors[i]),
+            child: Container(
+              width: 54,
+              height: 54,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: selected ? context.strongText : Colors.transparent, width: 2),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: hexColor(colors[i]),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.black12),
+                ),
+              ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: Row(children: [
-              // kapak
-              Expanded(
-                child: ColoredBox(
-                  color: theme.coverBackground,
-                  child: Center(
-                    child: Text('Aa', style: TextStyle(color: theme.coverText, fontWeight: FontWeight.w700, fontSize: 20)),
-                  ),
-                ),
-              ),
-              // iç sayfa
-              Expanded(
-                child: ColoredBox(
-                  color: theme.background,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(children: [
-                      Expanded(child: Container(color: const Color(0xFFDADADA))),
-                      const SizedBox(height: 4),
-                      Container(height: 4, color: theme.title),
-                    ]),
-                  ),
-                ),
-              ),
-            ]),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(theme.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
-      ]),
+          );
+        },
+      ),
     );
   }
 }

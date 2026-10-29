@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:anilarin/models/photo_book.dart';
 import 'package:anilarin/services/auto_layout_service.dart';
+import 'package:anilarin/services/palette_service.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'test_helpers.dart';
@@ -63,11 +65,11 @@ void main() {
       }
     });
 
-    test('kitapçık sabit sayfa sayısında kalır, sığmayanlar kullanılmayanlara gider', () {
+    test('azami sayfa sayısını aşmaz, sığmayanlar kullanılmayanlara gider', () {
       final product = catalog.product('PBK-1');
-      final book = service.create(product: product, photos: testPhotos(250), title: 'x');
-      expect(book.pageCount, 20);
-      expect(book.usedPhotoIds.length + book.unusedPhotoIds.length, 250);
+      final book = service.create(product: product, photos: testPhotos(400), title: 'x');
+      expect(book.pageCount, product.pagesMax);
+      expect(book.usedPhotoIds.length + book.unusedPhotoIds.length, 400);
       expect(book.unusedPhotoIds, isNotEmpty);
     });
 
@@ -79,6 +81,25 @@ void main() {
       final result = AutoLayoutService.assignToSlots(slots, 1, [landscape, portrait]);
       expect(result.whereType<BookPhoto>().length, 2);
     });
+  });
+
+  test('tarih aralığı etiketi', () {
+    final photos = [
+      BookPhoto(id: 'a', width: 1, height: 1, takenAtMs: DateTime(2024, 9, 3).millisecondsSinceEpoch),
+      BookPhoto(id: 'b', width: 1, height: 1, takenAtMs: DateTime(2026, 10, 20).millisecondsSinceEpoch),
+    ];
+    expect(AutoLayoutService.dateRangeLabel(photos), 'Eyl 2024 – Eki 2026');
+  });
+
+  test('palet kapağa uygulanır, iç sayfalar beyaz', () {
+    final palette = PaletteService.fromRgb([200, 30, 30, 180, 20, 20, 240, 240, 240]);
+    expect(palette.length, 5);
+    final book = service.create(product: catalog.product('PBK-8'), photos: testPhotos(30), title: 'x', palette: palette);
+    expect(book.cover.themeOverride, palette[3]);
+    expect(book.themeId, '#FFFFFF');
+    // baskın ton kırmızı olmalı
+    final vibrant = HSLColor.fromColor(catalog.theme(palette[2]).background);
+    expect(vibrant.hue < 20 || vibrant.hue > 340, isTrue);
   });
 
   test('başlık önerileri tarih aralığından üretilir', () {

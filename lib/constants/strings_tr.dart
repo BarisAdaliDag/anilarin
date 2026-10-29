@@ -4,11 +4,25 @@ class S {
 
   // Ana sayfa
   static const tabMemories = 'Anılar';
+  static const tabReminders = 'Hatırlatıcılar';
+  static const remindersBody = 'Özel günlerden önce sana haber verelim; hediyeni zamanında hazırla.';
+  static const suggestionBody = 'Bu yılın en güzel anlarını bir fotoğraf kitabında topla.';
+  static const photoBooks = 'Fotoğraf Kitapları';
+  static const photoBooksDescription = 'Hayatının en yeni bölümünü güzel bir albümde yayımla.';
+  static const mostPopular = 'En Popüler';
+  static const fromUpper = 'BAŞLANGIÇ';
+  static const productSpecs = 'Ürün Özellikleri';
+  static const extras = 'Ekstralar';
+  static const delivery = 'Teslimat';
+  static const moreInfo = 'Daha Fazla Bilgi';
+  static const standardShipping = 'Standart Kargo';
+  static const trackedShipping = 'Takipli Kargo';
+  static const soldBanner = '6.200.000\'DEN FAZLA SATILDI';
   static const tabDesigns = 'Tasarımlarım';
   static const tabBasket = 'Sepet';
   static const tabAccount = 'Hesap';
   static const myDesigns = 'Tasarımlarım';
-  static const homeDescription = 'Yeni bir şey başlat ya da mevcut bir tasarımı düzenle.';
+  static const homeDescription = 'Anıların için güvenli bir yuva.\nYeni bir şey başlat ya da mevcut bir tasarımı düzenle.';
   static const newDesign = 'Yeni Tasarım';
   static const noDesignsTitle = 'Henüz bir tasarımın yok';
   static const noDesignsBody = 'Fotoğraflarından birkaç dakikada bir fotoğraf kitabı oluştur.';
@@ -35,6 +49,7 @@ class S {
   static const small = 'Küçük';
   static const medium = 'Orta';
   static const large = 'Büyük';
+  static const xlarge = 'Çok Büyük';
   static const giftBox = 'Hediye Kutusu';
   static const giftBoxBody = 'Özel kutusunda, hediye etmeye hazır.';
   static const layflat = 'Düz Açılan Cilt';
@@ -78,6 +93,17 @@ class S {
   static const undo = 'Geri al';
   static const redo = 'Yinele';
   static const cover = 'Kapak';
+  static const frontCover = 'Ön Kapak';
+  static const photos = 'Fotoğraflar';
+  static const pages = 'Sayfalar';
+  static const options = 'Seçenekler';
+  static const replacePhoto = 'Fotoğrafı Değiştir';
+  static const dynamicThemes = 'Dinamik';
+  static const dynamicThemesBody = 'Fotoğraflarındaki renklere göre otomatik temalar';
+  static const neutralThemes = 'Nötr';
+  static const allInnerPages = 'Tüm İç Sayfalar';
+  static const allPages = 'Tüm Sayfalar';
+  static const fonts = 'Yazı Tipleri';
   static String pageN(int n) => 'Sayfa $n';
   static String pagesCount(int n) => '$n sayfa';
   static const addMorePages = 'Sayfa Ekle';
@@ -124,7 +150,7 @@ class S {
   static const buy = 'Satın Al';
   static const addToBasket = 'Sepete Ekle';
   static const editCopy = 'Kopyasını Düzenle';
-  static const dragToSwap = 'Yer değiştirmek için fotoğrafı sürükle, düzenlemek için dokun.';
+  static const dragToSwap = 'Fotoğrafa basılı tut ve sayfaya sürükle; düzenlemek için dokun.';
   static const tapToAddPhoto = 'Fotoğraf eklemek için dokun';
   static const tapToAddCaption = 'Altyazı eklemek için dokun';
   static const templateCategories = {

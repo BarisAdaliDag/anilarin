@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
-import '../../constants/asset_paths.dart';
 import '../../constants/strings_tr.dart';
 import '../../models/catalog.dart';
 import '../../models/photo_book.dart';
 import '../../view_model/app_view_model.dart';
 import '../editor/editor_screen.dart';
-import '../product/product_detail_screen.dart';
+import '../product/products_screen.dart';
 import '../widgets/book_mockup.dart';
-import '../widgets/promo_carousel.dart';
-import '../widgets/ref_image.dart';
 
-/// "Tasarımlarım" sekmesi: kayıtlı kitaplar + ürünler (Popsa'nın My Designs + Products Overview ekranı).
+/// "Tasarımlarım" sekmesi (Popsa My Designs): her tasarım büyük bir kart, sağ altta "Oluştur".
 class DesignsTab extends StatelessWidget {
   const DesignsTab({super.key});
 
@@ -22,115 +18,61 @@ class DesignsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.watch<AppViewModel>();
     final catalog = app.catalog!;
-    return SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(
-                  S.appName,
-                  style: const TextStyle(
-                    fontFamily: 'DMSerifDisplay',
-                    fontSize: 22,
-                    color: AppColors.accent,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                const Text(S.myDesigns, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                const Text(S.homeDescription, style: TextStyle(fontSize: 15, color: AppColors.text)),
-              ]),
-            ),
-          ),
-          SliverToBoxAdapter(child: _DesignsStrip(books: app.books, catalog: catalog)),
-          const SliverToBoxAdapter(child: SizedBox(height: 12)),
-          const SliverToBoxAdapter(child: PromoCarousel()),
-          const SliverToBoxAdapter(child: _SectionTitle(S.whatToCreate)),
-          SliverToBoxAdapter(child: _PhotoBookHeroCard(catalog: catalog)),
-          const SliverToBoxAdapter(child: _ComingSoonRow()),
-          const SliverToBoxAdapter(child: _SectionTitle(S.createdByCommunity)),
-          const SliverToBoxAdapter(child: _CommunityCarousel()),
-          const SliverToBoxAdapter(child: _SectionTitle(S.aboutUs)),
-          const SliverToBoxAdapter(child: _AboutCards()),
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
-        ],
-      ),
-    );
-  }
-}
-
-void openPhotoBook(BuildContext context) {
-  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProductDetailScreen()));
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
-        child: Text(text, style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700)),
-      );
-}
-
-class _DesignsStrip extends StatelessWidget {
-  const _DesignsStrip({required this.books, required this.catalog});
-
-  final List<PhotoBook> books;
-  final Catalog catalog;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 230,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        children: [
-          _NewDesignCard(onTap: () => openPhotoBook(context)),
-          for (final b in books) _DesignCard(book: b, catalog: catalog),
-        ],
-      ),
-    );
-  }
-}
-
-class _NewDesignCard extends StatelessWidget {
-  const _NewDesignCard({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: 150,
-          decoration: BoxDecoration(
-            color: AppColors.accent.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.accent.withValues(alpha: 0.4), width: 1.5),
-          ),
-          child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            CircleAvatar(
-              radius: 26,
-              backgroundColor: AppColors.accent,
-              child: Icon(Icons.add, color: Colors.white, size: 30),
-            ),
-            SizedBox(height: 12),
-            Text(S.newDesign, style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.accentDark)),
-          ]),
+    return Scaffold(
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+          children: [
+            const _Brand(),
+            const SizedBox(height: 22),
+            const Text(S.myDesigns, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
+            const SizedBox(height: 8),
+            Text(S.homeDescription, style: TextStyle(fontSize: 15, color: context.mutedText, height: 1.4)),
+            const SizedBox(height: 24),
+            for (final b in app.books) ...[
+              _DesignCard(book: b, catalog: catalog),
+              const SizedBox(height: 20),
+            ],
+            _SuggestionCard(onCreate: () => openProducts(context)),
+          ],
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => openProducts(context),
+        backgroundColor: context.isDark ? Colors.white : AppColors.textStrong,
+        foregroundColor: context.isDark ? AppColors.textStrong : Colors.white,
+        shape: const StadiumBorder(),
+        icon: const Icon(Icons.auto_stories_outlined),
+        label: const Text(S.create, style: TextStyle(fontSize: 17)),
+      ),
     );
   }
+}
+
+void openProducts(BuildContext context) {
+  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProductsScreen()));
+}
+
+class _Brand extends StatelessWidget {
+  const _Brand();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+      const Icon(Icons.auto_awesome, size: 26),
+      const SizedBox(width: 6),
+      Text(S.appName, style: TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: context.strongText)),
+    ]);
+  }
+}
+
+String timeAgo(int ms) {
+  final d = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(ms));
+  if (d.inMinutes < 1) return 'Az önce';
+  if (d.inMinutes < 60) return '${d.inMinutes} dakika önce';
+  if (d.inHours < 24) return '${d.inHours} saat önce';
+  if (d.inDays < 30) return '${d.inDays} gün önce';
+  return '${(d.inDays / 30).floor()} ay önce';
 }
 
 class _DesignCard extends StatelessWidget {
@@ -141,35 +83,44 @@ class _DesignCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final product = catalog.product(book.productCode);
-    final date = DateFormat('d MMM y', 'tr').format(DateTime.fromMillisecondsSinceEpoch(book.updatedAtMs));
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+    final cover = catalog.theme(book.cover.themeOverride ?? book.themeId);
+    // Kart rengi kapak renginin koyulaştırılmışı (Popsa'da kartlar tasarımın rengini alır).
+    final hsl = HSLColor.fromColor(cover.background);
+    final cardColor = book.cover.themeOverride == null
+        ? context.cardColor
+        : hsl.withLightness((hsl.lightness * 0.6).clamp(0.12, 0.42)).toColor();
+    final onCard = book.cover.themeOverride == null ? context.strongText : Colors.white;
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(22),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => EditorScreen(bookId: book.id)),
-        ),
-        onLongPress: () => _menu(context),
-        child: Container(
-          width: 200,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(16)),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditorScreen(bookId: book.id))),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 22, 12, 22),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(child: Center(child: BookMockup(book: book, catalog: catalog))),
-            const SizedBox(height: 8),
-            Text(
-              book.title.isEmpty ? S.photoBook : book.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-            ),
-            Text(
-              '${product.typeLabel} · ${S.pagesCount(book.pageCount)} · $date',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: AppColors.text),
-            ),
+            Row(children: [
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(
+                    S.photoBook.toUpperCase(),
+                    style: TextStyle(fontSize: 12, letterSpacing: 1.6, color: onCard.withValues(alpha: 0.75)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    book.title.isEmpty ? S.photoBook : book.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 20, color: onCard),
+                  ),
+                ]),
+              ),
+              IconButton(onPressed: () => _menu(context), icon: Icon(Icons.more_horiz, color: onCard)),
+            ]),
+            const SizedBox(height: 18),
+            SizedBox(width: 210, child: BookMockup(book: book, catalog: catalog)),
+            const SizedBox(height: 18),
+            Text(timeAgo(book.updatedAtMs), style: TextStyle(color: onCard.withValues(alpha: 0.85))),
           ]),
         ),
       ),
@@ -178,149 +129,88 @@ class _DesignCard extends StatelessWidget {
 
   Future<void> _menu(BuildContext context) async {
     final app = context.read<AppViewModel>();
-    final ok = await showDialog<bool>(
+    final action = await showModalBottomSheet<String>(
       context: context,
-      builder: (c) => AlertDialog(
-        title: const Text(S.deleteBook),
-        content: const Text(S.deleteBookConfirm),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
-          TextButton(
-            onPressed: () => Navigator.pop(c, true),
-            child: const Text(S.delete, style: TextStyle(color: AppColors.failure)),
+      builder: (c) => SafeArea(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ListTile(
+            leading: const Icon(Icons.edit_outlined),
+            title: const Text('Düzenle'),
+            onTap: () => Navigator.pop(c, 'edit'),
           ),
-        ],
+          ListTile(
+            leading: const Icon(Icons.copy_outlined),
+            title: const Text(S.duplicateBook),
+            onTap: () => Navigator.pop(c, 'duplicate'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete_outline, color: AppColors.failure),
+            title: const Text(S.deleteBook, style: TextStyle(color: AppColors.failure)),
+            onTap: () => Navigator.pop(c, 'delete'),
+          ),
+        ]),
       ),
     );
-    if (ok == true) await app.deleteBook(book.id);
+    if (!context.mounted) return;
+    switch (action) {
+      case 'edit':
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditorScreen(bookId: book.id)));
+      case 'duplicate':
+        await app.duplicateBook(book.id);
+      case 'delete':
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text(S.deleteBook),
+            content: const Text(S.deleteBookConfirm),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
+              TextButton(
+                onPressed: () => Navigator.pop(c, true),
+                child: const Text(S.delete, style: TextStyle(color: AppColors.failure)),
+              ),
+            ],
+          ),
+        );
+        if (ok == true) await app.deleteBook(book.id);
+    }
   }
 }
 
-class _PhotoBookHeroCard extends StatelessWidget {
-  const _PhotoBookHeroCard({required this.catalog});
+/// Popsa'nın sarı "My Life in 2026" öneri kartı.
+class _SuggestionCard extends StatelessWidget {
+  const _SuggestionCard({required this.onCreate});
 
-  final Catalog catalog;
+  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Material(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => openPhotoBook(context),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const AspectRatio(aspectRatio: 1.5, child: RefImage(AssetPaths.heroPhotoBook)),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              child: Row(children: [
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text(S.photoBook, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${S.from} ${formatPrice(catalog.lowestPrice)}',
-                      style: const TextStyle(color: AppColors.text),
-                    ),
-                  ]),
-                ),
-                FilledButton(
-                  style: FilledButton.styleFrom(minimumSize: const Size(110, 44)),
-                  onPressed: () => openPhotoBook(context),
-                  child: const Text(S.create),
-                ),
-              ]),
+    final year = DateTime.now().year;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
+      decoration: BoxDecoration(color: const Color(0xFFC9A300), borderRadius: BorderRadius.circular(22)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('ÖNERİ', style: TextStyle(fontSize: 12, letterSpacing: 1.6, color: Colors.white70)),
+        const SizedBox(height: 4),
+        Text('$year Yılım', style: const TextStyle(fontSize: 20, color: Colors.white)),
+        const SizedBox(height: 6),
+        const Text(S.suggestionBody, style: TextStyle(color: Colors.white)),
+        const SizedBox(height: 14),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFFFF8E1),
+              foregroundColor: AppColors.textStrong,
+              minimumSize: const Size(130, 48),
+              shape: const StadiumBorder(),
             ),
-          ]),
+            onPressed: onCreate,
+            icon: const Icon(Icons.auto_stories_outlined),
+            label: const Text(S.create),
+          ),
         ),
-      ),
-    );
-  }
-}
-
-class _ComingSoonRow extends StatelessWidget {
-  const _ComingSoonRow();
-
-  @override
-  Widget build(BuildContext context) {
-    const items = [
-      (Icons.photo_outlined, 'Baskılar'),
-      (Icons.calendar_month_outlined, 'Takvim'),
-      (Icons.inventory_2_outlined, 'Fotoğraf Kutusu'),
-    ];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      child: Row(children: [
-        for (final (icon, label) in items)
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(14)),
-              child: Column(children: [
-                Icon(icon, color: Colors.black38),
-                const SizedBox(height: 6),
-                Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                const Text('Yakında', style: TextStyle(fontSize: 11, color: AppColors.text)),
-              ]),
-            ),
-          ),
       ]),
     );
-  }
-}
-
-class _CommunityCarousel extends StatelessWidget {
-  const _CommunityCarousel();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 220,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: AssetPaths.community.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
-        itemBuilder: (_, i) => ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: SizedBox(width: 165, child: RefImage(AssetPaths.community[i], icon: Icons.menu_book_outlined)),
-        ),
-      ),
-    );
-  }
-}
-
-class _AboutCards extends StatelessWidget {
-  const _AboutCards();
-
-  @override
-  Widget build(BuildContext context) {
-    const items = [
-      (Icons.auto_awesome, 'Akıllı tasarım', 'Fotoğraflarını tarih sırasına göre düzenler, en uygun şablonları seçeriz.'),
-      (Icons.workspace_premium_outlined, 'Kaliteli baskı', 'Canlı renkler, kalın sayfalar ve dayanıklı cilt.'),
-      (Icons.local_shipping_outlined, 'Hızlı teslimat', 'Siparişin birkaç iş günü içinde kapında.'),
-    ];
-    return Column(children: [
-      for (final (icon, title, body) in items)
-        Container(
-          margin: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(14)),
-          child: Row(children: [
-            Icon(icon, color: AppColors.accent, size: 30),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                const SizedBox(height: 2),
-                Text(body, style: const TextStyle(color: AppColors.text)),
-              ]),
-            ),
-          ]),
-        ),
-    ]);
   }
 }

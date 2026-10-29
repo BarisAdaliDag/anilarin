@@ -10,33 +10,54 @@ enum PickerPermission { unknown, granted, denied }
 
 /// Fotoğraf seçimi: albümler, sayfalı galeri ve min/maks sayaç (Popsa PhotoPickerActivity).
 class PhotoPickerViewModel extends ChangeNotifier {
-  PhotoPickerViewModel({required this.minPhotos, required this.maxPhotos, required this.recommended, PhotoRepository? repository})
-      : _repo = repository ?? PhotoRepository();
+  PhotoPickerViewModel({
+    required this.minPhotos,
+    required int maxPhotos,
+    required this.recommended,
+    this.product,
+    PhotoRepository? repository,
+  })  : _baseMax = maxPhotos,
+        _repo = repository ?? PhotoRepository();
 
+  /// Yeni kitap: başlangıç sınırı varsayılan sayfa sayısına göre; "Sayfa ekle" ile artar.
   factory PhotoPickerViewModel.forProduct(Product p) =>
-      PhotoPickerViewModel(minPhotos: p.photoMin, maxPhotos: p.photoMax, recommended: p.photoRecommend);
+      PhotoPickerViewModel(minPhotos: p.photoMin, maxPhotos: p.photoMaxBase, recommended: p.photoRecommend, product: p);
 
-  /// Editörden "Fotoğraf ekle" için: alt sınır yok.
+  /// Editörden "Fotoğraf ekle" / "Değiştir" için: alt sınır yok.
   factory PhotoPickerViewModel.addMore({required int max}) =>
       PhotoPickerViewModel(minPhotos: 1, maxPhotos: max, recommended: 1);
 
   final PhotoRepository _repo;
+  final Product? product;
   final int minPhotos;
-  final int maxPhotos;
   final int recommended;
+  final int _baseMax;
+  int extraPages = 0;
   static const pageSize = 120;
   static const lowResolutionPixels = 1200 * 900;
 
   PickerPermission permission = PickerPermission.unknown;
   List<AssetPathEntity> albums = [];
   final Map<String, int> albumCounts = {};
+  final Map<String, AssetEntity> albumCovers = {};
   AssetPathEntity? album;
   final List<AssetEntity> assets = [];
   final List<AssetEntity> selected = [];
   bool loading = false;
+  bool maxReached = false;
   bool _hasMore = true;
   int _page = 0;
   String? message;
+
+  int get maxPhotos {
+    final p = product;
+    if (p == null) return _baseMax;
+    return (_baseMax + extraPages * p.photosPerExtraPage).clamp(0, p.photoMax);
+  }
+
+  int get pageCount => (product?.pagesDefault ?? 0) + extraPages;
+
+  bool get canAddPages => product != null && pageCount < product!.pagesMax;
 
   Future<void> init() async {
     final ok = await _repo.requestAccess();
@@ -46,8 +67,10 @@ class PhotoPickerViewModel extends ChangeNotifier {
     albums = await _repo.albums();
     for (final a in albums) {
       albumCounts[a.id] = await a.assetCountAsync;
+      final first = await a.getAssetListRange(start: 0, end: 1);
+      if (first.isNotEmpty) albumCovers[a.id] = first.first;
+      notifyListeners();
     }
-    if (albums.isNotEmpty) await selectAlbum(albums.first);
   }
 
   Future<void> openSettings() => _repo.openSettings();
@@ -59,6 +82,11 @@ class PhotoPickerViewModel extends ChangeNotifier {
     _hasMore = true;
     notifyListeners();
     await loadMore();
+  }
+
+  void closeAlbum() {
+    album = null;
+    notifyListeners();
   }
 
   Future<void> loadMore() async {
@@ -85,11 +113,28 @@ class PhotoPickerViewModel extends ChangeNotifier {
     if (i >= 0) {
       selected.removeAt(i);
     } else if (selected.length >= maxPhotos) {
-      message = S.selectUpTo(maxPhotos);
+      if (product != null) {
+        maxReached = true;
+      } else {
+        message = S.selectUpTo(maxPhotos);
+      }
     } else {
       selected.add(a);
     }
     notifyListeners();
+  }
+
+  void addPages(int n) {
+    final p = product;
+    if (p == null) return;
+    extraPages = (extraPages + n).clamp(0, p.pagesMax - p.pagesDefault);
+    notifyListeners();
+  }
+
+  bool takeMaxReached() {
+    final v = maxReached;
+    maxReached = false;
+    return v;
   }
 
   void selectAllVisible() {

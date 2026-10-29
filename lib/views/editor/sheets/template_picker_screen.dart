@@ -53,7 +53,7 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
                     label: Text(S.templateCategories[c]!),
                     selected: c == _category,
                     showCheckmark: false,
-                    labelStyle: TextStyle(color: c == _category ? Colors.white : AppColors.textStrong),
+                    labelStyle: TextStyle(color: c == _category ? Colors.white : context.strongText),
                     onSelected: (_) => setState(() => _category = c),
                   ),
                 ),
@@ -93,7 +93,7 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
                   const SizedBox(height: 4),
                   Text(
                     loses ? '${t.photoCount} foto · ${photoCount - t.photoCount} çıkar' : '${t.photoCount} foto',
-                    style: TextStyle(fontSize: 11, color: loses ? AppColors.warning : AppColors.text),
+                    style: TextStyle(fontSize: 11, color: loses ? AppColors.warning : context.mutedText),
                   ),
                 ]),
               );
@@ -130,7 +130,7 @@ class TemplateThumb extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: background,
-          border: Border.all(color: selected ? AppColors.accent : AppColors.grey, width: selected ? 3 : 1),
+          border: Border.all(color: selected ? AppColors.accent : context.divider, width: selected ? 3 : 1),
           boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
         ),
         child: LayoutBuilder(builder: (context, c) {

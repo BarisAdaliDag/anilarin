@@ -37,7 +37,8 @@ class PrintPageView extends StatelessWidget {
     final tpl = catalog.template(page.templateId);
     final theme = catalog.theme(page.themeOverride ?? book.themeId);
     final font = catalog.textAppearance(book.textAppearanceId);
-    final elements = tpl.elementsFor(product.format);
+    var elements = tpl.elementsFor(product.format);
+    if (page.borderless) elements = borderlessElements(elements);
     final bg = page.isCover ? theme.coverBackground : theme.background;
 
     return AspectRatio(
@@ -148,6 +149,24 @@ class _PhotoSlotView extends StatelessWidget {
       );
     });
   }
+}
+
+/// Fotoğraf alanlarının kapladığı bölgeyi sayfanın tamamına genişletir (kenarlıksız görünüm).
+List<TemplateElement> borderlessElements(List<TemplateElement> elements) {
+  final photos = elements.where((e) => e.isPhoto).map((e) => e.frame).toList();
+  if (photos.isEmpty) return elements;
+  final u = photos.reduce((a, b) => a.expandToInclude(b));
+  if (u.width <= 0 || u.height <= 0) return elements;
+  Rect map(Rect f) => Rect.fromLTWH(
+        (f.left - u.left) / u.width * 100,
+        (f.top - u.top) / u.height * 100,
+        f.width / u.width * 100,
+        f.height / u.height * 100,
+      );
+  return [
+    for (final e in elements)
+      e.isPhoto ? TemplateElement(type: e.type, role: e.role, frame: map(e.frame), align: e.align) : e,
+  ];
 }
 
 /// Alan içinde fotoğrafın çizileceği dikdörtgen (döndürülmüş en-boy, Doldur/Sığdır, yakınlaştırma ve kaydırma).

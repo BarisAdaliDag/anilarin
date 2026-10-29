@@ -21,7 +21,8 @@ class AutoLayoutService {
   final Random _random;
   static const _uuid = Uuid();
   static const targetPhotosPerPage = 3;
-  static const defaultCoverTemplate = 1;
+  static const defaultCoverTemplate = 18; // çerçeveli fotoğraf + altında başlık (Popsa varsayılanı)
+  static const defaultInnerTheme = '#FFFFFF';
 
   PhotoBook create({
     required Product product,
@@ -29,6 +30,7 @@ class AutoLayoutService {
     required String title,
     String subtitle = '',
     ProductOptions? options,
+    List<String> palette = const [],
   }) {
     final sorted = sortPhotos(photos);
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -62,18 +64,20 @@ class AutoLayoutService {
     }
     unused.addAll(rest.sublist(cursor).map((p) => p.id));
 
-    final preferred = catalog.preferredThemes;
+    // Kapak fotoğraflardan gelen zengin renkte, iç sayfalar beyaz (Popsa'nın ilk görünümü).
+    if (palette.length >= 4) cover.themeOverride = palette[3];
     return PhotoBook(
       id: _uuid.v4(),
       productCode: product.code,
       title: title,
       subtitle: subtitle,
-      themeId: preferred[_random.nextInt(preferred.length)],
+      themeId: defaultInnerTheme,
       textAppearanceId: catalog.textAppearances.first.id,
       pages: pages,
       unusedPhotoIds: unused,
       photos: {for (final p in photos) p.id: p},
       options: options ?? ProductOptions(),
+      palette: palette,
       createdAtMs: now,
       updatedAtMs: now,
     );
@@ -209,6 +213,18 @@ class AutoLayoutService {
         yield [items[i], ...p];
       }
     }
+  }
+
+  static const _monthsShort = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
+  /// "Eyl 2024 – Eki 2026" biçiminde tarih aralığı (Popsa kapak alt başlığı).
+  static String dateRangeLabel(List<BookPhoto> photos) {
+    final dates = photos.map((p) => p.takenAt).whereType<DateTime>().toList()..sort();
+    if (dates.isEmpty) return '';
+    final a = dates.first, b = dates.last;
+    final sa = '${_monthsShort[a.month - 1]} ${a.year}';
+    final sb = '${_monthsShort[b.month - 1]} ${b.year}';
+    return sa == sb ? sa : '$sa – $sb';
   }
 
   /// Fotoğrafların tarih aralığına göre başlık önerileri.

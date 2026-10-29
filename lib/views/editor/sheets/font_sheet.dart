@@ -5,68 +5,64 @@ import '../../../config/theme.dart';
 import '../../../constants/strings_tr.dart';
 import '../../../view_model/editor_view_model.dart';
 
-/// Yazı grubu seçimi (Popsa FontPickerActivity).
+/// Yazı grubu seçimi (Popsa FontPickerActivity): her grup için alfabe örneği.
 Future<void> showFontSheet(BuildContext context, EditorViewModel vm) {
-  return showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    builder: (_) => ChangeNotifierProvider.value(value: vm, child: const _FontSheet()),
-  );
+  return Navigator.of(context).push(MaterialPageRoute(
+    builder: (_) => ChangeNotifierProvider.value(value: vm, child: const _FontScreen()),
+  ));
 }
 
-class _FontSheet extends StatelessWidget {
-  const _FontSheet();
+class _FontScreen extends StatelessWidget {
+  const _FontScreen();
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<EditorViewModel>();
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text(S.changeFont, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
-          const SizedBox(height: 4),
-          const Text(S.selectFontGroup, style: TextStyle(color: AppColors.text)),
-          const SizedBox(height: 12),
-          for (final f in vm.catalog.textAppearances)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: f.id == vm.book.textAppearanceId ? AppColors.accent.withValues(alpha: 0.1) : AppColors.background,
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => vm.setTextAppearance(f.id),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Row(children: [
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(
-                            f.apply(vm.book.title.isEmpty ? f.name : vm.book.title),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: f.titleFont,
-                              fontWeight: f.titleWeight,
-                              letterSpacing: f.letterSpacing,
-                              fontSize: 22,
-                            ),
-                          ),
-                          Text(
-                            f.name,
-                            style: TextStyle(fontFamily: f.bodyFont, fontSize: 13, color: AppColors.text),
-                          ),
-                        ]),
-                      ),
-                      if (f.id == vm.book.textAppearanceId) const Icon(Icons.check_circle, color: AppColors.accent),
-                    ]),
+    return Scaffold(
+      appBar: AppBar(title: const Text(S.fonts)),
+      body: ListView(padding: const EdgeInsets.fromLTRB(20, 0, 20, 32), children: [
+        Text(S.selectFontGroup, style: TextStyle(color: context.mutedText, height: 1.4)),
+        const SizedBox(height: 16),
+        for (final f in vm.catalog.textAppearances)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Material(
+              color: context.cardColor,
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(14),
+                onTap: () => vm.setTextAppearance(f.id),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: f.id == vm.book.textAppearanceId ? AppColors.accent : Colors.transparent,
+                      width: 2,
+                    ),
                   ),
+                  child: Column(children: [
+                    Text(f.name.toUpperCase(), style: TextStyle(fontSize: 11, letterSpacing: 1.6, color: context.mutedText)),
+                    const SizedBox(height: 10),
+                    Text(
+                      f.apply('ABCÇDEFGĞHIİJKLMN\nOPRSŞTUÜVYZ'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: f.titleFont, fontWeight: f.titleWeight, letterSpacing: f.letterSpacing, fontSize: 19, height: 1.3),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'abcçdefgğhıijklmnoöprsştuüvyz\n1234567890',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: f.bodyFont, fontSize: 15, color: context.mutedText, height: 1.3),
+                    ),
+                    if (f.id == vm.book.textAppearanceId)
+                      const Align(alignment: Alignment.centerRight, child: Icon(Icons.check, color: AppColors.accent)),
+                  ]),
                 ),
               ),
             ),
-        ]),
-      ),
+          ),
+      ]),
     );
   }
 }

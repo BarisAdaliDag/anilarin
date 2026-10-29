@@ -63,6 +63,7 @@ class PrintPage {
   List<PhotoSlot?> photos; // şablonun fotoğraf alanı sırasına göre
   List<String> texts; // şablonun metin alanı sırasına göre (kapakta başlık kitap başlığından gelir)
   String? themeOverride;
+  bool borderless; // kenarlıksız: fotoğraf alanları sayfa kenarına kadar uzar
 
   PrintPage({
     required this.id,
@@ -71,6 +72,7 @@ class PrintPage {
     required this.photos,
     required this.texts,
     this.themeOverride,
+    this.borderless = false,
   });
 
   bool get isCover => tag == 'layout-front';
@@ -84,6 +86,7 @@ class PrintPage {
         'photos': photos.map((p) => p?.toJson()).toList(),
         'texts': texts,
         'theme': themeOverride,
+        if (borderless) 'bl': true,
       };
 
   factory PrintPage.fromJson(Map<String, dynamic> j) => PrintPage(
@@ -93,6 +96,7 @@ class PrintPage {
         photos: (j['photos'] as List).map((e) => e == null ? null : PhotoSlot.fromJson(e)).toList(),
         texts: List<String>.from(j['texts'] ?? const []),
         themeOverride: j['theme'],
+        borderless: j['bl'] ?? false,
       );
 }
 
@@ -126,6 +130,7 @@ class PhotoBook {
   List<String> unusedPhotoIds;
   Map<String, BookPhoto> photos;
   ProductOptions options;
+  List<String> palette; // fotoğraflardan çıkarılan dinamik renkler
   int createdAtMs;
   int updatedAtMs;
 
@@ -140,6 +145,7 @@ class PhotoBook {
     required this.unusedPhotoIds,
     required this.photos,
     required this.options,
+    this.palette = const [],
     required this.createdAtMs,
     required this.updatedAtMs,
   });
@@ -165,6 +171,7 @@ class PhotoBook {
         'unused': unusedPhotoIds,
         'photos': photos.values.map((p) => p.toJson()).toList(),
         'options': options.toJson(),
+        'palette': palette,
         'created': createdAtMs,
         'updated': updatedAtMs,
       };
@@ -182,6 +189,7 @@ class PhotoBook {
           for (final p in (j['photos'] as List).map((e) => BookPhoto.fromJson(e))) p.id: p,
         },
         options: ProductOptions.fromJson(j['options']),
+        palette: List<String>.from(j['palette'] ?? const []),
         createdAtMs: j['created'],
         updatedAtMs: j['updated'],
       );

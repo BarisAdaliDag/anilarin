@@ -21,7 +21,7 @@ class BasketScreen extends StatelessWidget {
     final body = items.isEmpty
         ? const Center(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.shopping_bag_outlined, size: 64, color: AppColors.grey),
+              Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
               SizedBox(height: 12),
               Text(S.basketEmpty, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             ]),
@@ -31,7 +31,7 @@ class BasketScreen extends StatelessWidget {
               Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(14)),
+                decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(14)),
                 child: Row(children: [
                   SizedBox(
                     width: 96,
@@ -45,7 +45,7 @@ class BasketScreen extends StatelessWidget {
                       Text(item.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                       Text(
                         '${catalog.product(item.productCode).title} · ${S.pagesCount(item.pages)}',
-                        style: const TextStyle(color: AppColors.text, fontSize: 13),
+                        style: TextStyle(color: context.mutedText, fontSize: 13),
                       ),
                       if (item.options.giftBox || item.options.layflat || item.options.foil != null)
                         Text(
@@ -54,7 +54,7 @@ class BasketScreen extends StatelessWidget {
                             if (item.options.layflat) S.layflat,
                             if (item.options.foil != null) '${S.foil} (${item.options.foil == 'gold' ? S.foilGold : S.foilSilver})',
                           ].join(' · '),
-                          style: const TextStyle(color: AppColors.text, fontSize: 12),
+                          style: TextStyle(color: context.mutedText, fontSize: 12),
                         ),
                       const SizedBox(height: 6),
                       Row(children: [
@@ -81,10 +81,10 @@ class BasketScreen extends StatelessWidget {
           : SafeArea(
               child: Container(
                 padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)]),
+                decoration: BoxDecoration(color: context.sheetColor, boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)]),
                 child: Row(children: [
                   Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text(S.total, style: TextStyle(color: AppColors.text, fontSize: 12)),
+                    Text(S.total, style: TextStyle(color: context.mutedText, fontSize: 12)),
                     Text(formatPrice(app.basketTotal), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                   ]),
                   const SizedBox(width: 16),
@@ -115,7 +115,7 @@ class _QtyButton extends StatelessWidget {
       customBorder: const CircleBorder(),
       child: Container(
         padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.grey)),
+        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: context.divider)),
         child: Icon(icon, size: 16),
       ),
     );

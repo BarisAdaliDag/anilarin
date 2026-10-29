@@ -27,7 +27,9 @@ class AnilarinApp extends StatelessWidget {
     return MaterialApp(
       title: S.appName,
       debugShowCheckedModeBanner: false,
-      theme: buildAppTheme(),
+      theme: buildAppTheme(Brightness.light),
+      darkTheme: buildAppTheme(Brightness.dark),
+      themeMode: ThemeMode.system,
       locale: const Locale('tr'),
       supportedLocales: const [Locale('tr')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,

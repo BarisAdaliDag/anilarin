@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:anilarin/models/photo_book.dart';
 import 'package:anilarin/services/auto_layout_service.dart';
 import 'package:anilarin/view_model/editor_view_model.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'test_helpers.dart';
@@ -67,8 +68,9 @@ void main() {
     expect(vm.book.pageCount, min);
   });
 
-  test('kitapçıkta sayfa eklenemez', () {
-    final vm = make(product: 'PBK-1');
+  test('azami sayfada sayfa eklenemez', () {
+    final vm = make(product: 'PBK-1', photos: 200);
+    expect(vm.book.pageCount, vm.product.pagesMax);
     expect(vm.canAddPages, isFalse);
     expect(vm.addPages(1), isFalse);
   });
@@ -83,13 +85,15 @@ void main() {
 
   test('tema kapsamları', () {
     final vm = make();
-    vm.setTheme('dark', scope: ThemeScope.page, pageIndex: 2);
-    expect(vm.themeOf(2).id, 'dark');
+    vm.setTheme('#1E1E1E', scope: ThemeScope.page, pageIndex: 2);
+    expect(vm.themeOf(2).id, '#1E1E1E');
+    expect(vm.themeOf(2).title, const Color(0xFFFFFFFF));
     expect(vm.themeOf(3).id, vm.book.themeId);
-    vm.setTheme('rose', scope: ThemeScope.inside);
-    expect(vm.themeOf(5).id, 'rose');
-    expect(vm.themeOf(0).id, vm.book.themeId);
-    vm.setTheme('honey');
+    vm.setTheme('#F7F3EC', scope: ThemeScope.inside);
+    expect(vm.themeOf(5).id, '#F7F3EC');
+    vm.setTheme('#AA0000', scope: ThemeScope.cover);
+    expect(vm.themeOf(0).id, '#AA0000');
+    vm.setTheme('#FFFFFF');
     expect(vm.book.pages.every((p) => p.themeOverride == null), isTrue);
   });
 
@@ -113,6 +117,16 @@ void main() {
     vm.changeTemplate(1, tpl!);
     vm.setCaption(1, 0, ' Deniz kenarı ');
     expect(vm.book.pages[1].texts.first, 'Deniz kenarı');
+  });
+
+  test('kenarlıksız sayfa ve tümü', () {
+    final vm = make();
+    vm.toggleBorderless(1);
+    expect(vm.book.pages[1].borderless, isTrue);
+    vm.setAllBorderless(true);
+    expect(vm.allBorderless, isTrue);
+    vm.undo();
+    expect(vm.allBorderless, isFalse);
   });
 
   test('json gidiş-dönüş', () {

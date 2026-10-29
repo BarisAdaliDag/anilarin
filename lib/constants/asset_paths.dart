@@ -10,46 +10,24 @@ class AssetPaths {
     'assets/ref/home/memories_rewinds.webp',
   ];
 
-  static String theme(String id) => 'assets/ref/themes/$id.webp';
-
-  /// Ana sayfa tanıtım karuseli. Video varsa önce o denenir, oynatılamazsa görsel gösterilir.
-  static const promos = [
-    Promo(
-      image: 'assets/ref/media/promo_1.jpg',
-      fallback: heroPhotoBook,
-      video: 'assets/ref/media/promo_1.mp4',
-      title: 'Anılarını kitaba dönüştür',
-      body: 'Fotoğraflarını seç; sayfaları senin için tasarlayalım.',
-    ),
-    Promo(
-      image: 'assets/ref/media/promo_2.jpg',
-      fallback: onboarding,
-      video: 'assets/ref/media/promo_2.mp4',
-      title: 'Dakikalar içinde hazır',
-      body: 'Akıllı yerleşim, temalar ve yazı tipleriyle kişiselleştir.',
-    ),
-    Promo(
-      image: 'assets/ref/media/promo_3.jpg',
-      fallback: productPhotoBook,
-      title: 'Sert kapak, yumuşak kapak, kitapçık',
-      body: 'Her bütçeye uygun boyut ve cilt seçenekleri.',
-    ),
+  /// Format detayındaki medya karuseli: önce video, sonra görseller.
+  static const productVideo = 'assets/ref/media/promo_1.mp4';
+  static const productCarousel = [
+    'assets/ref/media/carousel_1.jpg',
+    'assets/ref/media/carousel_2.jpg',
+    'assets/ref/media/carousel_3.jpg',
+    'assets/ref/media/carousel_4.jpg',
+    'assets/ref/media/carousel_5.jpg',
+    'assets/ref/media/carousel_6.jpg',
   ];
 
-  static const community = [
-    'assets/ref/media/community_1.jpg',
-    'assets/ref/media/community_2.jpg',
-    'assets/ref/media/community_3.jpg',
-    'assets/ref/media/community_4.jpg',
-  ];
-}
-
-class Promo {
-  final String image;
-  final String fallback;
-  final String? video;
-  final String title;
-  final String body;
-
-  const Promo({required this.image, required this.fallback, this.video, required this.title, required this.body});
+  /// Cilt tipi + format kart görselleri.
+  static String productCover(String type, String format) => switch ((type, format)) {
+        ('hardback', 'square') => 'assets/ref/media/cover_hardback_square.jpg',
+        ('softcover', 'square') => 'assets/ref/media/cover_softcover_square.jpg',
+        ('softcover', _) => 'assets/ref/media/cover_softcover_landscape.jpg',
+        ('booklet', 'square') => 'assets/ref/media/cover_softcover_square.jpg',
+        ('booklet', _) => 'assets/ref/media/cover_booklet_landscape.jpg',
+        _ => 'assets/ref/media/cover_hardback_landscape.jpg',
+      };
 }

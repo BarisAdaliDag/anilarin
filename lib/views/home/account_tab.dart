@@ -17,12 +17,12 @@ class AccountTab extends StatelessWidget {
     ];
     return SafeArea(
       child: ListView(padding: const EdgeInsets.fromLTRB(20, 16, 20, 32), children: [
-        const Text(S.accountTitle, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700)),
+        const Text(S.accountTitle, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
         const SizedBox(height: 16),
         for (final (icon, label) in items)
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: Icon(icon, color: AppColors.text),
+            leading: Icon(icon, color: context.mutedText),
             title: Text(label),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => ScaffoldMessenger.of(context)

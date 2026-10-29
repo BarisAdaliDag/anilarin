@@ -52,11 +52,10 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
     final frame = tpl.photoSlots(vm.format)[widget.ref.slot].frame;
     final slotAspect = frame.width * vm.product.aspect / frame.height;
     final dpi = photo == null ? 300 : _dpi(vm, photo, Size(frame.width / 100, frame.height / 100));
-    final (qLabel, qColor, qValue) = dpi >= 200
-        ? (S.qualityGood, AppColors.success, 1.0)
-        : dpi >= 120
-            ? (S.qualityOk, AppColors.warning, 0.6)
-            : (S.qualityPoor, AppColors.failure, 0.25);
+    final score = (dpi / 30).round().clamp(1, 10);
+    final qColor = score >= 7 ? AppColors.success : (score >= 4 ? AppColors.warning : AppColors.failure);
+    final qLabel = '$score/10';
+    final qValue = score / 10;
 
     return Scaffold(
       backgroundColor: const Color(0xFF1E1E1E),
