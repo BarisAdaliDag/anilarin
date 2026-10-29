@@ -60,3 +60,19 @@ ile kullanılır; ticari olanların yerine DM Sans / benzeri kullanılır.
 - ~1400 layout, ~2500 drawable, 430 Türkçe string (`values-tr`)
 - Yerel konumlar: `reference/decoded` (apktool), `reference/decoded-xxhdpi` (görseller),
   `reference/decoded-tr` (TR metinler), `reference/jadx` (kod)
+
+## Fotoğraf kitabı akışı (Adım 2'de çıkarıldı)
+- Ürün/şablon/tema/fiyat verisi Popsa'da sunucudan protobuf olarak geliyor (`GET /catalog/{ülke}/{para birimi}`).
+  Biz yerel `assets/catalog/catalog.json` ve `templates.json` kullanıyoruz.
+- Şablon geometrisi: APK'daki `template_icon_template_{id}_{square|landscape}.webp` ikonlarından
+  piksel analiziyle çıkarıldı (1–74, yüzde çerçeveler). Kapak şablonları: 1, 18–20, 31–38.
+- Otomatik yerleşim Popsa'da cihazda çalışıyor; `lib/services/auto_layout_service.dart` aynı mantığı uygular:
+  tarihsizler önce + tarih sırası, kapak = ilk foto, sayfa başı ~3 foto, artanlar ortadan dışa,
+  fotoğraf sayısına göre `automaticUse` şablon, en-boy oranı eşleştirmesi.
+- Ürün kodları: PBK-1/2 kitapçık, PBK-3–6 yumuşak kapak, PBK-7–12 sert kapak (yatay/kare).
+- Ana sayfa videoları APK'da yok (katalog/CDN'den akıyor). Telefondan ekran kaydıyla alınıp
+  `reference/screens/media` → `assets/ref/media/promo_*.mp4|jpg` olarak konursa karusel otomatik kullanır.
+
+## Görsel değiştirme
+`assets/ref/` altındaki dosyalar yereldir ve repoya girmez (`tool/import_reference_assets.sh` doldurur).
+Kendi görsellerinizi aynı adlarla koymanız yeterli; eksik dosyada uygulama yer tutucu gösterir.
