@@ -35,70 +35,77 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text(S.templates)),
-      body: CustomScrollView(slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            child: Text(S.templateWarning, style: TextStyle(fontSize: 15, height: 1.4, color: context.strongText)),
-          ),
-        ),
-        if (!isCover)
+      body: CustomScrollView(
+        slivers: [
           SliverToBoxAdapter(
-            child: SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  for (final c in categories)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: _CategoryChip(
-                        label: S.templateCategories[c]!,
-                        selected: c == _category,
-                        onTap: () => setState(() => _category = c),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              child: Text(S.templateWarning, style: TextStyle(fontSize: 15, height: 1.4, color: context.strongText)),
+            ),
+          ),
+          if (!isCover)
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  children: [
+                    for (final c in categories)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: _CategoryChip(
+                          label: c.startsWith('p') && c != 'p0'
+                              ? (c == 'p5' ? '5+' : c.substring(1))
+                              : S.templateCategories[c]!,
+                          photoIcon: c.startsWith('p') && c != 'p0',
+                          selected: c == _category,
+                          onTap: () => setState(() => _category = c),
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-          sliver: SliverGrid.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 20,
-              childAspectRatio: vm.product.aspect,
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+            sliver: SliverGrid.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 20,
+                crossAxisSpacing: 20,
+                childAspectRatio: vm.product.aspect,
+              ),
+              itemCount: list.length,
+              itemBuilder: (_, i) {
+                final t = list[i];
+                return GestureDetector(
+                  onTap: () {
+                    vm.changeTemplate(widget.pageIndex, t.id);
+                    Navigator.pop(context);
+                  },
+                  child: TemplateThumb(template: t, format: vm.format, selected: t.id == current),
+                );
+              },
             ),
-            itemCount: list.length,
-            itemBuilder: (_, i) {
-              final t = list[i];
-              return GestureDetector(
-                onTap: () {
-                  vm.changeTemplate(widget.pageIndex, t.id);
-                  Navigator.pop(context);
-                },
-                child: TemplateThumb(template: t, format: vm.format, selected: t.id == current),
-              );
-            },
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
 
-const _lorem = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt '
+const _lorem =
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt '
     'ut labore et dolore magna aliqua.\n\nUt enim ad minim veniam, quis nostrud exercitation ullamco '
     'laboris nisi.\n\nSapien faucibus et molestie ac feugiat. Dui faucibus in ornare quam viverra orci.';
 
 /// Popsa'daki gibi çerçeveli hap kategori çipi; seçili olan turkuaz.
 class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({required this.label, required this.selected, required this.onTap});
+  const _CategoryChip({required this.label, required this.selected, required this.onTap, this.photoIcon = false});
 
   final String label;
+  final bool photoIcon; // fotoğraf sayısı çipi: ikon + sayı
   final bool selected;
   final VoidCallback onTap;
 
@@ -116,13 +123,18 @@ class _CategoryChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Center(
             widthFactor: 1,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.0,
-                color: selected ? AppColors.accent : context.strongText,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (photoIcon) ...[
+                  Icon(Icons.image_outlined, size: 17, color: selected ? AppColors.accent : context.strongText),
+                  const SizedBox(width: 5),
+                ],
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 15, height: 1.0, color: selected ? AppColors.accent : context.strongText),
+                ),
+              ],
             ),
           ),
         ),
@@ -149,56 +161,60 @@ class TemplateThumb extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: ColoredBox(
         color: tile,
-        child: LayoutBuilder(builder: (context, c) {
-          final w = c.maxWidth, h = c.maxHeight;
-          final elements = template.elementsFor(format);
-          return Stack(children: [
-            for (final e in elements.where((e) => e.isPhoto))
-              Positioned(
-                left: e.frame.left / 100 * w,
-                top: e.frame.top / 100 * h,
-                width: e.frame.width / 100 * w,
-                height: e.frame.height / 100 * h,
-                // Popsa tam sayfa fotoğrafı ayrı kutu olarak çizmez (geçişli şablon hariç).
-                child: e.frame.width >= 99 && e.frame.height >= 99 && !elements.any((x) => x.scrim)
-                    ? const SizedBox.shrink()
-                    : Container(
-                        decoration: BoxDecoration(
-                          color: photo,
-                          border: e.border
-                              ? Border.all(color: Colors.white, width: w * 0.015)
-                              : e.overlay
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final w = c.maxWidth, h = c.maxHeight;
+            final elements = template.elementsFor(format);
+            return Stack(
+              children: [
+                for (final e in elements.where((e) => e.isPhoto))
+                  Positioned(
+                    left: e.frame.left / 100 * w,
+                    top: e.frame.top / 100 * h,
+                    width: e.frame.width / 100 * w,
+                    height: e.frame.height / 100 * h,
+                    // Popsa tam sayfa fotoğrafı ayrı kutu olarak çizmez (geçişli şablon hariç).
+                    child: e.frame.width >= 99 && e.frame.height >= 99 && !elements.any((x) => x.scrim)
+                        ? const SizedBox.shrink()
+                        : Container(
+                            decoration: BoxDecoration(
+                              color: photo,
+                              border: e.border
+                                  ? Border.all(color: Colors.white, width: w * 0.015)
+                                  : e.overlay
                                   ? Border.all(color: tile, width: w * 0.02)
                                   : null,
+                            ),
+                          ),
+                  ),
+                for (final e in elements.where((e) => e.scrim))
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    top: (e.frame.top - e.frame.height) / 100 * h,
+                    bottom: 0,
+                    child: const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0x00000000), Color(0x88000000)],
                         ),
                       ),
-              ),
-            for (final e in elements.where((e) => e.scrim))
-              Positioned(
-                left: 0,
-                right: 0,
-                top: (e.frame.top - e.frame.height) / 100 * h,
-                bottom: 0,
-                child: const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0x00000000), Color(0x88000000)],
                     ),
                   ),
-                ),
-              ),
-            for (final e in elements.where((e) => !e.isPhoto))
-              Positioned(
-                left: e.frame.left / 100 * w,
-                top: e.frame.top / 100 * h,
-                width: e.frame.width / 100 * w,
-                height: e.frame.height / 100 * h,
-                child: _sampleText(e, w, h, text),
-              ),
-          ]);
-        }),
+                for (final e in elements.where((e) => !e.isPhoto))
+                  Positioned(
+                    left: e.frame.left / 100 * w,
+                    top: e.frame.top / 100 * h,
+                    width: e.frame.width / 100 * w,
+                    height: e.frame.height / 100 * h,
+                    child: _sampleText(e, w, h, text),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
