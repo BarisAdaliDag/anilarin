@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show TextAlign;
 import 'package:uuid/uuid.dart';
 
 import '../models/catalog.dart';
@@ -294,8 +295,14 @@ class EditorViewModel extends ChangeNotifier {
   }
 
   /// Sayfa altyazısı: düzeni değiştirmez, sayfanın altına şerit olarak eklenir.
-  void setPageCaption(int pageIndex, String text) =>
-      _mutate((book) => book.pages[pageIndex].caption = text.trim());
+  void setPageCaption(int pageIndex, String text, {TextStyleId? style, TextAlign? align, String? font, bool clearFont = false}) =>
+      _mutate((book) {
+        final p = book.pages[pageIndex];
+        p.caption = text.trim();
+        if (style != null) p.captionStyle = style;
+        if (align != null) p.captionAlign = align;
+        if (font != null || clearFont) p.captionFont = font;
+      });
 
   /// Sayfanın, varsa yazı alanı olan aynı fotoğraf sayısındaki şablona geçerek altyazı eklemesi.
   int? captionTemplateFor(int pageIndex) {

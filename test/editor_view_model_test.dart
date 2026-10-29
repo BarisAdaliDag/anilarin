@@ -141,6 +141,18 @@ void main() {
     expect(bottom, lessThanOrEqualTo(100 - captionBand));
   });
 
+  test('altyazı stili, hizalama ve yazı tipi kaydedilir', () {
+    final vm = make();
+    vm.setPageCaption(1, 'Merhaba', style: TextStyleId.heading3, align: TextAlign.center, font: 'classic');
+    final p = PrintPage.fromJson(vm.book.pages[1].toJson());
+    expect(p.captionStyle, TextStyleId.heading3);
+    expect(p.captionAlign, TextAlign.center);
+    expect(p.captionFont, 'classic');
+    vm.setPageCaption(1, 'Merhaba', clearFont: true);
+    expect(vm.book.pages[1].captionFont, isNull);
+    expect(TextStyleId.heading3.charLimit, 24);
+  });
+
   test('json gidiş-dönüş', () {
     final vm = make();
     final copy = PhotoBook.fromJson(vm.book.toJson());

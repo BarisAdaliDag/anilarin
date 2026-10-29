@@ -104,6 +104,17 @@ class S {
   static const allInnerPages = 'Tüm İç Sayfalar';
   static const allPages = 'Tüm Sayfalar';
   static const fonts = 'Yazı Tipleri';
+  static const textStyles = 'Metin Stilleri';
+  static const font = 'Yazı Tipi';
+  static const alignment = 'Hizalama';
+  static const edit = 'Düzenle';
+  static const saveAnyway = 'Yine de Kaydet';
+  static const textLimitTitle = 'Metin sınırı aşıldı';
+  static String textLimitBody(String style, int limit, int over) =>
+      '"$style" stili için önerilen sınır $limit karakter; metnin $over karakter fazla. '
+      'Baskıda küçük görünebilir ya da sayfaya sığmayabilir. Lütfen önizlemede kontrol et.';
+  static String textLimitHint(int limit) => 'Önerilen sınır $limit karakter. Kaydedebilirsin ama baskıda kontrol et.';
+
   static String pageN(int n) => 'Sayfa $n';
   static String pagesCount(int n) => '$n sayfa';
   static const addMorePages = 'Sayfa Ekle';

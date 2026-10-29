@@ -115,21 +115,41 @@ class PrintPageView extends StatelessWidget {
           }
         }
         if (!page.isCover && page.caption.isNotEmpty) {
+          final capFont = page.captionFont == null ? font : catalog.textAppearance(page.captionFont!);
+          final st = page.captionStyle;
+          final alignment = switch (page.captionAlign) {
+            TextAlign.left => Alignment.centerLeft,
+            TextAlign.right => Alignment.centerRight,
+            _ => Alignment.center,
+          };
           children.add(Positioned(
-            left: w * 0.08,
-            right: w * 0.08,
-            top: h * (100 - captionBand + 1.5) / 100,
+            left: w * 0.045,
+            right: w * 0.045,
+            top: h * (100 - captionBand + 1) / 100,
             bottom: h * 0.02,
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: onTextTap == null ? null : () => onTextTap!(-1),
-              child: Center(
-                child: Text(
-                  page.caption,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontFamily: font.bodyFont, fontSize: h * 0.034, height: 1.25, color: theme.text),
+              child: Align(
+                alignment: alignment,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: alignment,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: w * 0.91),
+                    child: Text(
+                      capFont.apply(page.caption),
+                      textAlign: page.captionAlign,
+                      maxLines: st.heading ? 1 : 2,
+                      style: TextStyle(
+                        fontFamily: st.heading ? capFont.titleFont : capFont.bodyFont,
+                        fontWeight: st.heading ? capFont.titleWeight : FontWeight.w400,
+                        fontSize: h * st.sizeFactor,
+                        height: 1.2,
+                        color: st.heading ? theme.title : theme.text,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

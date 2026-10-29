@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../config/theme.dart';
 import '../../../constants/strings_tr.dart';
 import '../../../models/catalog.dart';
+import '../../../models/photo_book.dart';
 import '../../../view_model/editor_view_model.dart';
 import '../text_editor_screen.dart';
 
@@ -39,34 +40,52 @@ Future<void> editTitleDialog(BuildContext context, EditorViewModel vm) async {
 /// Sayfaya altyazı ekler/düzenler. Popsa gibi düzeni bozmaz: altyazı sayfanın altında şerit olarak durur.
 Future<void> editCaptionFlow(BuildContext context, EditorViewModel vm, int pageIndex) async {
   final page = vm.book.pages[pageIndex];
-  final result = await Navigator.of(context).push<String>(MaterialPageRoute(
+  final result = await Navigator.of(context).push<TextEditValue>(MaterialPageRoute(
     fullscreenDialog: true,
     builder: (_) => TextEditorScreen(
       title: page.caption.isEmpty ? S.addCaption : S.editCaption,
-      initial: page.caption,
-      limit: 90,
-      font: vm.textAppearance,
+      initial: TextEditValue(
+        text: page.caption,
+        style: page.captionStyle,
+        align: page.captionAlign,
+        fontId: page.captionFont,
+      ),
+      fonts: vm.catalog.textAppearances,
+      bookFontId: vm.book.textAppearanceId,
     ),
   ));
-  if (result != null) vm.setPageCaption(pageIndex, result);
+  if (result == null) return;
+  vm.setPageCaption(
+    pageIndex,
+    result.text,
+    style: result.style,
+    align: result.align,
+    font: result.fontId,
+    clearFont: result.fontId == null,
+  );
 }
 
+/// Şablonun kendi yazı alanını (ör. yazılı şablonlardaki metin) düzenler; -1 sayfa altyazısıdır.
 Future<void> editCaptionDialog(BuildContext context, EditorViewModel vm, int pageIndex, int textIndex) async {
   if (textIndex < 0) return editCaptionFlow(context, vm, pageIndex);
   final page = vm.book.pages[pageIndex];
   final slots = vm.templateOf(pageIndex).textSlots(vm.format);
   if (textIndex >= slots.length) return;
   final isTitle = slots[textIndex].role == 'title';
-  final result = await Navigator.of(context).push<String>(MaterialPageRoute(
+  final result = await Navigator.of(context).push<TextEditValue>(MaterialPageRoute(
     fullscreenDialog: true,
     builder: (_) => TextEditorScreen(
       title: isTitle ? 'Başlık Ekle' : S.addCaption,
-      initial: textIndex < page.texts.length ? page.texts[textIndex] : '',
-      limit: isTitle ? 40 : 240,
-      font: vm.textAppearance,
+      initial: TextEditValue(
+        text: textIndex < page.texts.length ? page.texts[textIndex] : '',
+        style: isTitle ? TextStyleId.heading4 : TextStyleId.body,
+      ),
+      styles: [isTitle ? TextStyleId.heading4 : TextStyleId.body],
+      fonts: vm.catalog.textAppearances,
+      bookFontId: vm.book.textAppearanceId,
     ),
   ));
-  if (result != null) vm.setCaption(pageIndex, textIndex, result);
+  if (result != null) vm.setCaption(pageIndex, textIndex, result.text);
 }
 
 Future<bool> confirmDelete(BuildContext context) async {

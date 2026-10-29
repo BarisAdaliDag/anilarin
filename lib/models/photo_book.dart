@@ -1,5 +1,24 @@
 import 'dart:convert';
 
+import 'package:flutter/painting.dart' show TextAlign;
+
+/// Popsa'daki metin stilleri; boyut sayfa yüksekliğine oranla, sınır karakter sayısıdır.
+enum TextStyleId {
+  heading2('Başlık 2', 0.075, 20, true),
+  heading3('Başlık 3', 0.062, 24, true),
+  heading4('Başlık 4', 0.052, 30, true),
+  subheading1('Alt Başlık 1', 0.044, 45, false),
+  subheading2('Alt Başlık 2', 0.038, 60, false),
+  body('Gövde', 0.032, 90, false);
+
+  const TextStyleId(this.label, this.sizeFactor, this.charLimit, this.heading);
+
+  final String label;
+  final double sizeFactor;
+  final int charLimit;
+  final bool heading;
+}
+
 /// Kitapta kullanılan bir fotoğraf (cihaz galerisindeki asset).
 class BookPhoto {
   final String id;
@@ -65,6 +84,9 @@ class PrintPage {
   String? themeOverride;
   bool borderless; // kenarlıksız: fotoğraf alanları sayfa kenarına kadar uzar
   String caption; // sayfa altyazısı: şablondan bağımsız, sayfanın altında şerit (Popsa page caption)
+  TextStyleId captionStyle;
+  TextAlign captionAlign;
+  String? captionFont; // null = kitabın yazı grubu
 
   PrintPage({
     required this.id,
@@ -75,6 +97,9 @@ class PrintPage {
     this.themeOverride,
     this.borderless = false,
     this.caption = '',
+    this.captionStyle = TextStyleId.body,
+    this.captionAlign = TextAlign.left,
+    this.captionFont,
   });
 
   bool get isCover => tag == 'layout-front';
@@ -90,6 +115,9 @@ class PrintPage {
         'theme': themeOverride,
         if (borderless) 'bl': true,
         if (caption.isNotEmpty) 'cap': caption,
+        if (captionStyle != TextStyleId.body) 'capStyle': captionStyle.name,
+        if (captionAlign != TextAlign.left) 'capAlign': captionAlign.name,
+        if (captionFont != null) 'capFont': captionFont,
       };
 
   factory PrintPage.fromJson(Map<String, dynamic> j) => PrintPage(
@@ -101,6 +129,9 @@ class PrintPage {
         themeOverride: j['theme'],
         borderless: j['bl'] ?? false,
         caption: j['cap'] ?? '',
+        captionStyle: TextStyleId.values.asNameMap()[j['capStyle']] ?? TextStyleId.body,
+        captionAlign: TextAlign.values.asNameMap()[j['capAlign']] ?? TextAlign.left,
+        captionFont: j['capFont'],
       );
 }
 
