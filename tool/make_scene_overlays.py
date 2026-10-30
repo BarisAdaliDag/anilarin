@@ -1,7 +1,7 @@
 """Popsa sahne arka planlarından (elle tutulan beyaz kitap) kapak yerleştirme katmanları üretir.
 
-Her BACKGROUND_PBKn için:
-  PBK-n_OVERLAY.png : kitap yüzeyi saydam (hafif gölgeli), eller ve masa opak. Kapağın üstüne çizilir.
+Her BACKGROUND_PBKn (kitap) ve BACKGROUND_PTSn (baskı) için:
+  <kod>_OVERLAY.png : kitap/kâğıt yüzeyi saydam (hafif gölgeli), eller ve masa opak. Kapağın üstüne çizilir.
   rects.json        : kitabın sahnedeki dikdörtgeni (0..1 oranları).
 Kullanım: python tool/make_scene_overlays.py <topdownscene klasörü> <çıktı klasörü>
 """
@@ -15,8 +15,8 @@ from PIL import Image
 src, dst = Path(sys.argv[1]), Path(sys.argv[2])
 dst.mkdir(parents=True, exist_ok=True)
 rects = {}
-for n in range(1, 13):
-    f = src / f"BACKGROUND_PBK{n}.webp"
+for kind, n in [("PBK", n) for n in range(1, 13)] + [("PTS", n) for n in range(2, 9)]:
+    f = src / f"BACKGROUND_{kind}{n}.webp"
     if not f.exists():
         continue
     rgb = np.asarray(Image.open(f).convert("RGB")).astype(np.float32)
@@ -37,7 +37,7 @@ for n in range(1, 13):
     out = np.dstack([color, alpha * 255]).astype(np.uint8)
     img = Image.fromarray(out, "RGBA")
     img = img.resize((640, round(640 * h / w)), Image.LANCZOS)  # kartlar küçük; dosya hafif kalsın
-    img.save(dst / f"PBK-{n}_OVERLAY.png", optimize=True)
-    rects[f"PBK-{n}"] = [round(x0 / w, 4), round(y0 / h, 4), round(x1 / w, 4), round(y1 / h, 4)]
+    img.save(dst / f"{kind}-{n}_OVERLAY.png", optimize=True)
+    rects[f"{kind}-{n}"] = [round(x0 / w, 4), round(y0 / h, 4), round(x1 / w, 4), round(y1 / h, 4)]
 (dst / "rects.json").write_text(json.dumps(rects, indent=1))
 print(f"{len(rects)} sahne → {dst}")

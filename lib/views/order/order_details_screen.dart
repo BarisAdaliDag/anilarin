@@ -123,7 +123,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
                                   ),
                                 ),
-                                _UnitToggle(inches: _inches, onChanged: (v) => setState(() => _inches = v)),
+                                UnitToggle(inches: _inches, onChanged: (v) => setState(() => _inches = v)),
                               ],
                             ),
                           ],
@@ -131,11 +131,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                       ),
                     ),
                     SliverToBoxAdapter(
-                      child: _Carousel(
+                      child: OrderCarousel(
                         selected: sizes.indexWhere((p) => p.code == product.code),
                         children: [
                           for (final p in sizes)
-                            _OptionCard(
+                            OrderOptionCard(
                               title: p.sizeLabel,
                               subtitle: p.dimensionsLabel(inches: _inches),
                               selected: p.code == product.code,
@@ -148,12 +148,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     ),
                     _header(S.coverSection),
                     SliverToBoxAdapter(
-                      child: _Carousel(
+                      child: OrderCarousel(
                         selected: types.indexOf(product.type),
                         children: [
                           for (final type in types)
                             if (catalog.closestOfType(product, type) case final p?)
-                              _OptionCard(
+                              OrderOptionCard(
                                 title: p.typeLabel,
                                 subtitle: p.tierLabel,
                                 selected: product.type == type,
@@ -166,29 +166,29 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                       )
                                     : null,
                                 onTap: vm.book.pageCount > p.pagesMax ? null : () => vm.changeProduct(p.code),
-                                background: _Video('assets/ref/media/order_cover_$type.mp4'),
+                                background: OrderVideo('assets/ref/media/order_cover_$type.mp4'),
                               ),
                         ],
                       ),
                     ),
                     _header(S.paperFinishSection),
                     SliverToBoxAdapter(
-                      child: _Carousel(
+                      child: OrderCarousel(
                         selected: vm.book.options.gloss ? 1 : 0,
                         children: [
-                          _OptionCard(
+                          OrderOptionCard(
                             title: S.matte,
                             subtitle: S.tierStandard,
                             selected: !vm.book.options.gloss,
                             onTap: () => vm.setGloss(false),
-                            background: const _Video('assets/ref/media/order_paper_matte.mp4'),
+                            background: const OrderVideo('assets/ref/media/order_paper_matte.mp4'),
                           ),
-                          _OptionCard(
+                          OrderOptionCard(
                             title: S.gloss,
                             subtitle: S.tierPremium,
                             selected: vm.book.options.gloss,
                             onTap: () => vm.setGloss(true),
-                            background: const _Video('assets/ref/media/order_paper_gloss.mp4'),
+                            background: const OrderVideo('assets/ref/media/order_paper_gloss.mp4'),
                           ),
                         ],
                       ),
@@ -220,21 +220,21 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
 /// Ortadaki kart seçili olanla açılır; kenarlarda komşular görünür (Popsa kaydırmalı kartlar).
 /// Kaydırmak seçmez, dokunmak seçer.
-class _Carousel extends StatefulWidget {
-  const _Carousel({required this.selected, required this.children});
+class OrderCarousel extends StatefulWidget {
+  const OrderCarousel({super.key, required this.selected, required this.children});
 
   final int selected;
   final List<Widget> children;
 
   @override
-  State<_Carousel> createState() => _CarouselState();
+  State<OrderCarousel> createState() => _CarouselState();
 }
 
-class _CarouselState extends State<_Carousel> {
+class _CarouselState extends State<OrderCarousel> {
   late final _controller = PageController(viewportFraction: 0.66, initialPage: widget.selected.clamp(0, 99));
 
   @override
-  void didUpdateWidget(_Carousel old) {
+  void didUpdateWidget(OrderCarousel old) {
     super.didUpdateWidget(old);
     if (old.selected != widget.selected && widget.selected >= 0 && _controller.hasClients) {
       _controller.animateToPage(
@@ -269,8 +269,9 @@ class _CarouselState extends State<_Carousel> {
   }
 }
 
-class _OptionCard extends StatelessWidget {
-  const _OptionCard({
+class OrderOptionCard extends StatelessWidget {
+  const OrderOptionCard({
+    super.key,
     required this.title,
     required this.subtitle,
     required this.selected,
@@ -390,8 +391,8 @@ class _Check extends StatelessWidget {
   }
 }
 
-class _Video extends StatelessWidget {
-  const _Video(this.path);
+class OrderVideo extends StatelessWidget {
+  const OrderVideo(this.path, {super.key});
 
   final String path;
 
@@ -410,6 +411,35 @@ class _SizeScene extends StatelessWidget {
   final EditorViewModel vm;
   final Product product;
 
+  @override
+  Widget build(BuildContext context) => SceneMockup(
+    sceneKey: product.code,
+    fallback: BookMockup(book: vm.book, catalog: vm.catalog),
+    child: SizedBox(
+      width: 400,
+      child: PrintPageView(book: vm.book, pageIndex: 0, catalog: vm.catalog, thumbSize: 500),
+    ),
+  );
+}
+
+/// Masada elle tutulan ürün sahnesi: Popsa sahne arka planı + [child] (kapak ya da baskı) + eller katmanı.
+/// Katmanlar `tool/make_scene_overlays.py` ile üretilir; yoksa [fallback] gösterilir.
+class SceneMockup extends StatelessWidget {
+  const SceneMockup({
+    super.key,
+    required this.sceneKey,
+    required this.child,
+    required this.fallback,
+    this.fit = BoxFit.cover,
+  });
+
+  final String sceneKey;
+  final Widget child;
+  final Widget fallback;
+
+  /// Ürün sahnedeki alana nasıl yerleşir; dik bir baskı yatay alanda kırpılmasın diye [BoxFit.contain].
+  final BoxFit fit;
+
   static final Future<Map<String, dynamic>?> _rects = rootBundle
       .loadString('assets/ref/mockups/scene/rects.json')
       .then<Map<String, dynamic>?>((s) => jsonDecode(s) as Map<String, dynamic>)
@@ -417,7 +447,7 @@ class _SizeScene extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final key = product.code;
+    final key = sceneKey;
     return FutureBuilder(
       future: _rects,
       builder: (context, snap) {
@@ -426,10 +456,7 @@ class _SizeScene extends StatelessWidget {
           return ColoredBox(
             color: const Color(0xFFD8CCC2),
             child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: BookMockup(book: vm.book, catalog: vm.catalog),
-              ),
+              child: Padding(padding: const EdgeInsets.all(24), child: fallback),
             ),
           );
         }
@@ -451,14 +478,7 @@ class _SizeScene extends StatelessWidget {
                     Positioned.fill(child: RefImage('assets/ref/mockups/scene/$key.webp')),
                     Positioned.fromRect(
                       rect: rect,
-                      child: FittedBox(
-                        fit: BoxFit.cover,
-                        clipBehavior: Clip.hardEdge,
-                        child: SizedBox(
-                          width: 400,
-                          child: PrintPageView(book: vm.book, pageIndex: 0, catalog: vm.catalog, thumbSize: 500),
-                        ),
-                      ),
+                      child: FittedBox(fit: fit, clipBehavior: Clip.hardEdge, child: child),
                     ),
                     Positioned.fill(
                       child: Image.asset(
@@ -478,8 +498,8 @@ class _SizeScene extends StatelessWidget {
   }
 }
 
-class _UnitToggle extends StatelessWidget {
-  const _UnitToggle({required this.inches, required this.onChanged});
+class UnitToggle extends StatelessWidget {
+  const UnitToggle({super.key, required this.inches, required this.onChanged});
 
   final bool inches;
   final ValueChanged<bool> onChanged;

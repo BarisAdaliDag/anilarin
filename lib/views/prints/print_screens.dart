@@ -12,6 +12,7 @@ import '../../services/auto_layout_service.dart';
 import '../../view_model/app_view_model.dart';
 import '../basket/basket_screen.dart';
 import '../home/designs_tab.dart' show timeAgo;
+import '../editor/sheets/font_sheet.dart';
 import '../editor/text_editor_screen.dart';
 import '../photo_picker/photo_picker_screen.dart';
 import '../widgets/media_carousel.dart';
@@ -19,27 +20,29 @@ import '../widgets/price_text.dart';
 import '../widgets/print_card.dart';
 import '../widgets/ref_image.dart';
 import 'print_edit_photo_screen.dart';
+import 'print_order_details.dart';
 import 'print_theme_sheet.dart';
 
 const _printImages = {'regular': 'assets/ref/media/prints_regular.png', 'square': 'assets/ref/media/prints_square.png'};
 
-/// Ürün sayfası karuseli: Popsa'dan alınan boyut başına görsel/videolar (assets/ref/media, repoya girmez).
-const _carousel = {
-  'regular_small': ['1.jpg', '2.mp4', '3.mp4'],
-  'regular_medium': ['1.mp4', '2.mp4', '3.mp4', '4.jpg'],
-  'regular_large': ['1.mp4', '2.mp4', '3.jpg', '4.mp4', '5.jpg'],
-  'regular_xlarge': ['1.mp4', '2.mp4', '3.jpg'],
-  'square_small': ['1.jpg', '2.jpg', '3.mp4', '4.mp4', '5.jpg'],
-  'square_medium': ['1.jpg', '2.mp4', '3.jpg', '4.jpg'],
-  'square_large': ['1.mp4', '2.jpg', '3.jpg', '4.jpg', '5.jpg'],
+/// Ürün sayfası karuseli: Popsa'dan alınan boyut başına görseller, ardından ücretsiz (Unsplash) alternatifler.
+/// Hepsi assets/ref/media altında, repoya girmez.
+const _carouselCount = {
+  'regular_small': 3,
+  'regular_medium': 4,
+  'regular_large': 5,
+  'regular_xlarge': 3,
+  'square_small': 5,
+  'square_medium': 4,
+  'square_large': 5,
 };
 
 List<String> printMedia(String format, String size) {
-  final files = _carousel['${format}_$size'] ?? const [];
+  final n = _carouselCount['${format}_$size'] ?? 0;
   final key = size == 'xlarge' ? 'xl' : size;
   return [
-    for (final f in files) 'assets/ref/media/prints_${format}_${key}_$f',
-    if (files.isEmpty) _printImages[format]!,
+    for (var i = 1; i <= n; i++) 'assets/ref/media/prints_${format}_${key}_$i.jpg',
+    for (var i = 1; i <= 7; i++) 'assets/ref/media/free/free_prints_$i.jpg',
   ];
 }
 
@@ -430,9 +433,8 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
       _toast(S.minPrintsWarning(PrintProduct.minPrints));
       return;
     }
-    final nav = Navigator.of(context);
-    await _app.addPrintSetToBasket(_set);
-    nav.push(MaterialPageRoute(builder: (_) => const BasketScreen()));
+    await showPrintOrderDetails(context, _set, onChanged: () => _changed(() {}));
+    if (mounted) setState(() {});
   }
 
   Future<void> _addMore() async {
@@ -459,49 +461,99 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
     _changed(() => _set.items.insert(i + 1, _set.items[i].copyWith(id: const Uuid().v4())));
   }
 
-  Future<void> _text(String title, String initial, int max, ValueChanged<String> onSave) async {
-    final c = TextEditingController(text: initial);
-    final saved = await showDialog<String>(
-      context: context,
-      builder: (d) => AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: c,
-          autofocus: true,
-          maxLength: max,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(hintText: S.captionHint),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(d), child: const Text(S.cancel)),
-          TextButton(onPressed: () => Navigator.pop(d, c.text.trim()), child: const Text(S.save)),
-        ],
-      ),
-    );
-    if (saved != null) onSave(saved);
-  }
+  List<TextAppearance> get _fonts => _app.catalog!.textAppearances;
 
-  /// Kapak yazısı: fotoğraf kitabındaki tam ekran yazı düzenleyici; başlık ve alt başlık ayrı kartlarda.
-  Future<void> _editCoverText() async {
-    final catalog = _app.catalog!;
+  /// Popsa Edit Title: fotoğraf kitabındaki tam ekran yazı düzenleyici (başlık + alt başlık, yazı tipi, hizalama).
+  Future<void> _editTitle() async {
     final result = await Navigator.of(context).push<TextEditValue>(
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => TextEditorScreen(
-          title: S.coverText,
-          initial: TextEditValue(text: _set.title, subtitle: _set.subtitle, align: TextAlign.center),
-          fonts: catalog.textAppearances,
-          bookFontId: catalog.textAppearances.first.id,
-          limit: 40,
+          title: S.editPrintTitle,
+          initial: TextEditValue(
+            text: _set.title,
+            subtitle: _set.subtitle,
+            align: _set.titleAlign,
+            fontId: _set.titleFontId,
+          ),
+          fonts: _fonts,
+          bookFontId: _set.fontId,
+          limit: 36,
           hint: S.printTitleDefault,
-          showFormatting: false,
+          showStyle: false,
         ),
       ),
     );
     if (result == null) return;
     _changed(() {
-      _set.title = result.text.trim().isEmpty ? S.printTitleDefault : result.text.trim();
-      _set.subtitle = (result.subtitle ?? '').trim();
+      _set
+        ..title = result.text.trim().isEmpty ? S.printTitleDefault : result.text.trim()
+        ..subtitle = (result.subtitle ?? '').trim()
+        ..titleAlign = result.align
+        ..titleFontId = result.fontId;
+    });
+  }
+
+  /// Popsa Add Caption: baskının altındaki yazı, aynı tam ekran düzenleyiciyle.
+  Future<void> _editCaption(int i) async {
+    final item = _set.items[i];
+    final result = await Navigator.of(context).push<TextEditValue>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => TextEditorScreen(
+          title: item.caption.isEmpty ? S.addCaption : S.editCaptionPrint,
+          initial: TextEditValue(text: item.caption, align: item.align, fontId: item.fontId),
+          fonts: _fonts,
+          bookFontId: _set.fontId,
+          limit: 90,
+          hint: S.captionHintPrint,
+          showStyle: false,
+        ),
+      ),
+    );
+    if (result == null) return;
+    _changed(() {
+      item
+        ..caption = result.text.trim()
+        ..align = result.align
+        ..fontId = result.fontId;
+    });
+  }
+
+  /// Popsa Change Font: tüm baskıların yazı tipi (özel seçimler temizlenir).
+  Future<void> _changeFont() async {
+    final id = await pickFont(context, fonts: _fonts, selectedId: _set.fontId);
+    if (id == null) return;
+    _changed(() {
+      _set
+        ..fontId = id
+        ..titleFontId = null;
+      for (final i in _set.items) {
+        i.fontId = null;
+      }
+    });
+  }
+
+  /// Popsa Templates (kapak baskısı): düzen seçimi.
+  Future<void> _coverTemplates() async {
+    final picked = await Navigator.of(context).push<CoverLayout>(
+      MaterialPageRoute(
+        builder: (_) => CoverTemplateScreen(set: _set, fonts: _fonts),
+      ),
+    );
+    if (picked != null) _changed(() => _set.coverLayout = picked.index);
+  }
+
+  Future<void> _removePrints() async {
+    final removed = await Navigator.of(context).push<Set<int>>(
+      MaterialPageRoute(
+        builder: (_) => RemovePrintsScreen(set: _set, fonts: _fonts),
+      ),
+    );
+    if (removed == null || removed.isEmpty) return;
+    _changed(() {
+      final ids = {for (final i in removed) _set.items[i].id};
+      _set.items.removeWhere((e) => ids.contains(e.id));
     });
   }
 
@@ -512,16 +564,8 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
     final item = _set.items[i];
     final result = await Navigator.of(context).push<PrintEditResult>(
       MaterialPageRoute(
-        builder: (_) => PrintEditPhotoScreen(
-          photo: item.photo,
-          slot: item.slot,
-          frameAspect: PrintCard.photoAreaAspect(
-            item,
-            _set.product,
-            title: i == 0 ? _set.title : null,
-            subtitle: i == 0 ? _set.subtitle : null,
-          ),
-        ),
+        builder: (_) =>
+            PrintEditPhotoScreen(photo: item.photo, slot: item.slot, frameAspect: PrintCard.photoAreaAspect(_set, i)),
       ),
     );
     if (result == null) return;
@@ -536,6 +580,7 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
       builder: (c) {
         Widget tile(IconData icon, String label, VoidCallback onTap, {bool danger = false}) => ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 20),
@@ -547,38 +592,42 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
           },
         );
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-                child: Text(_set.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                child: Text(
-                  _set.product.square ? S.squarePrints : S.regularPrints,
-                  style: TextStyle(fontSize: 17, color: c.mutedText),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: Text(_set.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
                 ),
-              ),
-              Divider(color: c.divider, indent: 20, endIndent: 20),
-              tile(Icons.edit_outlined, S.editPrintTitle, _editCoverText),
-              tile(Icons.add_photo_alternate_outlined, S.addMorePrints, _addMore),
-              tile(Icons.copy_outlined, S.duplicateSet, () async {
-                final copy = await _app.duplicatePrintSet(_set.id);
-                if (copy != null && mounted) {
-                  Navigator.of(
-                    context,
-                  ).pushReplacement(MaterialPageRoute(builder: (_) => PrintSetScreen(setId: copy.id)));
-                }
-              }),
-              tile(Icons.delete_outline, S.deleteSet, () async {
-                final nav = Navigator.of(context);
-                await _app.deletePrintSet(_set.id);
-                nav.pop();
-              }, danger: true),
-            ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Text(
+                    _set.product.square ? S.squarePrints : S.regularPrints,
+                    style: TextStyle(fontSize: 17, color: c.mutedText),
+                  ),
+                ),
+                Divider(color: c.divider, indent: 20, endIndent: 20),
+                tile(Icons.edit_outlined, S.editPrintTitle, _editTitle),
+                tile(Icons.text_fields, S.changeFont, _changeFont),
+                tile(Icons.add_photo_alternate_outlined, S.addMorePrints, _addMore),
+                tile(Icons.remove_circle_outline, S.removePrints, _removePrints),
+                tile(Icons.copy_outlined, S.duplicateSet, () async {
+                  final copy = await _app.duplicatePrintSet(_set.id);
+                  if (copy != null && mounted) {
+                    Navigator.of(
+                      context,
+                    ).pushReplacement(MaterialPageRoute(builder: (_) => PrintSetScreen(setId: copy.id)));
+                  }
+                }),
+                tile(Icons.delete_outline, S.deleteSet, () async {
+                  final nav = Navigator.of(context);
+                  await _app.deletePrintSet(_set.id);
+                  nav.pop();
+                }, danger: true),
+              ],
+            ),
           ),
         );
       },
@@ -665,6 +714,19 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                       '${product.square ? S.squarePrints : S.regularPrints} · ${S.printsN(_set.count)} · ${timeAgo(_set.updatedAtMs)}',
                       style: TextStyle(fontSize: 16, height: 1.4, color: context.mutedText),
                     ),
+                    if (_app.basket.any((b) => b.bookId == _set.id)) ...[
+                      const SizedBox(height: 14),
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: context.pillColor,
+                          foregroundColor: context.strongText,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () =>
+                            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BasketScreen())),
+                        child: const Text(S.viewInBasket),
+                      ),
+                    ],
                     Divider(height: 36, color: context.divider),
                   ],
                 );
@@ -700,7 +762,9 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        if (cover || product.square)
+                        if (cover)
+                          _round(Icons.call_to_action_outlined, _coverTemplates)
+                        else if (product.square)
                           _round(
                             item.border ? Icons.crop_din : Icons.crop_free,
                             () => _changed(() => item.border = !item.border),
@@ -713,14 +777,7 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                         const SizedBox(width: 10),
                         _round(
                           null,
-                          cover
-                              ? _editCoverText
-                              : () => _text(
-                                  S.editCaptionPrint,
-                                  item.caption,
-                                  40,
-                                  (t) => _changed(() => item.caption = t),
-                                ),
+                          cover ? _editTitle : () => _editCaption(i),
                           child: const Text('Aa', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
                         ),
                         const SizedBox(width: 10),
@@ -733,13 +790,7 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                         constraints: const BoxConstraints(maxWidth: 420),
                         child: GestureDetector(
                           onTap: () => _editPhoto(i),
-                          child: PrintCard(
-                            item: item,
-                            product: product,
-                            colorHex: _set.colorOf(item),
-                            title: cover ? _set.title : null,
-                            subtitle: cover ? _set.subtitle : null,
-                          ),
+                          child: PrintCard(set: _set, index: i, fonts: _fonts),
                         ),
                       ),
                     ),
@@ -791,6 +842,129 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                       ),
                     ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Popsa Templates (kapak baskısı): düzenler gerçek kapak önizlemesiyle iki sütunda; seçili olan vurgulu.
+class CoverTemplateScreen extends StatelessWidget {
+  const CoverTemplateScreen({super.key, required this.set, required this.fonts});
+
+  final PrintSet set;
+  final List<TextAppearance> fonts;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text(S.templates)),
+      body: GridView.builder(
+        padding: EdgeInsets.fromLTRB(20, 8, 20, 24 + MediaQuery.viewPaddingOf(context).bottom),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 18,
+          crossAxisSpacing: 18,
+          childAspectRatio: PrintCard.aspectOf(set, set.items.first),
+        ),
+        itemCount: CoverLayout.values.length,
+        itemBuilder: (context, i) {
+          final layout = CoverLayout.values[i];
+          final selected = layout == set.layout;
+          return GestureDetector(
+            onTap: () => Navigator.pop(context, layout),
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: selected ? AppColors.accent : Colors.transparent, width: 3),
+              ),
+              child: PrintCard(set: set, index: 0, fonts: fonts, thumbSize: 300, layout: layout),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Popsa Remove Prints: kaldırılacak baskıları seç (kapak hariç); set en az [PrintProduct.minPrints] baskı kalır.
+class RemovePrintsScreen extends StatefulWidget {
+  const RemovePrintsScreen({super.key, required this.set, required this.fonts});
+
+  final PrintSet set;
+  final List<TextAppearance> fonts;
+
+  @override
+  State<RemovePrintsScreen> createState() => _RemovePrintsScreenState();
+}
+
+class _RemovePrintsScreenState extends State<RemovePrintsScreen> {
+  final _selected = <int>{};
+
+  @override
+  Widget build(BuildContext context) {
+    final set = widget.set;
+    final removable = set.count - PrintProduct.minPrints;
+    return Scaffold(
+      appBar: AppBar(title: Text(S.removePrintsN(_selected.length))),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text(S.minPrintsWarning(PrintProduct.minPrints), style: TextStyle(color: context.mutedText)),
+          ),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 12,
+              ),
+              itemCount: set.count - 1,
+              itemBuilder: (_, k) {
+                final i = k + 1;
+                final selected = _selected.contains(i);
+                final disabled = !selected && _selected.length >= removable;
+                return GestureDetector(
+                  onTap: disabled ? null : () => setState(() => selected ? _selected.remove(i) : _selected.add(i)),
+                  child: Opacity(
+                    opacity: disabled ? 0.4 : 1,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        PrintCard(set: set, index: i, fonts: widget.fonts, thumbSize: 250),
+                        if (selected)
+                          const Positioned(
+                            top: 4,
+                            right: 4,
+                            child: CircleAvatar(
+                              radius: 12,
+                              backgroundColor: AppColors.failure,
+                              child: Icon(Icons.close, size: 16, color: Colors.white),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(backgroundColor: AppColors.failure),
+                  onPressed: _selected.isEmpty ? null : () => Navigator.pop(context, _selected),
+                  child: Text(S.removePrintsN(_selected.length)),
+                ),
               ),
             ),
           ),

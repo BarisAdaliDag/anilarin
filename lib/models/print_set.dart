@@ -1,3 +1,5 @@
+import 'package:flutter/painting.dart' show TextAlign;
+
 import 'photo_book.dart';
 
 /// Fotoğraf baskısı ürünü (Popsa "Regular Prints" / "Square Prints"): boyut başına tek birim fiyat,
@@ -79,6 +81,8 @@ class PrintItem {
   double dx; // -1..1, yalnız taşan eksende
   double dy;
   int turns; // fotoğrafın çeyrek dönüşü
+  TextAlign align; // alt yazı hizası
+  String? fontId; // alt yazı yazı tipi; null ise setin
 
   PrintItem({
     required this.id,
@@ -92,6 +96,8 @@ class PrintItem {
     this.dx = 0,
     this.dy = 0,
     this.turns = 0,
+    this.align = TextAlign.center,
+    this.fontId,
   }) : portrait = portrait ?? photo.aspect < 1;
 
   Map<String, dynamic> toJson() => {
@@ -106,6 +112,8 @@ class PrintItem {
     'dx': dx,
     'dy': dy,
     'r': turns,
+    'align': align.name,
+    if (fontId != null) 'font': fontId,
   };
 
   /// Kitap sayfalarıyla aynı kırpma hesabı ([photoRect]) için.
@@ -131,6 +139,8 @@ class PrintItem {
     dx: (j['dx'] as num?)?.toDouble() ?? 0,
     dy: (j['dy'] as num?)?.toDouble() ?? 0,
     turns: j['r'] ?? 0,
+    align: TextAlign.values.asNameMap()[j['align']] ?? TextAlign.center,
+    fontId: j['font'],
   );
 
   PrintItem copyWith({required String id}) => PrintItem(
@@ -145,6 +155,8 @@ class PrintItem {
     dx: dx,
     dy: dy,
     turns: turns,
+    align: align,
+    fontId: fontId,
   );
 }
 
@@ -157,6 +169,11 @@ class PrintSet {
   String colorHex; // baskı zemin rengi
   List<PrintItem> items; // [0] kapak baskısı
   int updatedAtMs;
+  String fontId; // "Yazı Tipini Değiştir": tüm yazıların yazı tipi
+  int coverLayout; // kapak baskısı düzeni (CoverLayout.values indeksi)
+  TextAlign titleAlign;
+  String? titleFontId; // kapak başlığına özel yazı tipi
+  bool matte; // kâğıt yüzeyi: parlak (Standart) / mat (Premium)
 
   PrintSet({
     required this.id,
@@ -166,7 +183,14 @@ class PrintSet {
     required this.items,
     this.colorHex = defaultColor,
     required this.updatedAtMs,
+    this.fontId = 'modern',
+    this.coverLayout = 0,
+    this.titleAlign = TextAlign.center,
+    this.titleFontId,
+    this.matte = false,
   });
+
+  CoverLayout get layout => CoverLayout.values[coverLayout.clamp(0, CoverLayout.values.length - 1)];
 
   /// Popsa'da baskılar beyaz kâğıtla gelir; önerilen renk.
   static const defaultColor = '#FFFFFF';
@@ -193,6 +217,11 @@ class PrintSet {
     'color': colorHex,
     'items': items.map((e) => e.toJson()).toList(),
     'updated': updatedAtMs,
+    'font': fontId,
+    'layout': coverLayout,
+    'titleAlign': titleAlign.name,
+    if (titleFontId != null) 'titleFont': titleFontId,
+    'matte': matte,
   };
 
   factory PrintSet.fromJson(Map<String, dynamic> j) => PrintSet(
@@ -203,7 +232,25 @@ class PrintSet {
     colorHex: j['color'] ?? defaultColor,
     items: (j['items'] as List).map((e) => PrintItem.fromJson(e)).toList(),
     updatedAtMs: j['updated'] ?? 0,
+    fontId: j['font'] ?? 'modern',
+    coverLayout: j['layout'] ?? 0,
+    titleAlign: TextAlign.values.asNameMap()[j['titleAlign']] ?? TextAlign.center,
+    titleFontId: j['titleFont'],
+    matte: j['matte'] ?? false,
   );
 
   PrintSet clone() => PrintSet.fromJson(toJson());
+}
+
+/// Kapak baskısı düzenleri (Popsa Templates, kapak baskısı).
+enum CoverLayout {
+  framed, // kenarlı fotoğraf, altında ortalı başlık
+  gradient, // tam fotoğraf, altta koyulaşan geçiş üstünde beyaz başlık
+  band, // tam fotoğraf, altta kâğıt renginde yarı saydam şerit
+  photoOnly, // yalnız fotoğraf
+  overlayLeft, // tam fotoğraf, sol altta başlık
+  framedLeft, // kenarlı fotoğraf, altında sola dayalı başlık
+  textAbove, // üstte başlık, altında fotoğraf
+  textLeft, // solda başlık, sağda fotoğraf
+  corner, // sol üstte başlık, sağ altta küçük fotoğraf
 }

@@ -75,6 +75,7 @@ flutter:
     - assets/ref/mockups/topdown/
     - assets/ref/mockups/scene/
     - assets/ref/media/
+    - assets/ref/media/free/
 
   fonts:
     - family: DMSans

@@ -31,9 +31,15 @@ for i in $(seq 1 12); do
   f="$SRC/decoded/assets/topdownscene/BACKGROUND_PBK$i.webp"
   [ -f "$f" ] && cp "$f" "$DST/mockups/scene/PBK-$i.webp"
 done
+for i in $(seq 2 8); do
+  f="$SRC/decoded/assets/topdownscene/BACKGROUND_PTS$i.webp"
+  [ -f "$f" ] && cp "$f" "$DST/mockups/scene/PTS-$i.webp"
+done
 
 # Ekran kayıtlarından çıkarılan kareler/klipler (reference/screens/media) varsa
 if [ -d "$SRC/screens/media" ]; then mkdir -p "$DST/media"; cp "$SRC"/screens/media/* "$DST/media/" 2>/dev/null || true; fi
+# Ücretsiz (Unsplash) alternatif görseller; kaynaklar reference/screens/media/free/SOURCES.md
+if [ -d "$SRC/screens/media/free" ]; then mkdir -p "$DST/media/free"; cp "$SRC"/screens/media/free/*.jpg "$DST/media/free/"; fi
 
 # Boyut kartlarındaki "elde tutulan kitap" sahneleri için eller katmanı (Pillow + numpy gerekir)
 python3 -I "$ROOT/tool/make_scene_overlays.py" "$SRC/decoded/assets/topdownscene" "$DST/mockups/scene" 2>/dev/null \

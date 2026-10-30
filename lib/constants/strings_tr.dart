@@ -247,6 +247,12 @@ class S {
   static String printN(int n) => 'Baskı $n';
   static const coverPrint = 'Kapak Baskısı';
   static const allPrints = 'Tüm baskılar';
+  static const removePrints = 'Baskıları Kaldır';
+  static String removePrintsN(int n) => n == 0 ? removePrints : 'Baskıları Kaldır ($n)';
+  static const captionHintPrint = 'Tasarımında fotoğrafın altında görünecek bir yazı gir';
+  static const viewInBasket = 'Sepette Gör';
+  static const printOrderBody = 'Fotoğraf baskılarının ayrıntılarını onayla. Fiyat otomatik güncellenir.';
+  static const matteFinish = 'Mat Kâğıt';
   static const coverText = 'Kapak Yazısı';
   static const titleLabel = 'Başlık';
   static const subtitleLabel = 'Alt başlık';

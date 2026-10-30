@@ -120,11 +120,9 @@ class _PrintSetCard extends StatelessWidget {
               SizedBox(
                 width: 210,
                 child: PrintCard(
-                  item: set.items.first,
-                  product: set.product,
-                  colorHex: set.colorOf(set.items.first),
-                  title: set.title,
-                  subtitle: set.subtitle,
+                  set: set,
+                  index: 0,
+                  fonts: context.read<AppViewModel>().catalog!.textAppearances,
                   thumbSize: 400,
                 ),
               ),

@@ -129,7 +129,11 @@ class AppViewModel extends ChangeNotifier {
   List<String> itemLines(BasketItem item) {
     if (item.isPrints) {
       final p = PrintCatalog.byCode(item.productCode);
-      return ['${p.square ? S.squarePrints : S.regularPrints} (${S.sizeName(p.size)})', S.printsN(item.pages)];
+      return [
+        '${p.square ? S.squarePrints : S.regularPrints} (${S.sizeName(p.size)})',
+        S.printsN(item.pages),
+        if (printSet(item.bookId)?.matte ?? false) S.matteFinish,
+      ];
     }
     final p = catalog!.product(item.productCode);
     final extra = (item.pages - p.pagesDefault).clamp(0, 999);

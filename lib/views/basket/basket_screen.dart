@@ -219,14 +219,7 @@ class _ItemCard extends StatelessWidget {
               child: set != null
                   ? Padding(
                       padding: const EdgeInsets.all(10),
-                      child: PrintCard(
-                        item: set.items.first,
-                        product: set.product,
-                        colorHex: set.colorOf(set.items.first),
-                        title: set.title,
-                        subtitle: set.subtitle,
-                        thumbSize: 300,
-                      ),
+                      child: PrintCard(set: set, index: 0, fonts: catalog.textAppearances, thumbSize: 300),
                     )
                   : book == null
                   ? const Icon(Icons.menu_book, size: 40, color: Colors.white70)

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:anilarin/models/photo_book.dart';
 import 'package:anilarin/models/print_set.dart';
 import 'package:anilarin/repositories/design_repository.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 PrintSet _set(int n, {String code = 'PRN-R-M'}) => PrintSet(
@@ -98,5 +99,27 @@ void main() {
     final i = PrintSet.fromJson(s.toJson()).items[0];
     expect([i.fit, i.scale, i.dx, i.turns], [true, 1.5, -0.4, 1]);
     expect(i.slot.quarterTurns, 1);
+  });
+
+  test('kapak düzeni, yazı tipi, hizalama ve mat kâğıt saklanır', () {
+    final s = _set(2)
+      ..coverLayout = CoverLayout.gradient.index
+      ..fontId = 'classic'
+      ..titleAlign = TextAlign.left
+      ..matte = true;
+    s.items[1]
+      ..caption = 'Deniz'
+      ..align = TextAlign.right
+      ..fontId = 'rounded';
+    final b = PrintSet.fromJson(s.toJson());
+    expect(b.layout, CoverLayout.gradient);
+    expect([b.fontId, b.titleAlign, b.matte], ['classic', TextAlign.left, true]);
+    expect([b.items[1].align, b.items[1].fontId], [TextAlign.right, 'rounded']);
+    final legacy = s.toJson()
+      ..remove('layout')
+      ..remove('font')
+      ..remove('matte');
+    final l = PrintSet.fromJson(legacy);
+    expect([l.layout, l.fontId, l.matte], [CoverLayout.framed, 'modern', false]);
   });
 }
