@@ -18,10 +18,17 @@ void startCheckout(BuildContext context) {
   );
 }
 
+/// Liste altına sistem gezinme çubuğu kadar boşluk (kenardan kenara ekranda son düğme örtülmesin).
+EdgeInsets _listPadding(BuildContext context, {double top = 8}) =>
+    EdgeInsets.fromLTRB(20, top, 20, 32 + MediaQuery.viewPaddingOf(context).bottom);
+
 // ---- Yeni Adres ----
 
 class AddressScreen extends StatefulWidget {
-  const AddressScreen({super.key});
+  const AddressScreen({super.key, this.editing = false});
+
+  /// Kargo ekranından "Değiştir" ile açıldıysa kaydedince oraya döner.
+  final bool editing;
 
   @override
   State<AddressScreen> createState() => _AddressScreenState();
@@ -36,7 +43,11 @@ class _AddressScreenState extends State<AddressScreen> {
     _form.currentState!.save();
     final nav = Navigator.of(context);
     await context.read<AppViewModel>().saveAddress(_a);
-    nav.pushReplacement(MaterialPageRoute(builder: (_) => const ShippingOptionsScreen()));
+    if (widget.editing) {
+      nav.pop();
+    } else {
+      nav.pushReplacement(MaterialPageRoute(builder: (_) => const ShippingOptionsScreen()));
+    }
   }
 
   @override
@@ -94,7 +105,7 @@ class _AddressScreenState extends State<AddressScreen> {
               onPressed: _save,
               iconAlignment: IconAlignment.end,
               icon: const Icon(Icons.arrow_forward, size: 20),
-              label: const Text(S.shipping, style: TextStyle(fontSize: 16)),
+              label: Text(widget.editing ? S.save : S.shipping, style: const TextStyle(fontSize: 16)),
             ),
           ),
         ],
@@ -102,7 +113,7 @@ class _AddressScreenState extends State<AddressScreen> {
       body: Form(
         key: _form,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          padding: _listPadding(context),
           children: [
             Text(S.addressSavedNote, style: TextStyle(fontSize: 16, height: 1.4, color: context.mutedText)),
             const SizedBox(height: 24),
@@ -151,7 +162,7 @@ class ShippingOptionsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+        padding: _listPadding(context, top: 4),
         children: [
           const Text(S.shippingOptions, style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600)),
           const SizedBox(height: 14),
@@ -178,7 +189,9 @@ class ShippingOptionsScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
+          if (app.address != null) _AddressTile(address: app.address!),
+          const SizedBox(height: 20),
           for (final s in ShippingOption.all)
             _ShippingCard(
               icon: s == ShippingOption.tracked ? Icons.wifi_tethering : Icons.local_shipping_outlined,
@@ -188,6 +201,46 @@ class ShippingOptionsScreen extends StatelessWidget {
               onTap: () =>
                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => PaymentOptionsScreen(shipping: s))),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Kargo ekranında kayıtlı teslimat adresi ve "Değiştir" (ilk hatalı girişi düzeltmek için).
+class _AddressTile extends StatelessWidget {
+  const _AddressTile({required this.address});
+
+  final Address address;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 14, 8, 14),
+      decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(16)),
+      child: Row(
+        children: [
+          const Icon(Icons.location_on_outlined),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(address.fullName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                Text(
+                  [address.line1, address.city].where((e) => e.isNotEmpty).join(', '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14, color: context.mutedText),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddressScreen(editing: true))),
+            child: const Text(S.change),
+          ),
         ],
       ),
     );
@@ -267,7 +320,7 @@ class PaymentOptionsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text(S.paymentOptions)),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        padding: _listPadding(context, top: 12),
         children: [
           SizedBox(
             height: 54,
@@ -364,7 +417,7 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text(S.summary)),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: _listPadding(context),
         children: [
           Text(S.orderSummaryBody, style: TextStyle(fontSize: 16, height: 1.4, color: context.mutedText)),
           const SizedBox(height: 24),

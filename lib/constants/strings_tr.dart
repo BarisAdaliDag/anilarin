@@ -255,6 +255,7 @@ class S {
   static const summary = 'Özet';
   static const orderSummaryBody = 'Siparişini onaylamadan önce aşağıdaki bilgilerin doğru olduğunu kontrol et.';
   static const deliverTo = 'Teslimat Adresi';
+  static const change = 'Değiştir';
   static const shippingMethod = 'Kargo Yöntemi';
   static const items = 'Ürünler';
   static const payWith = 'Ödeme Yöntemi';
