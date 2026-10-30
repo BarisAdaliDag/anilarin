@@ -25,8 +25,8 @@ class PhotoPickerViewModel extends ChangeNotifier {
       PhotoPickerViewModel(minPhotos: p.photoMin, maxPhotos: p.photoMaxBase, recommended: p.photoRecommend, product: p);
 
   /// Editörden "Fotoğraf ekle" / "Değiştir" için: alt sınır yok.
-  factory PhotoPickerViewModel.addMore({required int max}) =>
-      PhotoPickerViewModel(minPhotos: 1, maxPhotos: max, recommended: 1);
+  factory PhotoPickerViewModel.addMore({required int max, int min = 1}) =>
+      PhotoPickerViewModel(minPhotos: min, maxPhotos: max, recommended: min);
 
   final PhotoRepository _repo;
   final Product? product;

@@ -143,8 +143,7 @@ class _AddressScreenState extends State<AddressScreen> {
 
 /// Popsa'daki gibi "13 Kas Cum – 19 Kas Per": sepetteki en uzun teslim süresine kargonun ek günleri eklenir.
 String _deliveryRange(AppViewModel app, ShippingOption s) {
-  final catalog = app.catalog!;
-  final days = app.basket.map((i) => catalog.product(i.productCode).deliveryDays);
+  final days = app.basket.map(app.deliveryDaysOf);
   final lo = days.isEmpty ? 11 : days.map((d) => d.first).reduce((a, b) => a > b ? a : b);
   final hi = days.isEmpty ? 16 : days.map((d) => d.last).reduce((a, b) => a > b ? a : b);
   final now = DateTime.now();
@@ -411,7 +410,6 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppViewModel>();
-    final catalog = app.catalog!;
     final s = widget.shipping;
     final muted = TextStyle(fontSize: 15, color: context.mutedText);
     return Scaffold(
@@ -446,11 +444,7 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Text(
-                            '${item.quantity}× ${item.title}\n'
-                            '${catalog.product(item.productCode).title} (${catalog.product(item.productCode).sizeLabel})',
-                            style: muted,
-                          ),
+                          child: Text('${item.quantity}× ${item.title}\n${app.itemLines(item).first}', style: muted),
                         ),
                         Text(formatPrice(app.itemPrice(item)), style: muted),
                       ],

@@ -12,6 +12,7 @@ RES="$SRC/decoded/res"; XX="$SRC/decoded-xxhdpi/res/drawable-xxhdpi"
 
 cp "$RES/drawable-nodpi/hero_photobooks.jpg" "$DST/home/hero_photobooks.jpg"
 cp "$XX/product_selection_pbk.webp" "$DST/home/product_photobook.webp"
+cp "$XX/product_selection_pri.webp" "$DST/home/product_prints.webp"
 cp "$XX/onboarding_product_shot_2026.webp" "$DST/home/onboarding.webp"
 for m in connections journeys rewinds; do cp "$XX/memories_example_$m.webp" "$DST/home/memories_$m.webp"; done
 

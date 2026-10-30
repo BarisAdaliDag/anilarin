@@ -8,7 +8,10 @@ import '../../models/photo_book.dart';
 import '../../view_model/app_view_model.dart';
 import '../editor/editor_screen.dart';
 import '../product/products_screen.dart';
+import '../../models/print_set.dart';
+import '../prints/print_screens.dart';
 import '../widgets/book_mockup.dart';
+import '../widgets/print_card.dart';
 
 /// "Tasarımlarım" sekmesi (Popsa My Designs): her tasarım büyük bir kart, sağ altta "Oluştur".
 class DesignsTab extends StatelessWidget {
@@ -29,7 +32,14 @@ class DesignsTab extends StatelessWidget {
             const SizedBox(height: 8),
             Text(S.homeDescription, style: TextStyle(fontSize: 15, color: context.mutedText, height: 1.4)),
             const SizedBox(height: 24),
-            for (final b in app.books) ...[_DesignCard(book: b, catalog: catalog), const SizedBox(height: 20)],
+            // Kitaplar ve baskı setleri son düzenlemeye göre tek listede.
+            for (final d in [
+              ...app.books.map(_Design.book),
+              ...app.printSets.map(_Design.prints),
+            ]..sort((a, b) => b.updatedAtMs.compareTo(a.updatedAtMs))) ...[
+              if (d.book != null) _DesignCard(book: d.book!, catalog: catalog) else _PrintSetCard(set: d.prints!),
+              const SizedBox(height: 20),
+            ],
             _SuggestionCard(onCreate: () => openProducts(context)),
           ],
         ),
@@ -43,6 +53,143 @@ class DesignsTab extends StatelessWidget {
         label: const Text(S.create, style: TextStyle(fontSize: 17)),
       ),
     );
+  }
+}
+
+class _Design {
+  _Design.book(PhotoBook this.book) : prints = null, updatedAtMs = book.updatedAtMs;
+  _Design.prints(PrintSet this.prints) : book = null, updatedAtMs = prints.updatedAtMs;
+
+  final PhotoBook? book;
+  final PrintSet? prints;
+  final int updatedAtMs;
+}
+
+/// Baskı seti kartı (Popsa'da "FOTOĞRAF BASKILARI" etiketli kart).
+class _PrintSetCard extends StatelessWidget {
+  const _PrintSetCard({required this.set});
+
+  final PrintSet set;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = hexColor(set.colorHex);
+    final dark = bg.computeLuminance() < 0.5;
+    final onCard = dark ? Colors.white : AppColors.textStrong;
+    final cardColor = HSLColor.fromColor(
+      bg,
+    ).withLightness((HSLColor.fromColor(bg).lightness * 0.8).clamp(0.2, 0.5)).toColor();
+    return Material(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(22),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => PrintSetScreen(setId: set.id))),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 22, 12, 22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          S.photoPrints.toUpperCase(),
+                          style: TextStyle(fontSize: 12, letterSpacing: 1.6, color: onCard.withValues(alpha: 0.75)),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          set.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 20, color: onCard),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => _menu(context),
+                    icon: Icon(Icons.more_horiz, color: onCard),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: 210,
+                child: PrintCard(
+                  item: set.items.first,
+                  product: set.product,
+                  colorHex: set.colorHex,
+                  title: set.title,
+                  subtitle: set.subtitle,
+                  thumbSize: 400,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                '${S.printsN(set.count)} · ${timeAgo(set.updatedAtMs)}',
+                style: TextStyle(color: onCard.withValues(alpha: 0.85)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _menu(BuildContext context) async {
+    final app = context.read<AppViewModel>();
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (c) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Düzenle'),
+              onTap: () => Navigator.pop(c, 'edit'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.copy_outlined),
+              title: const Text(S.duplicateSet),
+              onTap: () => Navigator.pop(c, 'duplicate'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: AppColors.failure),
+              title: const Text(S.deleteSet, style: TextStyle(color: AppColors.failure)),
+              onTap: () => Navigator.pop(c, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+    switch (action) {
+      case 'edit':
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => PrintSetScreen(setId: set.id)));
+      case 'duplicate':
+        await app.duplicatePrintSet(set.id);
+      case 'delete':
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (c) => AlertDialog(
+            title: const Text(S.deleteSet),
+            content: const Text(S.deleteBookConfirm),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text(S.cancel)),
+              TextButton(
+                onPressed: () => Navigator.pop(c, true),
+                child: const Text(S.delete, style: TextStyle(color: AppColors.failure)),
+              ),
+            ],
+          ),
+        );
+        if (ok == true) await app.deletePrintSet(set.id);
+    }
   }
 }
 

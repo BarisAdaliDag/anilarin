@@ -14,11 +14,19 @@ import '../title/title_screen.dart';
 /// Fotoğraf seçici. [product] verilirse yeni kitap akışıdır (ardından başlık ekranı);
 /// verilmezse seçilen fotoğraflar `Navigator.pop` ile döner (editörden fotoğraf ekleme / değiştirme).
 class PhotoPickerScreen extends StatelessWidget {
-  const PhotoPickerScreen({super.key, this.product, this.options, this.maxPhotos = 200, this.single = false});
+  const PhotoPickerScreen({
+    super.key,
+    this.product,
+    this.options,
+    this.maxPhotos = 200,
+    this.minPhotos = 1,
+    this.single = false,
+  });
 
   final Product? product;
   final ProductOptions? options;
   final int maxPhotos;
+  final int minPhotos;
   final bool single;
 
   @override
@@ -27,7 +35,7 @@ class PhotoPickerScreen extends StatelessWidget {
       create: (_) =>
           (product != null
                 ? PhotoPickerViewModel.forProduct(product!)
-                : PhotoPickerViewModel.addMore(max: single ? 1 : maxPhotos))
+                : PhotoPickerViewModel.addMore(max: single ? 1 : maxPhotos, min: single ? 1 : minPhotos))
             ..init(),
       child: _PickerBody(product: product, options: options, single: single),
     );

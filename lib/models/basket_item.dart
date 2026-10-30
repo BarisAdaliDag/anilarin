@@ -1,4 +1,5 @@
 import 'photo_book.dart';
+import 'print_set.dart';
 
 class BasketItem {
   final String bookId;
@@ -16,6 +17,9 @@ class BasketItem {
     required this.options,
     this.quantity = 1,
   });
+
+  /// Baskı seti mi (kitap değil)? Bu durumda [bookId] set kimliği, [pages] baskı sayısıdır.
+  bool get isPrints => PrintCatalog.isPrintCode(productCode);
 
   Map<String, dynamic> toJson() => {
     'book': bookId,

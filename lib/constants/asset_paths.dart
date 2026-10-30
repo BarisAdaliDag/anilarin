@@ -3,6 +3,7 @@
 class AssetPaths {
   static const heroPhotoBook = 'assets/ref/home/hero_photobooks.jpg';
   static const productPhotoBook = 'assets/ref/home/product_photobook.webp';
+  static const productPrints = 'assets/ref/home/product_prints.webp';
   static const onboarding = 'assets/ref/home/onboarding.webp';
   static const memoriesExamples = [
     'assets/ref/home/memories_journeys.webp',

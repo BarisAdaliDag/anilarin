@@ -7,6 +7,9 @@ import '../../constants/strings_tr.dart';
 import '../../view_model/app_view_model.dart';
 import '../widgets/price_text.dart';
 import '../widgets/ref_image.dart';
+import '../../models/catalog.dart';
+import '../../models/print_set.dart';
+import '../prints/print_screens.dart';
 import 'photo_books_screen.dart';
 
 /// "Bugün ne oluşturmak istersin?" (Popsa ProductsOverviewActivity).
@@ -96,6 +99,34 @@ class ProductsScreen extends StatelessWidget {
             crossAxisSpacing: 16,
             childAspectRatio: 0.78,
             children: [
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PhotoPrintsScreen())),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: RefImage(AssetPaths.productPrints, icon: Icons.photo_library_outlined),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(S.photoPrints, style: TextStyle(fontWeight: FontWeight.w600)),
+                    Row(
+                      children: [
+                        Text('${S.from} ', style: TextStyle(color: context.mutedText)),
+                        Text(
+                          formatPrice(PrintCatalog.all.map((p) => p.headlineCents).reduce((a, b) => a < b ? a : b)),
+                          style: TextStyle(color: context.mutedText),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               for (final (icon, label) in const [
                 (Icons.calendar_month_outlined, 'Fotoğraf Takvimi'),
                 (Icons.park_outlined, 'Yılbaşı Süsü'),

@@ -12,7 +12,9 @@ import '../editor/editor_screen.dart';
 import '../home/designs_tab.dart' show openProducts;
 import '../order/order_details_screen.dart';
 import '../widgets/book_mockup.dart';
+import '../prints/print_screens.dart';
 import '../widgets/price_text.dart';
+import '../widgets/print_card.dart';
 
 /// Sepet (Popsa Basket): ürün kartları, indirim kodu kartı ve özet; ödeme üstteki düğmede.
 /// [embedded] true ise ana sayfa sekmesi olarak gösterilir.
@@ -183,10 +185,11 @@ class _ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.watch<AppViewModel>();
     final catalog = app.catalog!;
-    final book = app.book(item.bookId);
-    final product = catalog.product(item.productCode);
-    final extra = (item.pages - product.pagesDefault).clamp(0, 999);
-    final cover = book == null
+    final book = item.isPrints ? null : app.book(item.bookId);
+    final set = item.isPrints ? app.printSet(item.bookId) : null;
+    final cover = set != null
+        ? Color.lerp(hexColor(set.colorHex), Colors.black, 0.2)!
+        : book == null
         ? context.pillColor
         : Color.lerp(
             catalog
@@ -195,14 +198,7 @@ class _ItemCard extends StatelessWidget {
             Colors.black,
             0.45,
           )!;
-    final lines = [
-      '${product.title} (${product.sizeLabel})',
-      if (extra > 0) S.extraPages(extra),
-      if (item.options.gloss) S.glossFinish,
-      if (item.options.layflat) S.layflat,
-      if (item.options.foil != null) '${S.foil} (${item.options.foil == 'gold' ? S.foilGold : S.foilSilver})',
-      if (item.options.giftBox) S.giftBox,
-    ];
+    final lines = app.itemLines(item);
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -220,7 +216,19 @@ class _ItemCard extends StatelessWidget {
               color: cover,
               padding: const EdgeInsets.symmetric(horizontal: 6),
               alignment: Alignment.center,
-              child: book == null
+              child: set != null
+                  ? Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: PrintCard(
+                        item: set.items.first,
+                        product: set.product,
+                        colorHex: set.colorHex,
+                        title: set.title,
+                        subtitle: set.subtitle,
+                        thumbSize: 300,
+                      ),
+                    )
+                  : book == null
                   ? const Icon(Icons.menu_book, size: 40, color: Colors.white70)
                   : BookMockup(book: book, catalog: catalog),
             ),
@@ -308,7 +316,16 @@ void _itemMenu(BuildContext context, AppViewModel app, BasketItem item) {
               child: _Quantity(item: item),
             ),
             Divider(color: c.divider, indent: 20, endIndent: 20),
-            if (app.book(item.bookId) != null) ...[
+            if (item.isPrints && app.printSet(item.bookId) != null)
+              _MenuTile(
+                icon: Icons.dashboard_outlined,
+                label: S.editLayout,
+                onTap: () {
+                  Navigator.pop(c);
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => PrintSetScreen(setId: item.bookId)));
+                },
+              ),
+            if (!item.isPrints && app.book(item.bookId) != null) ...[
               _MenuTile(
                 icon: Icons.dashboard_outlined,
                 label: S.editLayout,

@@ -7,6 +7,7 @@ import '../models/address.dart';
 import '../models/basket_item.dart';
 import '../models/order.dart';
 import '../models/photo_book.dart';
+import '../models/print_set.dart';
 
 /// Tasarımları ve sepeti uygulama belgeler dizininde JSON dosyaları olarak saklar.
 class DesignRepository {
@@ -48,6 +49,35 @@ class DesignRepository {
   Future<void> deleteBook(String id) async {
     final d = await _dir('designs');
     final f = File('${d.path}/$id.json');
+    if (await f.exists()) await f.delete();
+  }
+
+  Future<List<PrintSet>> loadPrintSets() async {
+    final d = await _dir('prints');
+    final sets = <PrintSet>[];
+    await for (final f in d.list()) {
+      if (f is File && f.path.endsWith('.json')) {
+        try {
+          sets.add(PrintSet.fromJson(jsonDecode(await f.readAsString())));
+        } catch (_) {
+          // bozuk dosyayı atla
+        }
+      }
+    }
+    sets.sort((a, b) => b.updatedAtMs.compareTo(a.updatedAtMs));
+    return sets;
+  }
+
+  Future<void> savePrintSet(PrintSet set) async {
+    final d = await _dir('prints');
+    final f = File('${d.path}/${set.id}.json');
+    final tmp = File('${f.path}.tmp');
+    await tmp.writeAsString(jsonEncode(set.toJson()));
+    await tmp.rename(f.path);
+  }
+
+  Future<void> deletePrintSet(String id) async {
+    final f = File('${(await _dir('prints')).path}/$id.json');
     if (await f.exists()) await f.delete();
   }
 
