@@ -113,6 +113,14 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                           onScaleEnd: (_) => setState(() => _gesturing = false),
                           onScaleStart: (d) {
                             _gesturing = true;
+                            // Yakınlaştırma/kaydırma yalnız çerçeveyi dolduran fotoğrafta: Sığdır'dan Doldur'a geçilir.
+                            if (_slot.fit) {
+                              _slot
+                                ..fit = false
+                                ..scale = 1
+                                ..dx = 0
+                                ..dy = 0;
+                            }
                             _startScale = _slot.scale;
                             _startFocal = d.localFocalPoint;
                             _startDx = _slot.dx;
@@ -121,8 +129,8 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                           onScaleUpdate: (d) => setState(() {
                             _slot.scale = (_startScale * d.scale).clamp(1.0, 4.0);
                             final cur = photoRect(size, pa, _slot);
-                            final ox = max(1.0, (cur.width - size.width).abs() / 2);
-                            final oy = max(1.0, (cur.height - size.height).abs() / 2);
+                            final ox = max(1.0, (cur.width - size.width) / 2);
+                            final oy = max(1.0, (cur.height - size.height) / 2);
                             final delta = d.localFocalPoint - _startFocal;
                             _slot.dx = (_startDx + delta.dx / ox).clamp(-1.0, 1.0);
                             _slot.dy = (_startDy + delta.dy / oy).clamp(-1.0, 1.0);
@@ -186,8 +194,8 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
                 children: [
-                  _ToolCard(icon: Icons.image_outlined, label: S.replace, onTap: () => _replace(vm)),
-                  _ToolCard(
+                  EditToolCard(icon: Icons.image_outlined, label: S.replace, onTap: () => _replace(vm)),
+                  EditToolCard(
                     icon: Icons.delete_outline,
                     label: S.remove,
                     onTap: () {
@@ -195,7 +203,7 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                       Navigator.pop(context);
                     },
                   ),
-                  _ToolCard(
+                  EditToolCard(
                     icon: Icons.open_in_full,
                     label: S.fill,
                     active: !_slot.fit,
@@ -204,7 +212,7 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                       _slot.resetCrop();
                     }),
                   ),
-                  _ToolCard(
+                  EditToolCard(
                     icon: Icons.close_fullscreen,
                     label: S.fit,
                     active: _slot.fit,
@@ -213,7 +221,7 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                       _slot.resetCrop();
                     }),
                   ),
-                  _ToolCard(
+                  EditToolCard(
                     icon: Icons.rotate_right,
                     label: S.rotate,
                     onTap: () => setState(() {
@@ -222,7 +230,7 @@ class _EditPhotoScreenState extends State<EditPhotoScreen> {
                       _rotateTick++;
                     }),
                   ),
-                  _ToolCard(
+                  EditToolCard(
                     icon: Icons.grid_on,
                     label: S.grid,
                     active: _grid,
@@ -326,8 +334,8 @@ class _QualityCard extends StatelessWidget {
 }
 
 /// Popsa'nın alttaki büyük araç kartları.
-class _ToolCard extends StatelessWidget {
-  const _ToolCard({required this.icon, required this.label, required this.onTap, this.active = false});
+class EditToolCard extends StatelessWidget {
+  const EditToolCard({super.key, required this.icon, required this.label, required this.onTap, this.active = false});
 
   final IconData icon;
   final String label;

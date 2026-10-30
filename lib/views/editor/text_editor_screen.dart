@@ -43,6 +43,7 @@ class TextEditorScreen extends StatefulWidget {
     this.showVAlign = false,
     this.limit,
     this.hint = 'Sayfanda fotoğrafların altında ya da üstünde görünecek bir metin yaz',
+    this.showFormatting = true,
   });
 
   final String title;
@@ -55,6 +56,9 @@ class TextEditorScreen extends StatefulWidget {
   final bool showVAlign; // alan içinde üst/orta/alt (şablon yazı alanı)
   final int? limit; // verilirse stil sınırının yerine geçer (ör. yazılı şablon alanı 600)
   final String hint;
+
+  /// Yazı tipi, stil ve hizalama düğmeleri (baskılarda yazı biçimlendirilmediği için kapalı).
+  final bool showFormatting;
 
   @override
   State<TextEditorScreen> createState() => _TextEditorScreenState();
@@ -233,38 +237,49 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 28),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TextField(
-                      controller: _controller,
-                      autofocus: true,
-                      maxLines: null,
-                      textAlign: _align,
-                      textCapitalization: TextCapitalization.sentences,
-                      style: TextStyle(
-                        fontFamily: heading ? font.titleFont : font.bodyFont,
-                        fontWeight: heading ? font.titleWeight : FontWeight.w400,
-                        fontSize: 14 + _style.sizeFactor * 260,
-                        height: 1.3,
-                      ),
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: widget.hint,
-                        hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.6), fontSize: 16),
-                      ),
-                    ),
-                    if (_subtitle != null)
-                      TextField(
-                        controller: _subtitle,
-                        maxLength: 60,
+                    _FieldCard(
+                      label: S.titleLabel,
+                      enabled: _subtitle != null,
+                      child: TextField(
+                        controller: _controller,
+                        autofocus: true,
+                        maxLines: null,
                         textAlign: _align,
-                        style: TextStyle(fontFamily: font.bodyFont, fontSize: 16, color: context.mutedText),
+                        textCapitalization: TextCapitalization.sentences,
+                        style: TextStyle(
+                          fontFamily: heading ? font.titleFont : font.bodyFont,
+                          fontWeight: heading ? font.titleWeight : FontWeight.w400,
+                          fontSize: 14 + _style.sizeFactor * 260,
+                          height: 1.3,
+                        ),
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          hintText: S.subtitleHint,
-                          hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.5), fontSize: 15),
-                          counterText: '',
+                          hintText: widget.hint,
+                          hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.6), fontSize: 16),
                         ),
                       ),
+                    ),
+                    if (_subtitle != null) ...[
+                      const SizedBox(height: 12),
+                      _FieldCard(
+                        label: S.subtitleLabel,
+                        enabled: true,
+                        child: TextField(
+                          controller: _subtitle,
+                          maxLength: 60,
+                          textAlign: _align,
+                          style: TextStyle(fontFamily: font.bodyFont, fontSize: 16, color: context.mutedText),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: S.subtitleHint,
+                            hintStyle: TextStyle(color: context.mutedText.withValues(alpha: 0.5), fontSize: 15),
+                            counterText: '',
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -333,38 +348,40 @@ class _TextEditorScreenState extends State<TextEditorScreen> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
               child: Row(
                 children: [
-                  _ToolButton(
-                    tooltip: S.font,
-                    onTap: _pickFont,
-                    child: Text(
-                      'Aa',
-                      style: TextStyle(fontFamily: font.titleFont, fontSize: 22, fontWeight: font.titleWeight),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  _ToolButton(
-                    tooltip: S.textStyles,
-                    onTap: _pickStyle,
-                    child: const Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(text: 'A', style: TextStyle(fontSize: 15)),
-                          TextSpan(text: 'A', style: TextStyle(fontSize: 22)),
-                        ],
+                  if (widget.showFormatting) ...[
+                    _ToolButton(
+                      tooltip: S.font,
+                      onTap: _pickFont,
+                      child: Text(
+                        'Aa',
+                        style: TextStyle(fontFamily: font.titleFont, fontSize: 22, fontWeight: font.titleWeight),
                       ),
-                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  _ToolButton(
-                    tooltip: S.alignment,
-                    onTap: _cycleAlign,
-                    child: Icon(switch (_align) {
-                      TextAlign.left => Icons.format_align_left,
-                      TextAlign.right => Icons.format_align_right,
-                      _ => Icons.format_align_center,
-                    }),
-                  ),
+                    const SizedBox(width: 12),
+                    _ToolButton(
+                      tooltip: S.textStyles,
+                      onTap: _pickStyle,
+                      child: const Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(text: 'A', style: TextStyle(fontSize: 15)),
+                            TextSpan(text: 'A', style: TextStyle(fontSize: 22)),
+                          ],
+                        ),
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    _ToolButton(
+                      tooltip: S.alignment,
+                      onTap: _cycleAlign,
+                      child: Icon(switch (_align) {
+                        TextAlign.left => Icons.format_align_left,
+                        TextAlign.right => Icons.format_align_right,
+                        _ => Icons.format_align_center,
+                      }),
+                    ),
+                  ],
                   if (widget.showVAlign) ...[
                     const SizedBox(width: 12),
                     _ToolButton(
@@ -424,6 +441,36 @@ class _ToolButton extends StatelessWidget {
           onTap: onTap,
           child: SizedBox(width: 56, height: 56, child: Center(child: child)),
         ),
+      ),
+    );
+  }
+}
+
+/// Kapak yazısında başlık ve alt başlığı ayrı gösteren kart: üstte küçük etiket, altında alan.
+/// [enabled] false ise (tek alanlı düzenleme) kart çizilmez, alan olduğu gibi kalır.
+class _FieldCard extends StatelessWidget {
+  const _FieldCard({required this.label, required this.enabled, required this.child});
+
+  final String label;
+  final bool enabled;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) return child;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label.toUpperCase(), style: TextStyle(fontSize: 12, letterSpacing: 1.3, color: context.mutedText)),
+          child,
+        ],
       ),
     );
   }

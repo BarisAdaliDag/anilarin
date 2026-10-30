@@ -12,12 +12,36 @@ import '../../services/auto_layout_service.dart';
 import '../../view_model/app_view_model.dart';
 import '../basket/basket_screen.dart';
 import '../home/designs_tab.dart' show timeAgo;
+import '../editor/text_editor_screen.dart';
 import '../photo_picker/photo_picker_screen.dart';
+import '../widgets/media_carousel.dart';
 import '../widgets/price_text.dart';
 import '../widgets/print_card.dart';
 import '../widgets/ref_image.dart';
+import 'print_edit_photo_screen.dart';
+import 'print_theme_sheet.dart';
 
-const _printImages = {'regular': 'assets/ref/media/prints_regular.jpg', 'square': 'assets/ref/media/prints_square.jpg'};
+const _printImages = {'regular': 'assets/ref/media/prints_regular.png', 'square': 'assets/ref/media/prints_square.png'};
+
+/// Ürün sayfası karuseli: Popsa'dan alınan boyut başına görsel/videolar (assets/ref/media, repoya girmez).
+const _carousel = {
+  'regular_small': ['1.jpg', '2.mp4', '3.mp4'],
+  'regular_medium': ['1.mp4', '2.mp4', '3.mp4', '4.jpg'],
+  'regular_large': ['1.mp4', '2.mp4', '3.jpg', '4.mp4', '5.jpg'],
+  'regular_xlarge': ['1.mp4', '2.mp4', '3.jpg'],
+  'square_small': ['1.jpg', '2.jpg', '3.mp4', '4.mp4', '5.jpg'],
+  'square_medium': ['1.jpg', '2.mp4', '3.jpg', '4.jpg'],
+  'square_large': ['1.mp4', '2.jpg', '3.jpg', '4.jpg', '5.jpg'],
+};
+
+List<String> printMedia(String format, String size) {
+  final files = _carousel['${format}_$size'] ?? const [];
+  final key = size == 'xlarge' ? 'xl' : size;
+  return [
+    for (final f in files) 'assets/ref/media/prints_${format}_${key}_$f',
+    if (files.isEmpty) _printImages[format]!,
+  ];
+}
 
 // ---- Fotoğraf Baskıları: Normal / Kare ----
 
@@ -247,7 +271,7 @@ class _PrintProductScreenState extends State<PrintProductScreen> {
             ),
           ),
           const SizedBox(height: 18),
-          AspectRatio(aspectRatio: 1.1, child: RefImage(_printImages[widget.format]!, fit: BoxFit.cover)),
+          MediaCarousel(media: printMedia(widget.format, p.size)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
@@ -380,8 +404,6 @@ class _TierSheet extends StatelessWidget {
 
 // ---- Baskı seti editörü ----
 
-const _swatches = ['#1F2F38', '#FFFFFF', '#111111', '#F3EBDD', '#1F3A5F', '#7A1F2B', '#2E5E4E', '#8A6D3B', '#E8C7D1'];
-
 class PrintSetScreen extends StatefulWidget {
   const PrintSetScreen({super.key, required this.setId});
 
@@ -459,48 +481,55 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
     if (saved != null) onSave(saved);
   }
 
-  void _colorSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (c) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(S.printColor, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 14,
-                runSpacing: 14,
-                children: [
-                  for (final hex in _swatches)
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(c);
-                        _changed(() => _set.colorHex = hex);
-                      },
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: hexColor(hex),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: hex == _set.colorHex ? c.strongText : c.divider,
-                            width: hex == _set.colorHex ? 3 : 1.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
+  /// Kapak yazısı: fotoğraf kitabındaki tam ekran yazı düzenleyici; başlık ve alt başlık ayrı kartlarda.
+  Future<void> _editCoverText() async {
+    final catalog = _app.catalog!;
+    final result = await Navigator.of(context).push<TextEditValue>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => TextEditorScreen(
+          title: S.coverText,
+          initial: TextEditValue(text: _set.title, subtitle: _set.subtitle, align: TextAlign.center),
+          fonts: catalog.textAppearances,
+          bookFontId: catalog.textAppearances.first.id,
+          limit: 40,
+          hint: S.printTitleDefault,
+          showFormatting: false,
+        ),
+      ),
+    );
+    if (result == null) return;
+    _changed(() {
+      _set.title = result.text.trim().isEmpty ? S.printTitleDefault : result.text.trim();
+      _set.subtitle = (result.subtitle ?? '').trim();
+    });
+  }
+
+  /// Popsa Themes: [index] verilirse o baskı kapsamında açılır, yoksa "Tüm baskılar".
+  void _themes([int? index]) => showPrintThemeSheet(context, set: _set, index: index, onChanged: () => _changed(() {}));
+
+  Future<void> _editPhoto(int i) async {
+    final item = _set.items[i];
+    final result = await Navigator.of(context).push<PrintEditResult>(
+      MaterialPageRoute(
+        builder: (_) => PrintEditPhotoScreen(
+          photo: item.photo,
+          slot: item.slot,
+          frameAspect: PrintCard.photoAreaAspect(
+            item,
+            _set.product,
+            title: i == 0 ? _set.title : null,
+            subtitle: i == 0 ? _set.subtitle : null,
           ),
         ),
       ),
     );
+    if (result == null) return;
+    if (result.removed) return _remove(i);
+    _changed(() {
+      if (result.photo != null) item.photo = result.photo!;
+      if (result.slot != null) item.applySlot(result.slot!);
+    });
   }
 
   void _options() {
@@ -534,11 +563,7 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                 ),
               ),
               Divider(color: c.divider, indent: 20, endIndent: 20),
-              tile(
-                Icons.edit_outlined,
-                S.editPrintTitle,
-                () => _text(S.editPrintTitle, _set.title, 40, (t) => _changed(() => _set.title = t)),
-              ),
+              tile(Icons.edit_outlined, S.editPrintTitle, _editCoverText),
               tile(Icons.add_photo_alternate_outlined, S.addMorePrints, _addMore),
               tile(Icons.copy_outlined, S.duplicateSet, () async {
                 final copy = await _app.duplicatePrintSet(_set.id);
@@ -663,12 +688,12 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                         ),
                         _round(
                           null,
-                          _colorSheet,
+                          () => _themes(i),
                           child: Container(
                             width: 22,
                             height: 22,
                             decoration: BoxDecoration(
-                              color: hexColor(_set.colorHex),
+                              color: hexColor(_set.colorOf(item)),
                               shape: BoxShape.circle,
                               border: Border.all(color: context.divider),
                             ),
@@ -688,7 +713,14 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                         const SizedBox(width: 10),
                         _round(
                           null,
-                          () => _text(S.editCaptionPrint, item.caption, 40, (t) => _changed(() => item.caption = t)),
+                          cover
+                              ? _editCoverText
+                              : () => _text(
+                                  S.editCaptionPrint,
+                                  item.caption,
+                                  40,
+                                  (t) => _changed(() => item.caption = t),
+                                ),
                           child: const Text('Aa', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
                         ),
                         const SizedBox(width: 10),
@@ -699,12 +731,15 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                     Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 420),
-                        child: PrintCard(
-                          item: item,
-                          product: product,
-                          colorHex: _set.colorHex,
-                          title: cover ? _set.title : null,
-                          subtitle: cover ? _set.subtitle : null,
+                        child: GestureDetector(
+                          onTap: () => _editPhoto(i),
+                          child: PrintCard(
+                            item: item,
+                            product: product,
+                            colorHex: _set.colorOf(item),
+                            title: cover ? _set.title : null,
+                            subtitle: cover ? _set.subtitle : null,
+                          ),
                         ),
                       ),
                     ),
@@ -724,7 +759,7 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
               child: Row(
                 children: [
                   for (final (icon, label, onTap) in [
-                    (Icons.palette_outlined, S.themes, _colorSheet),
+                    (Icons.palette_outlined, S.themes, () => _themes()),
                     (
                       Icons.crop_free,
                       S.borderOn,

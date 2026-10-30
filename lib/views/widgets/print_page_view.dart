@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import '../../models/catalog.dart';
@@ -481,8 +483,9 @@ Rect photoRect(Size slot, double photoAspect, PhotoSlot s) {
   }
   w *= s.scale;
   h *= s.scale;
-  final ox = (w - slot.width).abs() / 2;
-  final oy = (h - slot.height).abs() / 2;
+  // Kaydırma yalnız taşan eksende: fotoğraf çerçeveden küçükse ortada kalır, kenarda boşluk açılmaz.
+  final ox = max(0.0, w - slot.width) / 2;
+  final oy = max(0.0, h - slot.height) / 2;
   final left = (slot.width - w) / 2 + s.dx * ox;
   final top = (slot.height - h) / 2 + s.dy * oy;
   return Rect.fromLTWH(left, top, w, h);

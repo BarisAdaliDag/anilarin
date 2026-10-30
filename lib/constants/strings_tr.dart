@@ -246,6 +246,11 @@ class S {
   static String printsN(int n) => '$n Baskı';
   static String printN(int n) => 'Baskı $n';
   static const coverPrint = 'Kapak Baskısı';
+  static const allPrints = 'Tüm baskılar';
+  static const coverText = 'Kapak Yazısı';
+  static const titleLabel = 'Başlık';
+  static const subtitleLabel = 'Alt başlık';
+  static const recommendedWhite = 'Önerilen: Beyaz';
   static const printTitleDefault = 'Baskılarım';
   static const addMorePrints = 'Baskı Ekle';
   static const removePrint = 'Bu Baskıyı Sil';

@@ -108,10 +108,10 @@ class _ThemeSheetState extends State<_ThemeSheet> {
             const Text(S.dynamicThemes, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
             Text(S.dynamicThemesBody, style: TextStyle(color: context.mutedText, fontSize: 14)),
             const SizedBox(height: 12),
-            _SwatchRow(
+            ThemeSwatchRow(
               children: [
                 for (final i in PaletteService.displayOrder.where((i) => i < palette.length))
-                  _Swatch(
+                  ThemeSwatch(
                     selected: current == 'DYN:$i',
                     onTap: () => _apply(vm, 'dyn:$i'),
                     // Her sayfa kendi tonunu alacağı için daire kitaptaki iki farklı sayfanın tonunu gösterir.
@@ -124,10 +124,10 @@ class _ThemeSheetState extends State<_ThemeSheet> {
             const SizedBox(height: 20),
             Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
             const SizedBox(height: 12),
-            _SwatchRow(
+            ThemeSwatchRow(
               children: [
                 for (final c in Catalog.themeGroups[id]!)
-                  _Swatch(selected: current == c.toUpperCase(), colors: [hexColor(c)], onTap: () => _apply(vm, c)),
+                  ThemeSwatch(selected: current == c.toUpperCase(), colors: [hexColor(c)], onTap: () => _apply(vm, c)),
               ],
             ),
           ],
@@ -152,8 +152,8 @@ class _ThemeSheetState extends State<_ThemeSheet> {
   void _apply(EditorViewModel vm, String id) => vm.setTheme(id, scope: _scope, pageIndex: widget.pageIndex);
 }
 
-class _SwatchRow extends StatelessWidget {
-  const _SwatchRow({required this.children});
+class ThemeSwatchRow extends StatelessWidget {
+  const ThemeSwatchRow({super.key, required this.children});
 
   final List<Widget> children;
 
@@ -171,8 +171,8 @@ class _SwatchRow extends StatelessWidget {
   }
 }
 
-class _Swatch extends StatelessWidget {
-  const _Swatch({required this.colors, required this.selected, required this.onTap});
+class ThemeSwatch extends StatelessWidget {
+  const ThemeSwatch({super.key, required this.colors, required this.selected, required this.onTap});
 
   final List<Color> colors;
   final bool selected;

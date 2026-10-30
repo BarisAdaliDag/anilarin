@@ -39,6 +39,8 @@ void main() {
     expect(PrintCatalog.byCode('PRN-R-L').headlineCents, 5600);
     expect(PrintCatalog.byCode('PRN-R-XL').headlineCents, 9600);
     expect(PrintCatalog.byCode('PRN-S-S').headlineCents, 960);
+    expect(PrintCatalog.byCode('PRN-S-M').headlineCents, 960);
+    expect(PrintCatalog.byCode('PRN-S-L').headlineCents, 6000);
   });
 
   test('ölçü etiketi ve yön', () {
@@ -69,5 +71,32 @@ void main() {
     await repo.deletePrintSet('s1');
     expect(await repo.loadPrintSets(), isEmpty);
     await dir.delete(recursive: true);
+  });
+
+  test('baskı başına kâğıt rengi, Tüm baskılar, eski kayıt varsayılanı', () {
+    final s = _set(3);
+    expect(s.colorHex, PrintSet.defaultColor);
+    s.items[1].colorHex = '#AF1919';
+    expect(s.colorOf(s.items[0]), '#FFFFFF');
+    expect(s.colorOf(s.items[1]), '#AF1919');
+    final back = PrintSet.fromJson(s.toJson());
+    expect(back.colorOf(back.items[1]), '#AF1919');
+    expect(back.items[0].colorHex, isNull);
+    back.setColorAll('#283238');
+    expect(back.items.every((i) => back.colorOf(i) == '#283238'), isTrue);
+    final legacy = s.toJson()..remove('color');
+    expect(PrintSet.fromJson(legacy).colorHex, '#FFFFFF');
+  });
+
+  test('kırpma ayarları saklanır', () {
+    final s = _set(1);
+    s.items[0]
+      ..fit = true
+      ..scale = 1.5
+      ..dx = -0.4
+      ..turns = 1;
+    final i = PrintSet.fromJson(s.toJson()).items[0];
+    expect([i.fit, i.scale, i.dx, i.turns], [true, 1.5, -0.4, 1]);
+    expect(i.slot.quarterTurns, 1);
   });
 }

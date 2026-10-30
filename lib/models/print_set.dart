@@ -46,8 +46,8 @@ class PrintProduct {
   }
 }
 
-/// Test sürümü baskı kataloğu. Regular Medium = 18 × 13 cm ve fiyatlar Popsa'dan alındı;
-/// diğer boyut ölçüleri ve Square Medium/Large fiyatları tahminidir.
+/// Test sürümü baskı kataloğu. Tüm fiyatlar ve Normal Orta ölçüsü (18 × 13 cm) Popsa'dan alındı;
+/// diğer ölçüler tahminidir.
 class PrintCatalog {
   static const all = [
     PrintProduct('PRN-R-S', 'regular', 'small', 1700, 15, 10),
@@ -55,8 +55,8 @@ class PrintCatalog {
     PrintProduct('PRN-R-L', 'regular', 'large', 7000, 30, 20),
     PrintProduct('PRN-R-XL', 'regular', 'xlarge', 12000, 42, 30),
     PrintProduct('PRN-S-S', 'square', 'small', 1200, 10, 10),
-    PrintProduct('PRN-S-M', 'square', 'medium', 1800, 15, 15),
-    PrintProduct('PRN-S-L', 'square', 'large', 6000, 20, 20),
+    PrintProduct('PRN-S-M', 'square', 'medium', 1200, 13, 13),
+    PrintProduct('PRN-S-L', 'square', 'large', 7500, 20, 20),
   ];
 
   static bool isPrintCode(String code) => code.startsWith('PRN-');
@@ -71,11 +71,28 @@ class PrintItem {
   String id;
   BookPhoto photo;
   String caption;
-  bool border; // anında kamera çerçevesi
+  bool border; // kâğıt kenarı (false: fotoğraf baskıyı tamamen kaplar)
   bool portrait; // true: baskı dik duruyor
+  bool fit; // true: Sığdır (fotoğrafın tamamı görünür), false: Doldur
+  String? colorHex; // bu baskının kâğıt rengi; null ise setin rengi
+  double scale; // kullanıcı yakınlaştırması (>= 1)
+  double dx; // -1..1, yalnız taşan eksende
+  double dy;
+  int turns; // fotoğrafın çeyrek dönüşü
 
-  PrintItem({required this.id, required this.photo, this.caption = '', this.border = true, bool? portrait})
-    : portrait = portrait ?? photo.aspect < 1;
+  PrintItem({
+    required this.id,
+    required this.photo,
+    this.caption = '',
+    this.border = true,
+    bool? portrait,
+    this.fit = false,
+    this.colorHex,
+    this.scale = 1,
+    this.dx = 0,
+    this.dy = 0,
+    this.turns = 0,
+  }) : portrait = portrait ?? photo.aspect < 1;
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -83,7 +100,24 @@ class PrintItem {
     'caption': caption,
     'border': border,
     'portrait': portrait,
+    'fit': fit,
+    if (colorHex != null) 'color': colorHex,
+    's': scale,
+    'dx': dx,
+    'dy': dy,
+    'r': turns,
   };
+
+  /// Kitap sayfalarıyla aynı kırpma hesabı ([photoRect]) için.
+  PhotoSlot get slot => PhotoSlot(photoId: photo.id, fit: fit, scale: scale, dx: dx, dy: dy, quarterTurns: turns);
+
+  void applySlot(PhotoSlot s) {
+    fit = s.fit;
+    scale = s.scale;
+    dx = s.dx;
+    dy = s.dy;
+    turns = s.quarterTurns;
+  }
 
   factory PrintItem.fromJson(Map<String, dynamic> j) => PrintItem(
     id: j['id'],
@@ -91,10 +125,27 @@ class PrintItem {
     caption: j['caption'] ?? '',
     border: j['border'] ?? true,
     portrait: j['portrait'],
+    fit: j['fit'] ?? false,
+    colorHex: j['color'],
+    scale: (j['s'] as num?)?.toDouble() ?? 1,
+    dx: (j['dx'] as num?)?.toDouble() ?? 0,
+    dy: (j['dy'] as num?)?.toDouble() ?? 0,
+    turns: j['r'] ?? 0,
   );
 
-  PrintItem copyWith({required String id}) =>
-      PrintItem(id: id, photo: photo, caption: caption, border: border, portrait: portrait);
+  PrintItem copyWith({required String id}) => PrintItem(
+    id: id,
+    photo: photo,
+    caption: caption,
+    border: border,
+    portrait: portrait,
+    fit: fit,
+    colorHex: colorHex,
+    scale: scale,
+    dx: dx,
+    dy: dy,
+    turns: turns,
+  );
 }
 
 /// Bir baskı seti (Popsa'daki "A Wedding Day" gibi tasarım): kapak baskısı + baskılar.
@@ -113,11 +164,24 @@ class PrintSet {
     required this.subtitle,
     required this.productCode,
     required this.items,
-    this.colorHex = '#1F2F38',
+    this.colorHex = defaultColor,
     required this.updatedAtMs,
   });
 
+  /// Popsa'da baskılar beyaz kâğıtla gelir; önerilen renk.
+  static const defaultColor = '#FFFFFF';
+
   PrintProduct get product => PrintCatalog.byCode(productCode);
+
+  String colorOf(PrintItem item) => item.colorHex ?? colorHex;
+
+  /// "Tüm baskılar": setin rengi değişir, baskılara özel renkler temizlenir.
+  void setColorAll(String hex) {
+    colorHex = hex;
+    for (final i in items) {
+      i.colorHex = null;
+    }
+  }
 
   int get count => items.length;
 
@@ -136,7 +200,7 @@ class PrintSet {
     title: j['title'] ?? '',
     subtitle: j['subtitle'] ?? '',
     productCode: j['product'],
-    colorHex: j['color'] ?? '#1F2F38',
+    colorHex: j['color'] ?? defaultColor,
     items: (j['items'] as List).map((e) => PrintItem.fromJson(e)).toList(),
     updatedAtMs: j['updated'] ?? 0,
   );

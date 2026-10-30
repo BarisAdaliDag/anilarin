@@ -222,7 +222,7 @@ class _ItemCard extends StatelessWidget {
                       child: PrintCard(
                         item: set.items.first,
                         product: set.product,
-                        colorHex: set.colorHex,
+                        colorHex: set.colorOf(set.items.first),
                         title: set.title,
                         subtitle: set.subtitle,
                         thumbSize: 300,
