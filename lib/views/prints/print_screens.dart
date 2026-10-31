@@ -156,6 +156,7 @@ class _PrintProductScreenState extends State<PrintProductScreen> {
       title: suggestions.isEmpty ? S.printTitleDefault : suggestions.first,
       subtitle: AutoLayoutService.dateRangeLabel(sorted),
       productCode: _product.code,
+      coverLayout: CoverLayout.photoOnly.index, // Popsa'da kapak ilk açılışta yazısız
       updatedAtMs: DateTime.now().millisecondsSinceEpoch,
       items: [for (final p in sorted) PrintItem(id: const Uuid().v4(), photo: p)],
     );
@@ -794,7 +795,11 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                             () => _changed(() => item.border = !item.border),
                           )
                         else
-                          _round(Icons.screen_rotation_alt_outlined, () => _toggleOrientation(i)),
+                          // Simge gidilecek yönü gösterir: dikeyken yatay, yatayken dikey dikdörtgen.
+                          _round(
+                            item.portrait ? Icons.crop_landscape : Icons.crop_portrait,
+                            () => _toggleOrientation(i),
+                          ),
                         const SizedBox(width: 10),
                         _round(
                           null,

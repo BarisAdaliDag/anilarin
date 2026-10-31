@@ -119,12 +119,7 @@ class _PrintSetCard extends StatelessWidget {
               const SizedBox(height: 18),
               SizedBox(
                 width: 210,
-                child: PrintCard(
-                  set: set,
-                  index: 0,
-                  fonts: context.read<AppViewModel>().catalog!.textAppearances,
-                  thumbSize: 400,
-                ),
+                child: PrintStackThumb(set: set, fonts: context.read<AppViewModel>().catalog!.textAppearances),
               ),
               const SizedBox(height: 18),
               Text(

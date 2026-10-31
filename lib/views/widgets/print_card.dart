@@ -246,3 +246,59 @@ class PrintCard extends StatelessWidget {
     );
   }
 }
+
+/// Baskı setinin küçük görseli: kapak baskısının arkasında sola doğru açılan birkaç yaprak
+/// (bir deste fotoğraf olduğu bir bakışta anlaşılsın; kitap kartlarından ayrılsın).
+class PrintStackThumb extends StatelessWidget {
+  const PrintStackThumb({super.key, required this.set, required this.fonts, this.thumbSize = 400});
+
+  final PrintSet set;
+  final List<TextAppearance> fonts;
+  final int thumbSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final aspect = PrintCard.aspectOf(set, set.items.first);
+    return LayoutBuilder(
+      builder: (context, c) {
+        final w = c.maxWidth * 0.82;
+        final step = c.maxWidth * 0.045;
+        Widget sheet(int k) => Positioned(
+          left: step * (4 - k),
+          top: step * 0.6 * k,
+          width: w,
+          child: Transform.rotate(
+            angle: -0.035 * k,
+            alignment: Alignment.bottomLeft,
+            child: AspectRatio(
+              aspectRatio: aspect,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F4F4),
+                  border: Border.all(color: const Color(0xFF9E9E9E), width: 0.8),
+                  boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 4, offset: Offset(0, 2))],
+                ),
+              ),
+            ),
+          ),
+        );
+        return SizedBox(
+          width: c.maxWidth,
+          height: w / aspect + step * 2,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              for (final k in [3, 2, 1]) sheet(k),
+              Positioned(
+                left: step * 4,
+                top: 0,
+                width: w,
+                child: PrintCard(set: set, index: 0, fonts: fonts, thumbSize: thumbSize),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
