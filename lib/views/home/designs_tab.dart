@@ -102,7 +102,7 @@ class _PrintSetCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          set.title,
+                          set.title.isEmpty ? S.printTitleDefault : set.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: 20, color: onCard),

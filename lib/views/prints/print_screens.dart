@@ -487,7 +487,8 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
     if (result == null) return;
     _changed(() {
       _set
-        ..title = result.text.trim().isEmpty ? S.printTitleDefault : result.text.trim()
+        ..title = result.text
+            .trim() // boş bırakılırsa kapakta yazı olmaz
         ..subtitle = (result.subtitle ?? '').trim()
         ..titleAlign = result.align
         ..titleFontId = result.fontId;
@@ -599,7 +600,10 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
-                  child: Text(_set.title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
+                  child: Text(
+                    _set.title.isEmpty ? S.printTitleDefault : _set.title,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
@@ -644,6 +648,14 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
     ),
   );
 
+  /// Baskıyı yatay ↔ dikey çevirir; fotoğraf yeni çerçeveyi ortadan doldurur.
+  void _toggleOrientation(int i) => _changed(() {
+    _set.items[i]
+      ..portrait = !_set.items[i].portrait
+      ..dx = 0
+      ..dy = 0;
+  });
+
   void _printMenu(int i) {
     showModalBottomSheet<void>(
       context: context,
@@ -652,6 +664,15 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (!_set.product.square)
+              ListTile(
+                leading: Icon(_set.items[i].portrait ? Icons.crop_landscape : Icons.crop_portrait),
+                title: Text(_set.items[i].portrait ? S.makeLandscape : S.makePortrait),
+                onTap: () {
+                  Navigator.pop(c);
+                  _toggleOrientation(i);
+                },
+              ),
             ListTile(
               leading: const Icon(Icons.copy_outlined),
               title: const Text(S.duplicatePrint),
@@ -708,7 +729,10 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_set.title, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w600)),
+                    Text(
+                      _set.title.isEmpty ? S.printTitleDefault : _set.title,
+                      style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       '${product.square ? S.squarePrints : S.regularPrints} · ${S.printsN(_set.count)} · ${timeAgo(_set.updatedAtMs)}',
@@ -770,10 +794,7 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                             () => _changed(() => item.border = !item.border),
                           )
                         else
-                          _round(
-                            Icons.screen_rotation_alt_outlined,
-                            () => _changed(() => item.portrait = !item.portrait),
-                          ),
+                          _round(Icons.screen_rotation_alt_outlined, () => _toggleOrientation(i)),
                         const SizedBox(width: 10),
                         _round(
                           null,
@@ -788,9 +809,15 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                     Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 420),
-                        child: GestureDetector(
-                          onTap: () => _editPhoto(i),
-                          child: PrintCard(set: _set, index: i, fonts: _fonts),
+                        // Dikey baskı yataydan daha dar: dikey olduğu bir bakışta anlaşılsın.
+                        child: AnimatedFractionallySizedBox(
+                          duration: const Duration(milliseconds: 280),
+                          curve: Curves.easeInOutCubic,
+                          widthFactor: item.portrait && !product.square ? 0.72 : 1,
+                          child: GestureDetector(
+                            onTap: () => _editPhoto(i),
+                            child: PrintCard(set: _set, index: i, fonts: _fonts),
+                          ),
                         ),
                       ),
                     ),

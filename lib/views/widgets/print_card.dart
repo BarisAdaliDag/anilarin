@@ -63,9 +63,19 @@ class PrintCard extends StatelessWidget {
         item.align,
       );
     }
-    final textH = (set.subtitle.isNotEmpty ? 0.14 : 0.1) * aspect;
+    final noText = set.title.isEmpty && set.subtitle.isEmpty;
+    final textH = noText ? 0.0 : (set.subtitle.isNotEmpty ? 0.14 : 0.1) * aspect;
     final framedText = Rect.fromLTRB(ex, 1 - ey - textH, 1 - ex, 1 - ey * 0.4);
     final framedPhoto = Rect.fromLTRB(ex, ey, 1 - ex, 1 - ey - textH);
+    if (noText && (layout ?? set.layout) != CoverLayout.textLeft && (layout ?? set.layout) != CoverLayout.corner) {
+      // Yazı yoksa yazı alanı da yok: kenarlı düzenler eşit kenarlı, diğerleri tam fotoğraf.
+      final framed = const {
+        CoverLayout.framed,
+        CoverLayout.framedLeft,
+        CoverLayout.textAbove,
+      }.contains(layout ?? set.layout);
+      return _g(framed ? Rect.fromLTRB(ex, ey, 1 - ex, 1 - ey) : const Rect.fromLTRB(0, 0, 1, 1), null, set.titleAlign);
+    }
     const full = Rect.fromLTRB(0, 0, 1, 1);
     return switch (layout ?? set.layout) {
       CoverLayout.framed => _g(framedPhoto, framedText, set.titleAlign),

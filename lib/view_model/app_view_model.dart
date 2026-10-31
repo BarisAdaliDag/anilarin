@@ -169,7 +169,7 @@ class AppViewModel extends ChangeNotifier {
     if (b >= 0) {
       basket[b] = BasketItem(
         bookId: set.id,
-        title: set.title,
+        title: set.title.isEmpty ? S.printTitleDefault : set.title,
         productCode: set.productCode,
         pages: set.count,
         options: ProductOptions(),
@@ -206,7 +206,7 @@ class AppViewModel extends ChangeNotifier {
     final existing = basket.indexWhere((b) => b.bookId == set.id);
     final item = BasketItem(
       bookId: set.id,
-      title: set.title,
+      title: set.title.isEmpty ? S.printTitleDefault : set.title,
       productCode: set.productCode,
       pages: set.count,
       options: ProductOptions(),

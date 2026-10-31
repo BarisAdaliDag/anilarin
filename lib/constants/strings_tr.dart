@@ -251,6 +251,8 @@ class S {
   static String removePrintsN(int n) => n == 0 ? removePrints : 'Baskıları Kaldır ($n)';
   static const captionHintPrint = 'Tasarımında fotoğrafın altında görünecek bir yazı gir';
   static const viewInBasket = 'Sepette Gör';
+  static const makePortrait = 'Dikey Yap';
+  static const makeLandscape = 'Yatay Yap';
   static const printOrderBody = 'Fotoğraf baskılarının ayrıntılarını onayla. Fiyat otomatik güncellenir.';
   static const matteFinish = 'Mat Kâğıt';
   static const coverText = 'Kapak Yazısı';
