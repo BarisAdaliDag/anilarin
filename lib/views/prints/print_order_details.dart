@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
 import '../../constants/strings_tr.dart';
+import '../../models/catalog.dart';
 import '../../models/print_set.dart';
 import '../../view_model/app_view_model.dart';
 import '../basket/basket_screen.dart';
@@ -72,6 +73,19 @@ class _PrintOrderDetailsState extends State<_PrintOrderDetails> {
     final product = _set.product;
     final sizes = PrintCatalog.ofFormat(product.format);
     final inBasket = app.basket.any((b) => b.bookId == _set.id);
+    // Sahnedeki kâğıt yatay: setteki ilk yatay fotoğraf (her açılışta aynı) yatay baskı olarak gösterilir;
+    // yatay fotoğraf yoksa sabit ücretsiz görsel kullanılır.
+    final landscape = _set.items.indexWhere((i) => i.photo.aspect >= 1.2);
+    final scene = _set.clone();
+    if (landscape >= 0) {
+      scene.items[0] = scene.items[landscape].copyWith(id: 'scene')
+        ..portrait = false
+        ..caption = ''
+        ..colorHex = _set.colorOf(_set.items.first);
+    }
+    Widget sceneCard(int thumb) => landscape >= 0
+        ? PrintCard(set: scene, index: 0, fonts: fonts, thumbSize: thumb)
+        : _AssetPrint(title: _set.title, subtitle: _set.subtitle, color: _set.colorOf(_set.items.first));
     final price = product.totalCents(_set.count);
     Widget header(String t) => Padding(
       padding: const EdgeInsets.fromLTRB(20, 34, 20, 0),
@@ -144,12 +158,8 @@ class _PrintOrderDetailsState extends State<_PrintOrderDetails> {
                         onTap: () => _update(() => _set.productCode = p.code),
                         background: SceneMockup(
                           sceneKey: _scenes[p.code]!,
-                          fit: BoxFit.contain,
-                          fallback: PrintCard(set: _set, index: 0, fonts: fonts, thumbSize: 400),
-                          child: SizedBox(
-                            width: 400,
-                            child: PrintCard(set: _set, index: 0, fonts: fonts, thumbSize: 500),
-                          ),
+                          fallback: sceneCard(400),
+                          child: SizedBox(width: 400, child: sceneCard(500)),
                         ),
                       ),
                   ],
@@ -210,6 +220,49 @@ class _PrintOrderDetailsState extends State<_PrintOrderDetails> {
                     ),
                   ],
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Sette yatay fotoğraf yoksa sahnede gösterilen yatay baskı (sabit ücretsiz görsel + set başlığı).
+class _AssetPrint extends StatelessWidget {
+  const _AssetPrint({required this.title, required this.subtitle, required this.color});
+
+  final String title;
+  final String subtitle;
+  final String color;
+
+  @override
+  Widget build(BuildContext context) {
+    final paper = hexColor(color);
+    final fg = paper.computeLuminance() < 0.5 ? Colors.white : const Color(0xFF222222);
+    return AspectRatio(
+      aspectRatio: 18 / 13,
+      child: Container(
+        color: paper,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
+        child: Column(
+          children: [
+            const Expanded(
+              child: SizedBox(width: double.infinity, child: RefImage('assets/ref/media/free/free_scene.jpg')),
+            ),
+            SizedBox(
+              height: 46,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    style: TextStyle(color: fg, fontSize: 20, fontWeight: FontWeight.w600),
+                  ),
+                  if (subtitle.isNotEmpty) Text(subtitle, maxLines: 1, style: TextStyle(color: fg, fontSize: 11)),
+                ],
               ),
             ),
           ],
