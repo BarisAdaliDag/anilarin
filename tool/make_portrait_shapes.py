@@ -68,11 +68,71 @@ def shapes_for(t, aspect):
     return floating(square, aspect)
 
 
+CEWE_ASPECT = 205 / 270  # CEWE dikey kitap düzenlerinin sayfa oranı
+MIN_SLOT_ASPECT = 0.35  # dikeyde bundan ince fotoğraf alanı olan şablon gizlenir (CEWE'nin en incesi)
+
+
+def _grid(xs, w, ys, h):
+    return [[x, y, w, h] for y in ys for x in xs]
+
+
+# CEWE'nin dikey kitap düzenlerinden en yaygınları (editördeki SVG önizlemelerinden, sayfa yüzdesi [x, y, w, h]).
+# (id, kategoriler, fotoğraf çerçeveleri, yazı çerçevesi)
+CEWE = [
+    (75, ['p2'], [[5.4, 4.1, 89.3, 28.7], [5.4, 35.7, 89.3, 60.3]], None),
+    (76, ['p2'], [[5.4, 4.1, 89.3, 44.4], [5.4, 51.5, 89.3, 44.4]], None),
+    (77, ['p3'], [[5.4, 4.1, 89.3, 44.4], [5.3, 51.5, 42.7, 44.4], [51.9, 51.5, 42.7, 44.4]], None),
+    (78, ['p3'], _grid([5.4], 89.3, [4.1, 35.7, 67.3], 28.7), None),
+    (79, ['p3'], [[5.3, 4.1, 42.7, 91.9], [51.9, 4.1, 42.7, 28.7], [51.9, 35.7, 42.7, 60.3]], None),
+    (80, ['collage', 'p4'], [[5.4, 4.1, 89.3, 67.8]] + _grid([5.4, 36.4, 67.4], 27.2, [75.3], 20.7), None),
+    (81, ['collage', 'p4'],
+     [[5.4, 4.1, 89.3, 28.7], [5.4, 35.7, 58.2, 60.3], [67.4, 35.7, 27.2, 28.7], [67.4, 67.3, 27.2, 28.7]], None),
+    (82, ['collage', 'p4'],
+     [[5.4, 4.1, 89.3, 28.7], [5.3, 35.7, 42.7, 28.7], [51.9, 35.7, 42.7, 28.7], [5.4, 67.3, 89.3, 28.7]], None),
+    (83, ['collage', 'p5'], [[5.4, 4.1, 56.6, 91.9]] + _grid([65.7], 29.6, [4.1, 27.8, 51.5, 75.2], 20.7), None),
+    (84, ['collage', 'p5'],
+     [[5.3, 4.1, 42.7, 28.7], [51.9, 4.1, 42.7, 28.7], [5.4, 35.7, 58.2, 60.3], [67.4, 35.7, 27.2, 28.7],
+      [67.4, 67.3, 27.2, 28.7]], None),
+    (85, ['collage'], _grid([5.4, 52], 42.8, [4.1, 35.7, 67.3], 28.7), None),
+    (86, ['collage'], [[5.4, 4.1, 89.3, 28.7]] + _grid([5.4, 36.4, 67.4], 27.2, [35.7, 67.3], 28.7), None),
+    (87, ['collage'], _grid([5.3, 51.9], 42.7, [4.1, 27.8, 51.5, 75.2], 20.7), None),
+    (88, ['collage'], _grid([5.4, 36.4, 67.4], 27.2, [4.1, 35.7, 67.3], 28.7), None),
+    # Yazılı: büyük fotoğraf + altta tam genişlikte yazı; yan yana iki fotoğraf + altta yazı.
+    (89, ['text', 'p1'], [[5.4, 4.1, 89.3, 66]], [5.4, 74, 89.3, 21.9]),
+    (90, ['text', 'p2'], [[5.3, 4.1, 42.7, 60], [51.9, 4.1, 42.7, 60]], [5.4, 68, 89.3, 27.9]),
+]
+
+
+def cewe_templates():
+    out = []
+    for tid, cats, photos, text in CEWE:
+        elements = [{'type': 'photo', 'frame': f} for f in photos]
+        if text:
+            elements.append({'type': 'text', 'role': 'caption', 'frame': text, 'align': 'left'})
+        out.append({
+            'id': tid,
+            'tag': 'layout-regular',
+            'photoCount': len(photos),
+            'automaticUse': text is None,
+            'categories': cats if text or any(c.startswith('p') for c in cats) else cats + [f'p{len(photos)}'],
+            'shapes': {'portrait': derive(elements, PORTRAIT_ASPECT / CEWE_ASPECT)},
+        })
+    return out
+
+
+def too_tall(shape):
+    """Dikey sayfada gerçek oranı [MIN_SLOT_ASPECT]'tan ince fotoğraf alanı var mı."""
+    return any(e['frame'][2] * PORTRAIT_ASPECT / e['frame'][3] < MIN_SLOT_ASPECT
+               for e in shape if e['type'] == 'photo' and e['frame'][3] > 0)
+
+
 def main():
     data = json.loads(PATH.read_text())
     if '--check' in sys.argv:
         worst = 0.0
         for t in data['templates']:
+            if 'square' not in t['shapes']:
+                continue  # yalnız dikey (CEWE) şablonları
             got = shapes_for(t, LANDSCAPE_ASPECT)
             for a, b in zip(got, t['shapes']['landscape']):
                 d = max(abs(p - q) for p, q in zip(a['frame'], b['frame']))
@@ -81,10 +141,21 @@ def main():
                     print(f"şablon {t['id']}: {a['frame']} ≠ {b['frame']}")
         print(f'en büyük sapma: {worst:.2f} puan')
         return
+    ids = {tid for tid, *_ in CEWE}
+    data['templates'] = [t for t in data['templates'] if t['id'] not in ids]
+    hidden = []
     for t in data['templates']:
         t['shapes']['portrait'] = shapes_for(t, PORTRAIT_ASPECT)
+        t.pop('hiddenIn', None)
+        # Şablon seçicide 6–9 fotoğraf ayrı sekmeler: eski "5+" etiketi gerçek sayıya çevrilir.
+        if t['photoCount'] > 5:
+            t['categories'] = [f"p{t['photoCount']}" if c == 'p5' else c for c in t['categories']]
+        if t['tag'] != 'layout-front' and too_tall(t['shapes']['portrait']):
+            t['hiddenIn'] = ['portrait']
+            hidden.append(t['id'])
+    data['templates'] += cewe_templates()
     PATH.write_text(json.dumps(data, ensure_ascii=False, separators=(',', ':')))
-    print(f"{len(data['templates'])} şablona portrait eklendi")
+    print(f"portrait şekilleri yazıldı; dikeyde gizli: {hidden}; CEWE: {sorted(ids)}")
 
 
 if __name__ == '__main__':

@@ -291,7 +291,7 @@ class EditorViewModel extends ChangeNotifier {
     if (_book.pages[pageIndex].isCover) {
       return [for (final id in coverOrder) catalog.template(id)];
     }
-    return catalog.templates.where((t) => !t.isCover).toList();
+    return catalog.templates.where((t) => !t.isCover && t.availableFor(format)).toList();
   }
 
   // ---- tema / yazı ----
@@ -380,7 +380,10 @@ class EditorViewModel extends ChangeNotifier {
     final tpl = templateOf(pageIndex);
     if (tpl.textSlots(format).isNotEmpty) return tpl.id;
     final candidates = catalog.templates
-        .where((t) => !t.isCover && t.photoCount == tpl.photoCount && t.textSlots(format).isNotEmpty)
+        .where(
+          (t) =>
+              !t.isCover && t.availableFor(format) && t.photoCount == tpl.photoCount && t.textSlots(format).isNotEmpty,
+        )
         .toList();
     return candidates.isEmpty ? null : candidates.first.id;
   }

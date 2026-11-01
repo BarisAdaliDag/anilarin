@@ -25,7 +25,22 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
     final isCover = vm.book.pages[widget.pageIndex].isCover;
     final all = vm.templatesFor(widget.pageIndex);
     // Popsa sırası: Tümü, Minimal, Kolaj, Yazılı, Üst üste; ardından fotoğraf sayıları.
-    const order = ['all', 'minimal', 'collage', 'text', 'overlapping', 'p1', 'p2', 'p3', 'p4', 'p5'];
+    const order = [
+      'all',
+      'minimal',
+      'collage',
+      'text',
+      'overlapping',
+      'p1',
+      'p2',
+      'p3',
+      'p4',
+      'p5',
+      'p6',
+      'p7',
+      'p8',
+      'p9',
+    ];
     final categories = [
       for (final k in order)
         if (k == 'all' || all.any((t) => t.categories.contains(k))) k,
@@ -55,9 +70,7 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: _CategoryChip(
-                          label: c.startsWith('p') && c != 'p0'
-                              ? (c == 'p5' ? '5+' : c.substring(1))
-                              : S.templateCategories[c]!,
+                          label: c.startsWith('p') && c != 'p0' ? c.substring(1) : S.templateCategories[c]!,
                           photoIcon: c.startsWith('p') && c != 'p0',
                           selected: c == _category,
                           onTap: () => setState(() => _category = c),

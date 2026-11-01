@@ -364,7 +364,7 @@ double captionBandFor(PrintPage page, double aspect) {
 /// Şablon öğelerini sayfaya uygular: kenarlıksız, Popsa'nın dar boşlukları ve yazı şeridi (üstte ya da altta).
 List<TemplateElement> pageLayout(PrintPage page, PageTemplate tpl, String format, double aspect) {
   var elements = tpl.elementsFor(format);
-  if (!page.isCover && tpl.automaticUse) elements = tightenGutters(elements);
+  if (!page.isCover && tpl.automaticUse) elements = tightenGutters(elements, aspect: aspect);
   if (page.borderless) elements = borderlessElements(elements);
   final band = captionBandFor(page, aspect);
   if (band > 0) {
@@ -379,9 +379,11 @@ List<TemplateElement> pageLayout(PrintPage page, PageTemplate tpl, String format
 }
 
 /// Şablon ikonlarındaki geniş boşlukları Popsa'nın baskıdaki oranlarına daraltır:
-/// kenar boşluğu yatayda ~%4.5, dikeyde ~%6; fotoğraflar arası ~%1.8 / ~%2.4.
-List<TemplateElement> tightenGutters(List<TemplateElement> elements) {
-  const marginX = 4.5, marginY = 6.0, gapX = 1.8, gapY = 2.4;
+/// kenar boşluğu yatayda ~%4.5, dikeyde ~%6; fotoğraflar arası ~%1.8 / ~%2.4. Dikey (A4) sayfada sayfa uzun
+/// olduğundan dikey değerler oranla küçülür; üst/alt boşluk kare sayfadaki gerçek kalınlığında kalır.
+List<TemplateElement> tightenGutters(List<TemplateElement> elements, {double aspect = 1}) {
+  final k = min(1.0, aspect);
+  final marginX = 4.5, marginY = 6.0 * k, gapX = 1.8, gapY = 2.4 * k;
   final photos = elements.where((e) => e.isPhoto).map((e) => e.frame).toList();
   if (photos.isEmpty || elements.any((e) => !e.isPhoto)) return elements;
   final u = photos.reduce((a, b) => a.expandToInclude(b));
@@ -393,29 +395,28 @@ List<TemplateElement> tightenGutters(List<TemplateElement> elements) {
   const eps = 0.5;
   final out = <Rect>[];
   for (final r in rects) {
-    var l = r.left, t = r.top, rt = r.right, b = r.bottom;
+    // Her kenarda yalnız en yakın komşuya göre: uzaktaki bir komşunun geniş boşluğu fotoğrafı yanındakinin
+    // üstüne taşırmasın (3 sıra / 3 sütun şablonlarında ilk iki fotoğraf üst üste biniyordu).
+    double? right, left, below, above;
+    double? nearest(double? cur, double gap) => cur == null || gap < cur ? gap : cur;
     for (final o in rects) {
       if (identical(o, r)) continue;
       final vOverlap = o.top < r.bottom - eps && o.bottom > r.top + eps;
       final hOverlap = o.left < r.right - eps && o.right > r.left + eps;
-      if (vOverlap && o.left >= r.right - eps) {
-        final gap = o.left - r.right;
-        if (gap > gapX) rt = r.right + (gap - gapX) / 2;
-      }
-      if (vOverlap && o.right <= r.left + eps) {
-        final gap = r.left - o.right;
-        if (gap > gapX) l = r.left - (gap - gapX) / 2;
-      }
-      if (hOverlap && o.top >= r.bottom - eps) {
-        final gap = o.top - r.bottom;
-        if (gap > gapY) b = r.bottom + (gap - gapY) / 2;
-      }
-      if (hOverlap && o.bottom <= r.top + eps) {
-        final gap = r.top - o.bottom;
-        if (gap > gapY) t = r.top - (gap - gapY) / 2;
-      }
+      if (vOverlap && o.left >= r.right - eps) right = nearest(right, o.left - r.right);
+      if (vOverlap && o.right <= r.left + eps) left = nearest(left, r.left - o.right);
+      if (hOverlap && o.top >= r.bottom - eps) below = nearest(below, o.top - r.bottom);
+      if (hOverlap && o.bottom <= r.top + eps) above = nearest(above, r.top - o.bottom);
     }
-    out.add(Rect.fromLTRB(l, t, rt, b));
+    double grow(double? gap, double target) => gap != null && gap > target ? (gap - target) / 2 : 0;
+    out.add(
+      Rect.fromLTRB(
+        r.left - grow(left, gapX),
+        r.top - grow(above, gapY),
+        r.right + grow(right, gapX),
+        r.bottom + grow(below, gapY),
+      ),
+    );
   }
   var i = 0;
   return [for (final e in elements) e.withFrame(out[i++])];

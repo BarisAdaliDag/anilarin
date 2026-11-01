@@ -175,6 +175,18 @@ void main() {
     expect(tight[0].left, closeTo(4.5, 0.01));
     expect(tight[1].left - tight[0].right, closeTo(1.8, 0.01));
     expect(tight[2].top - tight[0].bottom, closeTo(2.4, 0.01));
+    // Dikey (A4) sayfada üst/alt boşluk oranla incelir: gerçek kalınlık kare sayfadakiyle aynı.
+    final a4 = tightenGutters(tpl.elementsFor('portrait'), aspect: 0.7071).map((e) => e.frame).toList();
+    expect(a4[0].left, closeTo(4.5, 0.01));
+    expect(a4[0].top, closeTo(6 * 0.7071, 0.01));
+    // 3 sıra / 3 sütun: her komşu arasında aynı ince boşluk; uzaktaki komşu fotoğrafları üst üste bindirmez.
+    final rows = tightenGutters(catalog.template(78).elementsFor('portrait'), aspect: 0.7071).map((e) => e.frame);
+    final r = rows.toList();
+    expect(r[1].top - r[0].bottom, closeTo(2.4 * 0.7071, 0.01));
+    expect(r[2].top - r[1].bottom, closeTo(2.4 * 0.7071, 0.01));
+    final cols = tightenGutters(catalog.template(16).elementsFor('square')).map((e) => e.frame).toList();
+    expect(cols[1].left - cols[0].right, closeTo(1.8, 0.01));
+    expect(cols[2].left - cols[1].right, closeTo(1.8, 0.01));
     final page = PrintPage(id: 'x', tag: 'layout-regular', templateId: 5, photos: [], texts: [], caption: 'Merhaba');
     final laid = pageLayout(page, tpl, 'square', 1);
     final band = captionBandFor(page, 1);

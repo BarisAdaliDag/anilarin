@@ -80,8 +80,8 @@ void main() {
       for (final tpl in catalog.templates) {
         final shapes = tpl.shapes['portrait'];
         expect(shapes, isNotNull, reason: 'şablon ${tpl.id}');
-        expect(shapes!.length, tpl.shapes['square']!.length);
-        for (final e in shapes) {
+        if (tpl.shapes['square'] case final square?) expect(shapes!.length, square.length);
+        for (final e in shapes!) {
           expect(e.frame.top, greaterThanOrEqualTo(0));
           expect(e.frame.bottom, lessThanOrEqualTo(100.01));
         }
@@ -91,6 +91,21 @@ void main() {
       for (final page in book.pages) {
         expect(page.photos.length, catalog.template(page.templateId).photoSlots('portrait').length);
       }
+      // Uzun sütunlu şablonlar dikeyde kapalı, CEWE düzenleri yalnız dikeyde; otomatik yerleşim buna uyar.
+      for (final id in [4, 7, 8, 16]) {
+        expect(catalog.template(id).availableFor('portrait'), isFalse, reason: 'şablon $id');
+        expect(catalog.template(id).availableFor('square'), isTrue);
+      }
+      for (var id = 75; id <= 90; id++) {
+        expect(catalog.template(id).availableFor('portrait'), isTrue, reason: 'şablon $id');
+        expect(catalog.template(id).availableFor('square'), isFalse);
+        expect(catalog.template(id).availableFor('landscape'), isFalse);
+      }
+      final used = book.pages.skip(1).map((p) => p.templateId).toSet();
+      expect(used.intersection({4, 7, 8, 16}), isEmpty);
+      expect(used.any((id) => id >= 75), isTrue);
+      final square = service.create(product: catalog.product('PBK-11'), photos: testPhotos(120), title: 'x');
+      expect(square.pages.every((p) => p.templateId < 75), isTrue);
       // Tür değişince biçim korunur; dikey kitapçık yok.
       expect(catalog.closestOfType(product, 'softcover')?.code, 'PBK-13');
       expect(catalog.closestOfType(product, 'booklet'), isNull);

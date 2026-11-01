@@ -232,6 +232,9 @@ class PageTemplate {
   final List<String> categories;
   final Map<String, List<TemplateElement>> shapes;
 
+  /// Bu biçimlerde seçeneklerde gösterilmez (şekli eski sayfalar için durur).
+  final List<String> hiddenIn;
+
   const PageTemplate({
     required this.id,
     required this.tag,
@@ -239,6 +242,7 @@ class PageTemplate {
     required this.automaticUse,
     required this.categories,
     required this.shapes,
+    this.hiddenIn = const [],
   });
 
   factory PageTemplate.fromJson(Map<String, dynamic> j) => PageTemplate(
@@ -250,9 +254,13 @@ class PageTemplate {
     shapes: (j['shapes'] as Map<String, dynamic>).map(
       (k, v) => MapEntry(k, (v as List).map((e) => TemplateElement.fromJson(e)).toList()),
     ),
+    hiddenIn: List<String>.from(j['hiddenIn'] ?? const []),
   );
 
   bool get isCover => tag == 'layout-front';
+
+  /// Şablon bu biçimde seçilebilir mi: kendi şekli var ve gizli değil (CEWE dikey düzenleri yalnız dikeyde).
+  bool availableFor(String format) => shapes.containsKey(format) && !hiddenIn.contains(format);
 
   List<TemplateElement> elementsFor(String format) => shapes[format] ?? shapes['square']!;
 

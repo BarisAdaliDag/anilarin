@@ -49,7 +49,7 @@ class AutoLayoutService {
 
     final rest = sorted.skip(1).toList();
     final pageCount = pageCountFor(product, rest.length);
-    final counts = distribute(rest.length, pageCount, maxPerPage: maxAutoCapacity);
+    final counts = distribute(rest.length, pageCount, maxPerPage: maxAutoCapacity(format));
     final unused = <String>[];
 
     final pages = <PrintPage>[cover];
@@ -58,7 +58,7 @@ class AutoLayoutService {
     for (final n in counts) {
       final pagePhotos = rest.sublist(cursor, cursor + n);
       cursor += n;
-      final tpl = pickTemplate(n, avoid: previousTemplate);
+      final tpl = pickTemplate(n, format: format, avoid: previousTemplate);
       previousTemplate = tpl.id;
       pages.add(buildPage(tpl, format, product.aspect, pagePhotos));
     }
@@ -90,12 +90,13 @@ class AutoLayoutService {
     return [...undated, ...dated];
   }
 
-  Set<int> get autoCounts => {
-    for (final t in catalog.templates)
-      if (t.automaticUse && !t.isCover) t.photoCount,
-  };
+  /// [format] biçiminde otomatik kullanılabilen iç sayfa şablonları.
+  List<PageTemplate> autoTemplates(String format) =>
+      catalog.templates.where((t) => t.automaticUse && !t.isCover && t.availableFor(format)).toList();
 
-  int get maxAutoCapacity => autoCounts.reduce(max);
+  Set<int> autoCounts(String format) => {for (final t in autoTemplates(format)) t.photoCount};
+
+  int maxAutoCapacity(String format) => autoCounts(format).reduce(max);
 
   /// Sayfa başı hedef fotoğrafa göre çift sayıya yuvarlanmış, ürün sınırlarıyla kısıtlı sayfa sayısı.
   int pageCountFor(Product product, int photoCount) {
@@ -139,8 +140,8 @@ class AutoLayoutService {
   }
 
   /// [n] fotoğrafa uygun otomatik şablon. Tam eşleşme yoksa daha büyük en yakın kapasite seçilir.
-  PageTemplate pickTemplate(int n, {int? avoid}) {
-    final auto = catalog.templates.where((t) => t.automaticUse && !t.isCover).toList();
+  PageTemplate pickTemplate(int n, {required String format, int? avoid}) {
+    final auto = autoTemplates(format);
     var candidates = auto.where((t) => t.photoCount == n).toList();
     if (candidates.isEmpty) {
       final bigger = auto.where((t) => t.photoCount >= n).map((t) => t.photoCount).toList()..sort();
