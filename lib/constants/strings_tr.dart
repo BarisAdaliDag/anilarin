@@ -47,6 +47,7 @@ class S {
   static const hardback = 'Sert Kapak';
   static const landscape = 'Yatay';
   static const square = 'Kare';
+  static const portrait = 'Dikey';
   static const small = 'Küçük';
   static const medium = 'Orta';
   static const large = 'Büyük';

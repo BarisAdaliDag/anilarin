@@ -23,7 +23,9 @@ class AssetPaths {
   ];
 
   /// Cilt tipi + format kart görselleri.
+  /// Dikeyin Popsa görseli yok: ücretsiz yedek görsel (sonra değiştirilecek).
   static String productCover(String type, String format) => switch ((type, format)) {
+    (_, 'portrait') => 'assets/ref/media/free/free_scene.jpg',
     ('hardback', 'square') => 'assets/ref/media/cover_hardback_square.jpg',
     ('softcover', 'square') => 'assets/ref/media/cover_softcover_square.jpg',
     ('softcover', _) => 'assets/ref/media/cover_softcover_landscape.jpg',

@@ -174,7 +174,7 @@ class _FormatDetailScreenState extends State<FormatDetailScreen> {
             title: 'Mat yüzey',
             subtitle: 'Parlak yüzeye yükseltilebilir',
           ),
-          _SpecRow(icon: Icons.crop_landscape, title: product.formatLabel),
+          _SpecRow(icon: product.formatIcon, title: product.formatLabel),
           const _SectionTitle(S.extras),
           _ExtraRow(
             icon: Icons.auto_fix_high,

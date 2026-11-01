@@ -15,9 +15,13 @@ class BookMockup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final product = catalog.product(book.productCode);
-    final square = product.format == 'square';
-    final canvas = square ? const Size(942, 942) : const Size(942, 753);
+    final canvas = switch (product.format) {
+      'square' => const Size(942, 942),
+      'portrait' => const Size(753, 1000),
+      _ => const Size(942, 753),
+    };
     final quad = switch (product.mockupKey) {
+      'HARDBACK_PORTRAIT' || 'SOFTCOVER_PORTRAIT' => const Rect.fromLTRB(60, 45, 693, 940),
       'PHOTOBOOKLET' => const Rect.fromLTRB(63, 45, 847, 602),
       'SOFTCOVER' => const Rect.fromLTRB(63, 45, 847, 640),
       'HARDBACK' => const Rect.fromLTRB(63, 45, 847, 645),

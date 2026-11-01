@@ -26,7 +26,7 @@ class ProductLayout {
 class Product {
   final String code;
   final String type; // booklet | softcover | hardback
-  final String format; // landscape | square
+  final String format; // landscape | square | portrait
   final String size; // small | medium | large
   final int priceCents;
   final int compareAtCents; // üstü çizili fiyat
@@ -140,7 +140,18 @@ class Product {
     _ => S.tierPremium,
   };
 
-  String get formatLabel => format == 'square' ? S.square : S.landscape;
+  String get formatLabel => switch (format) {
+    'square' => S.square,
+    'portrait' => S.portrait,
+    _ => S.landscape,
+  };
+
+  /// Biçimin simgesi (ürün özellik satırı).
+  IconData get formatIcon => switch (format) {
+    'square' => Icons.crop_square,
+    'portrait' => Icons.crop_portrait,
+    _ => Icons.crop_landscape,
+  };
 
   String get sizeLabel => switch (size) {
     'small' => S.small,
@@ -151,11 +162,12 @@ class Product {
 
   String get title => '$typeLabel ${S.photoBook}';
 
-  /// Mockup katman adı (assets/ref/mockups/topdown).
+  /// Mockup katman adı (assets/ref/mockups/topdown). Dikeyin Popsa katmanı yok: düz gölge kullanılır.
   String get mockupKey => switch (type) {
     'booklet' => 'PHOTOBOOKLET',
-    'softcover' => format == 'square' ? 'SOFTCOVER_SQUARE' : 'SOFTCOVER',
-    _ => format == 'square' ? 'HARDBACK_SQUARE' : 'HARDBACK',
+    'softcover' =>
+      format == 'square' ? 'SOFTCOVER_SQUARE' : (format == 'portrait' ? 'SOFTCOVER_PORTRAIT' : 'SOFTCOVER'),
+    _ => format == 'square' ? 'HARDBACK_SQUARE' : (format == 'portrait' ? 'HARDBACK_PORTRAIT' : 'HARDBACK'),
   };
 }
 
@@ -365,7 +377,7 @@ class Catalog {
 
   static const sizeOrder = ['small', 'medium', 'large', 'xlarge'];
 
-  /// Aynı biçimde (yatay/kare) [type] türündeki ürünler, küçükten büyüğe.
+  /// Aynı biçimde (yatay/kare/dikey) [type] türündeki ürünler, küçükten büyüğe.
   List<Product> sizesOf(String type, String format) =>
       products.where((p) => p.type == type && p.format == format).toList()
         ..sort((a, b) => sizeOrder.indexOf(a.size).compareTo(sizeOrder.indexOf(b.size)));

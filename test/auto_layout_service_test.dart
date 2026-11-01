@@ -73,6 +73,29 @@ void main() {
       expect(book.unusedPhotoIds, isNotEmpty);
     });
 
+    test('dikey (A4): her şablonda dikey çerçeve var, sayfa içinde; kitap kurulur', () {
+      final product = catalog.product('PBK-14');
+      expect(product.format, 'portrait');
+      expect(product.dimensionsLabel(), '21cm × 30cm');
+      for (final tpl in catalog.templates) {
+        final shapes = tpl.shapes['portrait'];
+        expect(shapes, isNotNull, reason: 'şablon ${tpl.id}');
+        expect(shapes!.length, tpl.shapes['square']!.length);
+        for (final e in shapes) {
+          expect(e.frame.top, greaterThanOrEqualTo(0));
+          expect(e.frame.bottom, lessThanOrEqualTo(100.01));
+        }
+      }
+      final book = service.create(product: product, photos: testPhotos(60), title: 'x');
+      expect(book.usedPhotoIds.length, 60);
+      for (final page in book.pages) {
+        expect(page.photos.length, catalog.template(page.templateId).photoSlots('portrait').length);
+      }
+      // Tür değişince biçim korunur; dikey kitapçık yok.
+      expect(catalog.closestOfType(product, 'softcover')?.code, 'PBK-13');
+      expect(catalog.closestOfType(product, 'booklet'), isNull);
+    });
+
     test('fotoğraflar en-boy oranına uygun alanlara yerleşir', () {
       final tpl = catalog.template(4); // iki dikey alan
       final slots = tpl.photoSlots('square');

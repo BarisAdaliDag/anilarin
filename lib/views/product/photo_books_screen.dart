@@ -10,7 +10,7 @@ import '../widgets/price_text.dart';
 import '../widgets/ref_image.dart';
 import 'format_detail_screen.dart';
 
-/// Fotoğraf kitapları: Yatay/Kare sekmesi ve cilt tipi kartları (Popsa ProductDetailActivity).
+/// Fotoğraf kitapları: Yatay/Kare/Dikey sekmesi ve cilt tipi kartları (Popsa ProductDetailActivity).
 class PhotoBooksScreen extends StatefulWidget {
   const PhotoBooksScreen({super.key});
 
@@ -66,7 +66,7 @@ class _FormatToggle extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          for (final (v, label) in const [('landscape', S.landscape), ('square', S.square)])
+          for (final (v, label) in const [('landscape', S.landscape), ('square', S.square), ('portrait', S.portrait)])
             GestureDetector(
               onTap: () => onChanged(v),
               child: AnimatedContainer(
@@ -117,9 +117,13 @@ class _TypeCard extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: SizedBox(
-                    width: 210,
+                    width: cheapest.format == 'portrait' ? 160 : 210,
                     child: AspectRatio(
-                      aspectRatio: cheapest.format == 'square' ? 1 : 1.3,
+                      aspectRatio: switch (cheapest.format) {
+                        'square' => 1,
+                        'portrait' => 0.75,
+                        _ => 1.3,
+                      },
                       child: DecoratedBox(
                         decoration: const BoxDecoration(
                           boxShadow: [BoxShadow(color: Colors.black38, blurRadius: 12, offset: Offset(4, 6))],

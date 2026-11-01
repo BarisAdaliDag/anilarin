@@ -432,6 +432,78 @@
      "maximum": 150
     }
    ]
+  },
+  {
+   "code": "PBK-13",
+   "type": "softcover",
+   "format": "portrait",
+   "size": "large",
+   "priceCents": 65000,
+   "compareAtCents": 130000,
+   "incrementPriceCents": 1800,
+   "pagesMin": 20,
+   "pagesMax": 150,
+   "pagesDefault": 20,
+   "pageIncrement": 1,
+   "photoMin": 21,
+   "photoRecommend": 60,
+   "photosPerExtraPage": 4,
+   "photoMaxBase": 80,
+   "aspect": 0.7071,
+   "dimensionsCm": "21 × 29.7",
+   "deliveryDays": [
+    11,
+    16
+   ],
+   "mostPopular": false,
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 20,
+     "maximum": 150
+    }
+   ]
+  },
+  {
+   "code": "PBK-14",
+   "type": "hardback",
+   "format": "portrait",
+   "size": "large",
+   "priceCents": 90000,
+   "compareAtCents": 180000,
+   "incrementPriceCents": 1800,
+   "pagesMin": 20,
+   "pagesMax": 150,
+   "pagesDefault": 20,
+   "pageIncrement": 1,
+   "photoMin": 21,
+   "photoRecommend": 60,
+   "photosPerExtraPage": 4,
+   "photoMaxBase": 80,
+   "aspect": 0.7071,
+   "dimensionsCm": "21 × 29.7",
+   "deliveryDays": [
+    11,
+    16
+   ],
+   "mostPopular": false,
+   "layouts": [
+    {
+     "tag": "layout-front",
+     "minimum": 1,
+     "maximum": 1
+    },
+    {
+     "tag": "layout-regular",
+     "minimum": 20,
+     "maximum": 150
+    }
+   ]
   }
  ],
  "neutralColors": [
