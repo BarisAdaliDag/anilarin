@@ -812,7 +812,7 @@ class _PrintSetScreenState extends State<PrintSetScreen> {
                         constraints: const BoxConstraints(maxWidth: 420),
                         // Dikey baskı yataydan daha dar: dikey olduğu bir bakışta anlaşılsın.
                         child: AnimatedFractionallySizedBox(
-                          duration: const Duration(milliseconds: 280),
+                          duration: const Duration(milliseconds: 420),
                           curve: Curves.easeInOutCubic,
                           widthFactor: item.portrait && !product.square ? 0.72 : 1,
                           child: GestureDetector(

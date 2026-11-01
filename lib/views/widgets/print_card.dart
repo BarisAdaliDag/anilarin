@@ -27,6 +27,7 @@ class PrintCard extends StatelessWidget {
   final CoverLayout? layout;
 
   static const _duration = Duration(milliseconds: 280);
+  static const _turnDuration = Duration(milliseconds: 420);
 
   PrintItem get item => set.items[index];
 
@@ -130,8 +131,12 @@ class PrintCard extends StatelessWidget {
     final sub = _cover ? set.subtitle : '';
     final font = _font(_cover ? set.titleFontId : item.fontId);
     final multiLine = _cover && (layout ?? set.layout) == CoverLayout.textLeft;
-    return AspectRatio(
-      aspectRatio: aspectOf(set, item),
+    // Yatay ↔ dikey çevirmede kâğıdın oranı ve fotoğraf alanı birlikte, kesintisiz değişir.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: aspectOf(set, item)),
+      duration: _turnDuration,
+      curve: Curves.easeInOutCubic,
+      builder: (context, aspect, child) => AspectRatio(aspectRatio: aspect, child: child),
       child: LayoutBuilder(
         builder: (context, c) {
           final w = c.maxWidth, h = c.maxHeight;
@@ -159,10 +164,12 @@ class PrintCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(w * 0.008),
               child: Stack(
                 children: [
-                  AnimatedPositioned.fromRect(
-                    duration: _duration,
+                  // Alan oran olarak (0..1) canlandırılır; kâğıt boyutu her karede değişse de takılmaz.
+                  TweenAnimationBuilder<Rect?>(
+                    tween: RectTween(end: g.photo),
+                    duration: _turnDuration,
                     curve: Curves.easeInOutCubic,
-                    rect: scaled(g.photo),
+                    builder: (context, r, child) => Positioned.fromRect(rect: scaled(r ?? g.photo), child: child!),
                     child: ClipRect(
                       child: LayoutBuilder(
                         builder: (context, box) {
