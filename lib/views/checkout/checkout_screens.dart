@@ -7,6 +7,8 @@ import '../../constants/strings_tr.dart';
 import '../../models/address.dart';
 import '../../models/catalog.dart';
 import '../../models/order.dart';
+import '../../services/firebase_order_backend.dart';
+import '../../services/order_upload_service.dart';
 import '../../view_model/app_view_model.dart';
 
 /// Ödeme akışı (Popsa Checkout): Yeni Adres → Kargo Seçenekleri → Ödeme Seçenekleri → Özet → Teşekkürler.
@@ -404,7 +406,10 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
     setState(() => _placing = true);
     final nav = Navigator.of(context);
     final order = await context.read<AppViewModel>().placeOrder(widget.shipping, widget.paymentMethod);
-    nav.pushAndRemoveUntil(MaterialPageRoute(builder: (_) => ThankYouScreen(order: order)), (route) => route.isFirst);
+    nav.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => OrderUploadScreen(order: order)),
+      (route) => route.isFirst,
+    );
   }
 
   @override
@@ -532,6 +537,116 @@ class _AmountRow extends StatelessWidget {
           Expanded(child: Text(label, style: style)),
           Text(value, style: style),
         ],
+      ),
+    );
+  }
+}
+
+// ---- Gönderim ----
+
+/// Siparişin dosyalarını matbaaya gönderir; kesilirse kaldığı yerden devam eder.
+class OrderUploadScreen extends StatefulWidget {
+  const OrderUploadScreen({super.key, required this.order});
+
+  final Order order;
+
+  @override
+  State<OrderUploadScreen> createState() => _OrderUploadScreenState();
+}
+
+class _OrderUploadScreenState extends State<OrderUploadScreen> {
+  int _done = 0;
+  int _total = 0;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  Future<void> _start() async {
+    final app = context.read<AppViewModel>();
+    if (!FirebaseSetup.available) return setState(() => _error = S.serverNotConfigured);
+    final designs = app.designsOf(widget.order);
+    if (designs == null) return setState(() => _error = S.designMissing);
+    setState(() => _error = null);
+    try {
+      await OrderUploadService(
+        backend: FirebaseOrderBackend(),
+        encode: encodeGalleryPhoto,
+      ).upload(
+        widget.order,
+        designs,
+        onProgress: (d, t) {
+          if (mounted) {
+            setState(() {
+              _done = d;
+              _total = t;
+            });
+          }
+        },
+      );
+      await app.markOrderUploaded(widget.order);
+      if (mounted) _finish();
+    } catch (_) {
+      if (mounted) setState(() => _error = S.uploadFailed);
+    }
+  }
+
+  void _finish() =>
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => ThankYouScreen(order: widget.order)));
+
+  @override
+  Widget build(BuildContext context) {
+    final error = _error;
+    final canRetry = error == S.uploadFailed;
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Spacer(),
+                const Icon(Icons.cloud_upload_outlined, size: 64, color: AppColors.accent),
+                const SizedBox(height: 24),
+                const Text(S.uploadingOrder, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 12),
+                Text(error ?? S.uploadingBody, style: TextStyle(fontSize: 17, height: 1.45, color: context.mutedText)),
+                const SizedBox(height: 28),
+                if (error == null) ...[
+                  LinearProgressIndicator(value: _total == 0 ? null : _done / _total, minHeight: 6),
+                  const SizedBox(height: 8),
+                  Text(S.uploadedN(_done, _total), style: TextStyle(color: context.mutedText)),
+                ],
+                const Spacer(flex: 2),
+                if (canRetry)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: FilledButton(
+                      onPressed: _start,
+                      child: const Text(S.retryUpload, style: TextStyle(fontSize: 17)),
+                    ),
+                  ),
+                if (error != null) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: TextButton(
+                      onPressed: _finish,
+                      child: Text(canRetry ? S.uploadLater : S.continueLabel, style: const TextStyle(fontSize: 17)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

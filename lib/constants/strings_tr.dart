@@ -317,6 +317,15 @@ class S {
   static const thankYouBody = 'Siparişin alındı. Baskıya hazırlandığında ve kargoya verildiğinde sana haber vereceğiz.';
   static const orderReference = 'Sipariş Numarası';
   static const backToDesigns = 'Tasarımlarıma Dön';
+  static const uploadingOrder = 'Siparişin Gönderiliyor';
+  static const uploadingBody = 'Fotoğrafların baskı kalitesinde matbaaya gönderiliyor. Bitene kadar uygulamayı açık tut; Wi-Fi önerilir.';
+  static String uploadedN(int done, int total) => '$done / $total dosya';
+  static const uploadFailed = 'Gönderim yarıda kaldı. Bağlantını kontrol edip kaldığın yerden devam edebilirsin.';
+  static const retryUpload = 'Devam Et';
+  static const uploadLater = 'Sonra Gönder';
+  static const serverNotConfigured = 'Sunucu bağlantısı henüz yapılandırılmadı; sipariş yalnızca cihazda kaydedildi.';
+  static const continueLabel = 'Devam';
+  static const designMissing = 'Siparişteki bir tasarım bulunamadı (silinmiş olabilir).';
   static const basketBody = 'İndirimlerden yararlanmak ve kargoda tasarruf etmek için sepetine ürün ekle.';
   static String itemsN(int n) => 'Ürünler ($n)';
   static String copiesN(int n) => '$n kopya';

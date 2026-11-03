@@ -5,12 +5,14 @@ import 'package:provider/provider.dart';
 
 import 'config/theme.dart';
 import 'constants/strings_tr.dart';
+import 'services/firebase_order_backend.dart';
 import 'view_model/app_view_model.dart';
 import 'views/home/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('tr');
+  await FirebaseSetup.init();
   runApp(ChangeNotifierProvider(create: (_) => AppViewModel()..load(), child: const AnilarinApp()));
 }
 

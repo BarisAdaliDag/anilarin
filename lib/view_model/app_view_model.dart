@@ -10,6 +10,7 @@ import '../models/photo_book.dart';
 import '../models/print_set.dart';
 import '../repositories/catalog_repository.dart';
 import '../repositories/design_repository.dart';
+import '../services/order_upload_service.dart';
 
 /// Uygulama genelindeki durum: katalog, kayıtlı tasarımlar ve sepet.
 class AppViewModel extends ChangeNotifier {
@@ -268,6 +269,31 @@ class AppViewModel extends ChangeNotifier {
     await designs.saveBasket(basket);
     await designs.saveCoupon(null);
     return order;
+  }
+
+  /// Siparişteki ürünlerin tasarımları; biri silinmişse null.
+  List<OrderDesign>? designsOf(Order order) {
+    final out = <OrderDesign>[];
+    for (final item in order.items) {
+      if (item.isPrints) {
+        final set = printSets.where((s) => s.id == item.bookId).firstOrNull;
+        if (set == null) return null;
+        out.add(OrderDesign.prints(item, set));
+      } else {
+        final book = books.where((b) => b.id == item.bookId).firstOrNull;
+        if (book == null) return null;
+        out.add(OrderDesign.book(item, book));
+      }
+    }
+    return out;
+  }
+
+  Future<void> markOrderUploaded(Order order) async {
+    final i = orders.indexWhere((o) => o.reference == order.reference);
+    if (i < 0) return;
+    orders[i] = orders[i].markUploaded();
+    notifyListeners();
+    await designs.saveOrders(orders);
   }
 
   Future<void> removeFromBasket(BasketItem item) => setQuantity(item, 0);

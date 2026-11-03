@@ -11,6 +11,9 @@ class Order {
   final String paymentMethod; // gpay | card
   final int totalCents;
 
+  /// Dosyalar matbaaya (Firebase) gönderildi mi?
+  final bool uploaded;
+
   const Order({
     required this.reference,
     required this.createdAtMs,
@@ -19,7 +22,19 @@ class Order {
     required this.shippingId,
     required this.paymentMethod,
     required this.totalCents,
+    this.uploaded = false,
   });
+
+  Order markUploaded() => Order(
+    reference: reference,
+    createdAtMs: createdAtMs,
+    items: items,
+    address: address,
+    shippingId: shippingId,
+    paymentMethod: paymentMethod,
+    totalCents: totalCents,
+    uploaded: true,
+  );
 
   Map<String, dynamic> toJson() => {
     'ref': reference,
@@ -29,6 +44,7 @@ class Order {
     'shipping': shippingId,
     'payment': paymentMethod,
     'total': totalCents,
+    if (uploaded) 'up': true,
   };
 
   factory Order.fromJson(Map<String, dynamic> j) => Order(
@@ -39,5 +55,6 @@ class Order {
     shippingId: j['shipping'],
     paymentMethod: j['payment'] ?? 'card',
     totalCents: j['total'],
+    uploaded: j['up'] ?? false,
   );
 }

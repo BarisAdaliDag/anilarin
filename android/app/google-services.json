@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "201997627437",
+    "project_id": "anilarin-b29ac",
+    "storage_bucket": "anilarin-b29ac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:201997627437:android:4e3effbdb81c60f3a6c8a4",
+        "android_client_info": {
+          "package_name": "com.barisadalidag.anilarin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDoXgmCMJFIfItA3vIwRSOd3e_1DPeFTnM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

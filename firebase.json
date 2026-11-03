@@ -1,0 +1,50 @@
+{
+  "firestore": {
+    "rules": "firebase/firestore.rules"
+  },
+  "storage": {
+    "rules": "firebase/storage.rules"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "storage": {
+      "port": 9199
+    },
+    "ui": {
+      "enabled": true
+    }
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "anilarin-b29ac",
+          "appId": "1:201997627437:android:4e3effbdb81c60f3a6c8a4",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "anilarin-b29ac",
+          "appId": "1:201997627437:ios:4ab73692d7a08ef6a6c8a4",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "anilarin-b29ac",
+          "configurations": {
+            "android": "1:201997627437:android:4e3effbdb81c60f3a6c8a4",
+            "ios": "1:201997627437:ios:4ab73692d7a08ef6a6c8a4"
+          }
+        }
+      }
+    }
+  }
+}
