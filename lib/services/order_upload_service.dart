@@ -57,30 +57,72 @@ class OrderUploadService {
   /// Baskı için uzun kenar sınırı (A4 tam sayfa 300 DPI ≈ 3508 px).
   static const maxLongSide = 4000;
 
+  /// 42 × 30 cm baskı 300 DPI'da 4961 px ister; yalnız bu ürünün fotoğrafları daha büyük yüklenir.
+  static const largePrintLongSide = 5000;
+
+  static int maxLongSideFor(String productCode) => productCode == 'PRN-R-XL' ? largePrintLongSide : maxLongSide;
+
   /// Orijinali büyütmeden, oranı koruyarak hedef piksel boyutu.
-  static (int, int) targetSize(int width, int height) {
+  static (int, int) targetSize(int width, int height, {int maxLong = maxLongSide}) {
     final long = math.max(width, height);
-    if (long <= maxLongSide || long == 0) return (width, height);
-    final k = maxLongSide / long;
+    if (long <= maxLong || long == 0) return (width, height);
+    final k = maxLong / long;
     return (math.max(1, (width * k).round()), math.max(1, (height * k).round()));
   }
 
   /// photo_manager kimlikleri `/` içerebilir; dosya adı için güvenli hale getirir.
   static String fileNameOf(String photoId) => photoId.replaceAll(RegExp(r'[^A-Za-z0-9_-]'), '_');
 
-  Future<void> upload(Order order, List<OrderDesign> designs, {void Function(int done, int total)? onProgress}) async {
+  /// Matbaada okunacak özet: kimden, ne zaman, hangi ürünler, hangi dosyalar.
+  static Map<String, dynamic> manifest(Order order, List<OrderDesign> designs, Map<String, dynamic> customer) => {
+    'siparisNo': order.reference,
+    'tarih': DateTime.fromMillisecondsSinceEpoch(order.createdAtMs).toIso8601String(),
+    'musteri': customer,
+    'teslimat': order.address.lines,
+    'kargo': order.shippingId,
+    'toplamKurus': order.totalCents,
+    'urunler': [
+      for (final d in designs)
+        {
+          'ad': d.item.title,
+          'urunKodu': d.item.productCode,
+          'adet': d.item.quantity,
+          'sayfa': d.item.pages,
+          'tasarimDosyasi': '${d.item.bookId}.json',
+          'fotografSayisi': d.photos.length,
+        },
+    ],
+  };
+
+  Future<void> upload(
+    Order order,
+    List<OrderDesign> designs, {
+    Map<String, dynamic> customer = const {},
+    void Function(int done, int total)? onProgress,
+  }) async {
     final uid = await backend.signIn();
     final root = 'orders/$uid/${order.reference}';
     final photos = <String, BookPhoto>{
       for (final d in designs)
         for (final p in d.photos) fileNameOf(p.id): p,
     };
-    final total = photos.length + designs.length;
+    final maxLong = <String, int>{};
+    for (final d in designs) {
+      for (final p in d.photos) {
+        final k = fileNameOf(p.id);
+        maxLong[k] = math.max(maxLong[k] ?? 0, maxLongSideFor(d.item.productCode));
+      }
+    }
+    final total = photos.length + designs.length + 1; // +1: siparis.json
+    final summary = manifest(order, designs, customer);
 
     await backend.saveOrder(order.reference, {
       'uid': uid,
       'status': 'uploading',
-      'order': order.toJson(),
+      'order': order.summaryJson(),
+      'customer': customer,
+      'createdAtIso': summary['tarih'],
+      'products': summary['urunler'],
       'fileCount': total,
       'photos': {for (final e in photos.entries) e.key: e.value.id},
     });
@@ -93,7 +135,7 @@ class OrderUploadService {
     Future<void> worker() async {
       while (queue.isNotEmpty) {
         final e = queue.removeLast();
-        final (w, h) = targetSize(e.value.width, e.value.height);
+        final (w, h) = targetSize(e.value.width, e.value.height, maxLong: maxLong[e.key]!);
         final bytes = await encode(e.value, w, h);
         await backend.putFile('$root/photos/${e.key}.jpg', bytes, 'image/jpeg');
         await backend.markPhotoUploaded(order.reference, e.key, bytes.length);
@@ -102,6 +144,13 @@ class OrderUploadService {
     }
 
     await Future.wait([for (var i = 0; i < math.min(parallel, math.max(1, queue.length)); i++) worker()]);
+
+    await backend.putFile(
+      '$root/siparis.json',
+      Uint8List.fromList(utf8.encode(const JsonEncoder.withIndent('  ').convert(summary))),
+      'application/json',
+    );
+    onProgress?.call(++count, total);
 
     // Tasarımlar en son: matbaa "ready" görmeden eksik sipariş indirmez.
     for (final d in designs) {

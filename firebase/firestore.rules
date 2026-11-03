@@ -1,19 +1,36 @@
 rules_version = '2';
 
-// Sipariş kayıtları. Kullanıcı yalnız kendi siparişini "uploading" → "ready" arasında yazabilir;
-// "downloaded", "printed", "deleted" durumlarını yalnız matbaa (admin claim) verir.
+// Roller users/{uid}.role alanındadır ve yalnız Firebase konsolundan verilir:
+//   (yok)  → müşteri: yalnız kendi profilini ve siparişini görür/yazar
+//   editor → tüm siparişleri görür, indirir, durumunu günceller
+//   admin  → editor + sipariş ve dosya silme
+// Kullanıcı kendi role alanını oluşturamaz ve değiştiremez.
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+    function role() {
+      let u = /databases/$(database)/documents/users/$(request.auth.uid);
+      return signedIn() && exists(u) ? get(u).data.get('role', '') : '';
+    }
+    function isStaff() { return role() in ['editor', 'admin']; }
+    function isAdmin() { return role() == 'admin'; }
     function userStatus(s) { return s in ['uploading', 'ready']; }
+    function roleUntouched() {
+      return request.resource.data.get('role', null) == (resource == null ? null : resource.data.get('role', null));
+    }
+
+    match /users/{uid} {
+      allow read: if isStaff() || (signedIn() && request.auth.uid == uid);
+      allow create, update: if signedIn() && request.auth.uid == uid && roleUntouched();
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
 
     match /orders/{ref} {
-      allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow read: if isStaff() || (signedIn() && resource.data.uid == request.auth.uid);
       allow create: if signedIn()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.status == 'uploading';
-      allow update: if isAdmin() || (signedIn()
+      allow update: if isStaff() || (signedIn()
         && resource.data.uid == request.auth.uid
         && request.resource.data.uid == resource.data.uid
         && userStatus(resource.data.status)

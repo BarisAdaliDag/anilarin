@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../constants/strings_tr.dart';
 import '../../view_model/app_view_model.dart';
+import '../../services/firebase_order_backend.dart';
 import '../basket/basket_screen.dart';
+import '../order/orders_screen.dart';
 import 'account_tab.dart';
 import 'designs_tab.dart';
 import 'memories_tab.dart';
@@ -33,31 +35,49 @@ class HomeScreen extends StatelessWidget {
         index: app.tabIndex,
         children: const [DesignsTab(), _RemindersTab(), MemoriesTab(), BasketScreen(embedded: true), AccountTab()],
       ),
-      bottomNavigationBar: NavigationBar(
-        height: 72,
-        selectedIndex: app.tabIndex,
-        onDestinationSelected: app.setTab,
-        destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book),
-            label: S.tabDesigns,
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.notifications_none),
-            selectedIcon: Icon(Icons.notifications),
-            label: S.tabReminders,
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.photo_library_outlined),
-            selectedIcon: Icon(Icons.photo_library),
-            label: S.tabMemories,
-          ),
-          NavigationDestination(icon: basketIcon(false), selectedIcon: basketIcon(true), label: S.tabBasket),
-          const NavigationDestination(
-            icon: Icon(Icons.account_circle_outlined),
-            selectedIcon: Icon(Icons.account_circle),
-            label: S.tabAccount,
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (FirebaseSetup.available && app.orders.any((o) => !o.uploaded))
+            Material(
+              color: context.cardColor,
+              child: ListTile(
+                dense: true,
+                leading: const Icon(Icons.cloud_upload_outlined, color: AppColors.warning),
+                title: const Text(S.pendingUploadBanner),
+                trailing: TextButton(
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const OrdersScreen())),
+                  child: const Text(S.complete),
+                ),
+              ),
+            ),
+          NavigationBar(
+            height: 72,
+            selectedIndex: app.tabIndex,
+            onDestinationSelected: app.setTab,
+            destinations: [
+              const NavigationDestination(
+                icon: Icon(Icons.menu_book_outlined),
+                selectedIcon: Icon(Icons.menu_book),
+                label: S.tabDesigns,
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.notifications_none),
+                selectedIcon: Icon(Icons.notifications),
+                label: S.tabReminders,
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.photo_library_outlined),
+                selectedIcon: Icon(Icons.photo_library),
+                label: S.tabMemories,
+              ),
+              NavigationDestination(icon: basketIcon(false), selectedIcon: basketIcon(true), label: S.tabBasket),
+              const NavigationDestination(
+                icon: Icon(Icons.account_circle_outlined),
+                selectedIcon: Icon(Icons.account_circle),
+                label: S.tabAccount,
+              ),
+            ],
           ),
         ],
       ),

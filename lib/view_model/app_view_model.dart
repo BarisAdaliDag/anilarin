@@ -30,8 +30,10 @@ class AppViewModel extends ChangeNotifier {
   Coupon? coupon;
   Address? address;
   List<Order> orders = [];
+  bool authSkipped = false;
 
   Future<void> load() async {
+    authSkipped = await designs.loadAuthSkipped();
     catalog = await _catalogRepository.load();
     books = await designs.loadBooks();
     printSets = await designs.loadPrintSets();
@@ -44,6 +46,12 @@ class AppViewModel extends ChangeNotifier {
     }
     loading = false;
     notifyListeners();
+  }
+
+  Future<void> skipAuth() async {
+    authSkipped = true;
+    notifyListeners();
+    await designs.saveAuthSkipped();
   }
 
   void setTab(int i) {
@@ -253,13 +261,14 @@ class AppViewModel extends ChangeNotifier {
   Future<Order> placeOrder(ShippingOption shipping, String paymentMethod) async {
     final now = DateTime.now();
     final order = Order(
-      reference: 'AN-${now.millisecondsSinceEpoch.toRadixString(36).toUpperCase()}',
+      reference: Order.newReference(now),
       createdAtMs: now.millisecondsSinceEpoch,
       items: [...basket],
       address: address!,
       shippingId: shipping.id,
       paymentMethod: paymentMethod,
       totalCents: basketTotal + shipping.priceCents,
+      designs: {for (final item in basket) item.bookId: ?_designJson(item)},
     );
     orders.insert(0, order);
     basket.clear();
@@ -271,19 +280,21 @@ class AppViewModel extends ChangeNotifier {
     return order;
   }
 
-  /// Siparişteki ürünlerin tasarımları; biri silinmişse null.
+  Map<String, dynamic>? _designJson(BasketItem item) => item.isPrints
+      ? printSets.where((s) => s.id == item.bookId).firstOrNull?.toJson()
+      : books.where((b) => b.id == item.bookId).firstOrNull?.toJson();
+
+  /// Siparişteki ürünlerin tasarımları: önce sipariş anındaki kopya, yoksa güncel tasarım; bulunamazsa null.
   List<OrderDesign>? designsOf(Order order) {
     final out = <OrderDesign>[];
     for (final item in order.items) {
-      if (item.isPrints) {
-        final set = printSets.where((s) => s.id == item.bookId).firstOrNull;
-        if (set == null) return null;
-        out.add(OrderDesign.prints(item, set));
-      } else {
-        final book = books.where((b) => b.id == item.bookId).firstOrNull;
-        if (book == null) return null;
-        out.add(OrderDesign.book(item, book));
-      }
+      final json = order.designs[item.bookId] ?? _designJson(item);
+      if (json == null) return null;
+      out.add(
+        item.isPrints
+            ? OrderDesign.prints(item, PrintSet.fromJson(json))
+            : OrderDesign.book(item, PhotoBook.fromJson(json)),
+      );
     }
     return out;
   }

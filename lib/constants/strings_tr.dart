@@ -326,6 +326,60 @@ class S {
   static const serverNotConfigured = 'Sunucu bağlantısı henüz yapılandırılmadı; sipariş yalnızca cihazda kaydedildi.';
   static const continueLabel = 'Devam';
   static const designMissing = 'Siparişteki bir tasarım bulunamadı (silinmiş olabilir).';
+
+  // Hesap
+  static const signIn = 'Giriş Yap';
+  static const register = 'Kayıt Ol';
+  static const signInTitle = 'Tekrar hoş geldin';
+  static const registerTitle = 'Hesap oluştur';
+  static const authBody = 'Siparişlerini takip etmek ve tasarımlarını baskıya göndermek için hesabını oluştur.';
+  static const checkoutAuthBody = 'Siparişini verebilmek için giriş yap ya da hesap oluştur.';
+  static const email = 'E-posta';
+  static const password = 'Şifre';
+  static const passwordHint = 'En az 6 karakter';
+  static const skipForNow = 'Şimdilik Geç';
+  static const haveAccount = 'Hesabın var mı? Giriş yap';
+  static const noAccount = 'Hesabın yok mu? Kayıt ol';
+  static const forgotPassword = 'Şifremi unuttum';
+  static const resetSent = 'Şifre sıfırlama bağlantısı e-postana gönderildi.';
+  static const kvkkAccept = 'KVKK Aydınlatma Metni\'ni okudum, kişisel verilerimin işlenmesini kabul ediyorum.';
+  static const kvkkTitle = 'KVKK Aydınlatma Metni';
+  static const kvkkText =
+      'Bu metin yer tutucudur; yayından önce hukuki olarak hazırlanmış aydınlatma metniyle değiştirilecektir.\n\n'
+      'Ad, soyad, e-posta, telefon, teslimat adresi ve sipariş için yüklediğin fotoğraflar; siparişini basmak, '
+      'kargolamak ve seninle iletişim kurmak amacıyla işlenir. Sipariş dosyaları baskıdan sonra en geç 30 gün '
+      'içinde sunucudan silinir. Hesabını uygulama içinden istediğin zaman silebilirsin.';
+  static const kvkkRequired = 'Devam etmek için aydınlatma metnini onaylamalısın.';
+  static const profile = 'Profilim';
+  static const myOrders = 'Siparişlerim';
+  static const signOut = 'Çıkış Yap';
+  static const deleteAccount = 'Hesabı Sil';
+  static const deleteAccountBody =
+      'Hesabın ve profil bilgilerin kalıcı olarak silinir. Onaylamak için şifreni gir.';
+  static const emailNotVerified = 'E-posta adresin henüz doğrulanmadı.';
+  static const resendVerification = 'Doğrulama e-postasını tekrar gönder';
+  static const verificationSent = 'Doğrulama e-postası gönderildi.';
+  static const iVerified = 'Doğruladım';
+  static const saved = 'Kaydedildi.';
+  static const signInOrRegister = 'Giriş Yap / Kayıt Ol';
+  static const accountGuestBody = 'Siparişlerin hesabına kaydedilsin diye giriş yap.';
+  static const authEmailInUse = 'Bu e-posta adresiyle zaten bir hesap var.';
+  static const authInvalidEmail = 'E-posta adresi geçersiz.';
+  static const authWeakPassword = 'Şifre en az 6 karakter olmalı.';
+  static const authWrongCredentials = 'E-posta ya da şifre hatalı.';
+  static const authTooMany = 'Çok fazla deneme yapıldı. Biraz sonra tekrar dene.';
+  static const authNetwork = 'İnternet bağlantısı yok.';
+  static const authGeneric = 'Bir sorun oluştu';
+  static const ordersEmpty = 'Henüz siparişin yok.';
+  static const statusUploaded = 'Matbaaya gönderildi';
+  static const statusPending = 'Gönderim bekliyor';
+  static const completeUpload = 'Gönderimi Tamamla';
+  static const pendingUploadBanner = 'Matbaaya gönderilmeyi bekleyen siparişin var.';
+  static const complete = 'Tamamla';
+  static const pdfDebugButton = 'Baskı PDF\'ini Telefonda Üret (geliştirici)';
+  static const pdfPreparing = 'Baskı PDF\'i hazırlanıyor…';
+  static const pdfReady = 'Baskı PDF\'leri';
+  static const pdfFailed = 'PDF üretilemedi';
   static const basketBody = 'İndirimlerden yararlanmak ve kargoda tasarruf etmek için sepetine ürün ekle.';
   static String itemsN(int n) => 'Ürünler ($n)';
   static String copiesN(int n) => '$n kopya';

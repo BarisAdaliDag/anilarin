@@ -40,7 +40,8 @@ firebase deploy --only firestore:rules,storage
 Kurallar `firebase/firestore.rules` ve `firebase/storage.rules` dosyalarında:
 - Kullanıcı yalnız kendi `orders/{uid}/...` klasörüne, dosya başına 25 MB'a kadar JPEG/JSON yazar.
 - Sipariş durumu kullanıcı tarafında yalnız `uploading` → `ready`; `downloaded`, `printed`, `deleted` matbaanındır.
-- Silme ve diğer kullanıcıların siparişlerini okuma yalnız `admin` claim'li matbaa hesabında.
+- Kullanıcı profili `users/{uid}`: yalnız sahibi yazar (`role` hariç); sahibi ve yetkililer okur.
+- Diğer kullanıcıların siparişlerini okuma `editor`/`admin`, silme yalnız `admin` rolünde (7. madde).
 
 ## 6. 30 gün sonra otomatik silme
 ```bash
@@ -48,19 +49,40 @@ gcloud storage buckets update gs://BUCKET_ADI --lifecycle-file=firebase/storage-
 ```
 `BUCKET_ADI`: Storage sayfasında görünen ad (ör. `proje-id.firebasestorage.app`).
 
-## 7. Matbaa hesabı (admin claim)
-Matbaa kullanıcısını Authentication'da oluşturduktan sonra bir kez çalıştır
-(Firebase Admin SDK, hizmet hesabı anahtarıyla):
-```js
-// node set-admin.js <uid>
-const admin = require('firebase-admin');
-admin.initializeApp({ credential: admin.credential.applicationDefault() });
-admin.auth().setCustomUserClaims(process.argv[2], { admin: true }).then(() => process.exit(0));
+## 7. Roller (matbaa yetkisi)
+Rol, kullanıcının Firestore kaydındaki `role` alanıdır ve **yalnız Firebase konsolundan** verilir;
+kullanıcı kendi rolünü oluşturamaz ya da değiştiremez (kurallar engeller).
+
+| `role` | Yetki |
+|---|---|
+| (yok) | Müşteri: yalnız kendi profili ve siparişleri |
+| `editor` | Tüm siparişleri görür, indirir, durumunu günceller |
+| `admin` | `editor` + buluttan silme |
+
+Rol vermek: Firestore → `users` → kullanıcının UID'li dokümanı (UID: Authentication → Users) →
+alan ekle `role` = `admin` ya da `editor`. Doküman yoksa aynı UID ile oluştur. Geri almak için alanı sil.
+
+## 8. Matbaa Mac uygulaması
+Proje klasöründen tek komut (derler ve açar):
+```bash
+./tool/matbaa.sh
 ```
+Geliştirirken canlı yeniden yükleme için: `flutter run -d macos -t lib/main_matbaa.dart`.
+`-t lib/main_matbaa.dart` verilmezse telefon uygulaması açılır.
+İmza: takım L6R7P8MDW2, bu Mac Apple hesabında geliştirme cihazı olarak kayıtlı (Keychain için gerekli).
+- Yetkili hesapla giriş yapılır; sağ üstten **kayıt klasörü** seçilir (ör. harici SSD). Seçim hatırlanır.
+- "İndir ve PDF Üret": dosyalar `<klasör>/2026-11-03_AN-20261103-K7Q2_Ad-Soyad/` altına iner;
+  baskı PDF'leri `baski/<ürün adı>/` altına üretilir (`kapak.pdf`, `ic-sayfalar.pdf`, `baskilar.pdf`)
+  ve ölçüler `baski/baski-bilgisi.txt` dosyasına yazılır.
+- PDF sayfaları her kenarda 3 mm taşma payı içerir; 300 DPI.
+  Kitap ölçüleri katalogdaki `dimensionsCm` ve tasarım oranından türetilir — matbaa ölçüleriyle karşılaştırılmalı.
+- Durumlar: Yeni → İndirildi → Basıldı. "Buluttan Sil" Storage dosyalarını siler, yerel arşiv kalır.
 
 ## Sipariş düzeni
-- Firestore `orders/{ref}`: `uid`, `status`, `order` (adres, ürünler, tutar), `fileCount`,
-  `uploadedIds`, `totalBytes`, `photos` (dosya adı → galeri kimliği), `updatedAt`.
+- Sipariş numarası: `AN-20261103-K7Q2` (tarih + 4 harf).
+- Firestore `orders/{ref}`: `uid`, `status`, `customer` (ad, soyad, e-posta, telefon), `createdAtIso`,
+  `products`, `order` (adres, ürünler, tutar), `fileCount`, `uploadedIds`, `totalBytes`, `photos`, `updatedAt`.
+- Storage `orders/{uid}/{ref}/siparis.json`: okunur özet (kimden, ne zaman, ürünler, teslimat).
 - Storage `orders/{uid}/{ref}/photos/{dosya}.jpg`: uzun kenar en fazla 4000 px, JPEG kalite 90.
 - Storage `orders/{uid}/{ref}/{tasarımId}.json`: tasarım + `qty` + `photoFiles`. En son yüklenir;
   ardından durum `ready` olur.

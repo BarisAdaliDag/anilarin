@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 
+import '../../print/photo_source.dart';
 import '../../repositories/photo_repository.dart';
 
 /// Galerideki bir fotoğrafı kimliğinden gösterir.
@@ -20,16 +21,22 @@ class _PhotoImageState extends State<PhotoImage> {
   AssetEntity? _entity;
   bool _missing = false;
 
+  bool _started = false;
+
   @override
-  void initState() {
-    super.initState();
-    _resolve();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Baskı çiziminde fotoğraf kapsamdan gelir; galeriye hiç sorulmaz.
+    if (!_started && PhotoSourceScope.maybeOf(context) == null) {
+      _started = true;
+      _resolve();
+    }
   }
 
   @override
   void didUpdateWidget(PhotoImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.photoId != widget.photoId) _resolve();
+    if (oldWidget.photoId != widget.photoId && PhotoSourceScope.maybeOf(context) == null) _resolve();
   }
 
   void _resolve() {
@@ -55,6 +62,16 @@ class _PhotoImageState extends State<PhotoImage> {
 
   @override
   Widget build(BuildContext context) {
+    final scope = PhotoSourceScope.maybeOf(context);
+    final printed = scope?.images[widget.photoId];
+    if (printed != null) {
+      return LayoutBuilder(
+        builder: (context, c) {
+          scope!.onDpi?.call(widget.photoId, scope.dpiOf(printed, c.biggest));
+          return RawImage(image: printed, fit: widget.fit, filterQuality: FilterQuality.high);
+        },
+      );
+    }
     final e = _entity;
     if (e == null) {
       return ColoredBox(

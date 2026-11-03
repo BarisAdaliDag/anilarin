@@ -28,10 +28,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -56,7 +53,6 @@ class DefaultFirebaseOptions {
     projectId: 'anilarin-b29ac',
     storageBucket: 'anilarin-b29ac.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAdEZ77B2WfVOAiCuNuDf29RJZWW2qN8JU',
     appId: '1:201997627437:ios:4ab73692d7a08ef6a6c8a4',
@@ -64,5 +60,13 @@ class DefaultFirebaseOptions {
     projectId: 'anilarin-b29ac',
     storageBucket: 'anilarin-b29ac.firebasestorage.app',
     iosBundleId: 'com.barisadalidag.anilarin',
+  );
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAdEZ77B2WfVOAiCuNuDf29RJZWW2qN8JU',
+    appId: '1:201997627437:ios:8923a538df5dd8a1a6c8a4',
+    messagingSenderId: '201997627437',
+    projectId: 'anilarin-b29ac',
+    storageBucket: 'anilarin-b29ac.firebasestorage.app',
+    iosBundleId: 'com.barisadalidag.anilarin.matbaa',
   );
 }

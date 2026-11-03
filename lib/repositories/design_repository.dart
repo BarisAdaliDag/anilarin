@@ -137,6 +137,11 @@ class DesignRepository {
     ).writeAsString(jsonEncode(orders.map((e) => e.toJson()).toList()));
   }
 
+  /// İlk açılıştaki giriş ekranı "Şimdilik Geç" ile atlandı mı?
+  Future<bool> loadAuthSkipped() async => File('${(await _dir('checkout')).path}/auth_skipped').exists();
+
+  Future<void> saveAuthSkipped() async => File('${(await _dir('checkout')).path}/auth_skipped').writeAsString('1');
+
   Future<void> saveBasket(List<BasketItem> items) async {
     final d = await _dir('basket');
     await File('${d.path}/basket.json').writeAsString(jsonEncode(items.map((e) => e.toJson()).toList()));

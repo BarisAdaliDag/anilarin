@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,6 +6,7 @@ import '../../config/theme.dart';
 import '../../constants/strings_tr.dart';
 import '../../models/basket_item.dart';
 import '../../models/catalog.dart';
+import '../../print/debug_print_export.dart';
 import '../../view_model/app_view_model.dart';
 import '../../view_model/editor_view_model.dart';
 import '../checkout/checkout_screens.dart';
@@ -121,6 +123,14 @@ class _BasketScreenState extends State<BasketScreen> {
             _SummaryRow(label: S.discounts, value: '-${formatPrice(app.basketDiscount)}'),
             const SizedBox(height: 10),
             _SummaryRow(label: S.subtotal, value: formatPrice(app.basketTotal), strong: true),
+          ],
+          if (kDebugMode && items.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: () => exportBasketPdfs(context),
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              label: const Text(S.pdfDebugButton),
+            ),
           ],
         ],
       ),

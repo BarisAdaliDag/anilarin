@@ -5,15 +5,25 @@ import 'package:provider/provider.dart';
 
 import 'config/theme.dart';
 import 'constants/strings_tr.dart';
+import 'services/auth_service.dart';
 import 'services/firebase_order_backend.dart';
 import 'view_model/app_view_model.dart';
+import 'views/auth/auth_screens.dart';
 import 'views/home/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('tr');
   await FirebaseSetup.init();
-  runApp(ChangeNotifierProvider(create: (_) => AppViewModel()..load(), child: const AnilarinApp()));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AppViewModel()..load()),
+        ChangeNotifierProvider(create: (_) => AuthService()),
+      ],
+      child: const AnilarinApp(),
+    ),
+  );
 }
 
 class AnilarinApp extends StatelessWidget {
@@ -30,7 +40,7 @@ class AnilarinApp extends StatelessWidget {
       locale: const Locale('tr'),
       supportedLocales: const [Locale('tr')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      home: const HomeScreen(),
+      home: const AuthGate(child: HomeScreen()),
     );
   }
 }

@@ -7,13 +7,16 @@ import '../../constants/strings_tr.dart';
 import '../../models/address.dart';
 import '../../models/catalog.dart';
 import '../../models/order.dart';
+import '../../services/auth_service.dart';
 import '../../services/firebase_order_backend.dart';
 import '../../services/order_upload_service.dart';
 import '../../view_model/app_view_model.dart';
+import '../auth/auth_screens.dart';
 
 /// Ödeme akışı (Popsa Checkout): Yeni Adres → Kargo Seçenekleri → Ödeme Seçenekleri → Özet → Teşekkürler.
 /// Ödeme sistemi yok: ödeme düğmeleri ödeme alınmış gibi Özet'e, oradan Teşekkürler'e geçer.
-void startCheckout(BuildContext context) {
+Future<void> startCheckout(BuildContext context) async {
+  if (!await ensureSignedIn(context) || !context.mounted) return;
   final app = context.read<AppViewModel>();
   Navigator.of(context).push(
     MaterialPageRoute(builder: (_) => app.address == null ? const AddressScreen() : const ShippingOptionsScreen()),
@@ -572,12 +575,10 @@ class _OrderUploadScreenState extends State<OrderUploadScreen> {
     if (designs == null) return setState(() => _error = S.designMissing);
     setState(() => _error = null);
     try {
-      await OrderUploadService(
-        backend: FirebaseOrderBackend(),
-        encode: encodeGalleryPhoto,
-      ).upload(
+      await OrderUploadService(backend: FirebaseOrderBackend(), encode: encodeGalleryPhoto).upload(
         widget.order,
         designs,
+        customer: _customer(),
         onProgress: (d, t) {
           if (mounted) {
             setState(() {
@@ -592,6 +593,19 @@ class _OrderUploadScreenState extends State<OrderUploadScreen> {
     } catch (_) {
       if (mounted) setState(() => _error = S.uploadFailed);
     }
+  }
+
+  /// Matbaanın siparişi tanıması için: profil varsa ondan, yoksa teslimat adresinden.
+  Map<String, dynamic> _customer() {
+    final auth = context.read<AuthService>();
+    final p = auth.profile;
+    final a = widget.order.address;
+    return {
+      'firstName': p?.firstName ?? a.firstName,
+      'lastName': p?.lastName ?? a.lastName,
+      'email': auth.email ?? '',
+      'phone': p?.phone ?? a.phone,
+    };
   }
 
   void _finish() =>

@@ -1,16 +1,22 @@
 rules_version = '2';
 
-// Sipariş dosyaları: orders/{uid}/{ref}/photos/*.jpg ve orders/{uid}/{ref}/*.json.
-// Kullanıcı yalnız kendi klasörüne, dosya başına 25 MB'a kadar JPEG/JSON yazar; silme yalnız matbaada.
+// Sipariş dosyaları: orders/{uid}/{ref}/photos/*.jpg, orders/{uid}/{ref}/*.json.
+// Kullanıcı yalnız kendi klasörüne, dosya başına 25 MB'a kadar JPEG/JSON yazar.
+// Okuma: sahibi ve editor/admin rolündekiler (Firestore users/{uid}.role). Silme: yalnız admin.
 service firebase.storage {
   match /b/{bucket}/o {
+    function role() {
+      let u = /databases/(default)/documents/users/$(request.auth.uid);
+      return request.auth != null && firestore.exists(u) ? firestore.get(u).data.get('role', '') : '';
+    }
+
     match /orders/{uid}/{ref}/{path=**} {
-      allow read: if request.auth != null && (request.auth.uid == uid || request.auth.token.admin == true);
+      allow read: if request.auth != null && (request.auth.uid == uid || role() in ['editor', 'admin']);
       allow create, update: if request.auth != null
         && request.auth.uid == uid
         && request.resource.size < 25 * 1024 * 1024
         && request.resource.contentType in ['image/jpeg', 'application/json'];
-      allow delete: if request.auth != null && request.auth.token.admin == true;
+      allow delete: if role() == 'admin';
     }
   }
 }

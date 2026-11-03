@@ -72,6 +72,17 @@ void main() {
     expect(OrderUploadService.targetSize(1200, 900), (1200, 900));
   });
 
+  test('42 × 30 baskının fotoğrafları 5000 px, diğerleri 4000 px', () {
+    expect(OrderUploadService.maxLongSideFor('PRN-R-XL'), 5000);
+    expect(OrderUploadService.maxLongSideFor('PRN-R-M'), 4000);
+    expect(OrderUploadService.maxLongSideFor('PBK-13'), 4000);
+    expect(OrderUploadService.targetSize(8000, 6000, maxLong: 5000), (5000, 3750));
+  });
+
+  test('sipariş numarası tarihli ve okunur', () {
+    expect(Order.newReference(DateTime(2026, 11, 3)), matches(RegExp(r'^AN-20261103-[A-Z2-9]{4}$')));
+  });
+
   test('dosya adı Storage yolu için güvenli', () {
     expect(OrderUploadService.fileNameOf('ABC-12/L0/001'), 'ABC-12_L0_001');
   });
@@ -84,22 +95,30 @@ void main() {
       _design('b2', [photos.first]),
     ];
     final progress = <int>[];
-    await OrderUploadService(
-      backend: backend,
-      encode: encode,
-    ).upload(_order(designs.map((d) => d.item).toList()), designs, onProgress: (d, _) => progress.add(d));
+    await OrderUploadService(backend: backend, encode: encode).upload(
+      _order(designs.map((d) => d.item).toList()),
+      designs,
+      customer: const {'email': 'a@b.c'},
+      onProgress: (d, _) => progress.add(d),
+    );
 
     // Ortak fotoğraf bir kez gönderilir.
     expect(encoded, hasLength(3));
     expect(backend.files.keys.where((k) => k.contains('/photos/')), hasLength(3));
     expect(backend.files.keys, contains('orders/u1/AN-TEST/b1.json'));
-    expect(backend.order['fileCount'], 5);
+    expect(backend.order['fileCount'], 6);
     expect(backend.order['uid'], 'u1');
     expect(backend.log.first, 'status:uploading');
     expect(backend.log.last, 'status:ready');
     final jsonIndex = backend.log.indexOf('orders/u1/AN-TEST/b1.json');
     expect(backend.log.lastIndexWhere((l) => l.contains('/photos/')), lessThan(jsonIndex));
-    expect(progress.last, 5);
+    expect(progress.last, 6);
+
+    final manifest = jsonDecode(utf8.decode(backend.files['orders/u1/AN-TEST/siparis.json']!));
+    expect(manifest['musteri'], {'email': 'a@b.c'});
+    expect(manifest['urunler'][0]['tasarimDosyasi'], 'b1.json');
+    expect(backend.order['customer'], {'email': 'a@b.c'});
+    expect(backend.order['order'], isNot(contains('designs')));
 
     final design = jsonDecode(utf8.decode(backend.files['orders/u1/AN-TEST/b1.json']!));
     expect(design['qty'], 2);
