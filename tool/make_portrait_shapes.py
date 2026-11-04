@@ -71,6 +71,14 @@ def shapes_for(t, aspect):
 CEWE_ASPECT = 205 / 270  # CEWE dikey kitap düzenlerinin sayfa oranı
 MIN_SLOT_ASPECT = 0.35  # dikeyde bundan ince fotoğraf alanı olan şablon gizlenir (CEWE'nin en incesi)
 
+# Kullanıcının ayıkladığı, dikeyde gösterilmeyen şablonlar (okul yıllığı: yazılılar ve CEWE düzenleri kalır).
+PORTRAIT_REMOVED = {
+    53, 54, 55, 56, 57, 58,  # üst üste binen
+    6, 10, 15, 21, 29,  # CEWE karşılığı var (76, 77, 78, 85, 88)
+    59, 60, 61, 62, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,  # yazısız küçük (minimal)
+    11, 12, 13, 14, 17, 24, 26, 27, 28,  # dar sütunlu kolajlar
+}
+
 
 def _grid(xs, w, ys, h):
     return [[x, y, w, h] for y in ys for x in xs]
@@ -150,7 +158,7 @@ def main():
         # Şablon seçicide 6–9 fotoğraf ayrı sekmeler: eski "5+" etiketi gerçek sayıya çevrilir.
         if t['photoCount'] > 5:
             t['categories'] = [f"p{t['photoCount']}" if c == 'p5' else c for c in t['categories']]
-        if t['tag'] != 'layout-front' and too_tall(t['shapes']['portrait']):
+        if t['id'] in PORTRAIT_REMOVED or (t['tag'] != 'layout-front' and too_tall(t['shapes']['portrait'])):
             t['hiddenIn'] = ['portrait']
             hidden.append(t['id'])
     data['templates'] += cewe_templates()

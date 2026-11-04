@@ -318,7 +318,8 @@ class S {
   static const orderReference = 'Sipariş Numarası';
   static const backToDesigns = 'Tasarımlarıma Dön';
   static const uploadingOrder = 'Siparişin Gönderiliyor';
-  static const uploadingBody = 'Fotoğrafların baskı kalitesinde matbaaya gönderiliyor. Bitene kadar uygulamayı açık tut; Wi-Fi önerilir.';
+  static const uploadingBody =
+      'Fotoğrafların baskı kalitesinde matbaaya gönderiliyor. Bitene kadar uygulamayı açık tut; Wi-Fi önerilir.';
   static String uploadedN(int done, int total) => '$done / $total dosya';
   static const uploadFailed = 'Gönderim yarıda kaldı. Bağlantını kontrol edip kaldığın yerden devam edebilirsin.';
   static const retryUpload = 'Devam Et';
@@ -354,8 +355,7 @@ class S {
   static const myOrders = 'Siparişlerim';
   static const signOut = 'Çıkış Yap';
   static const deleteAccount = 'Hesabı Sil';
-  static const deleteAccountBody =
-      'Hesabın ve profil bilgilerin kalıcı olarak silinir. Onaylamak için şifreni gir.';
+  static const deleteAccountBody = 'Hesabın ve profil bilgilerin kalıcı olarak silinir. Onaylamak için şifreni gir.';
   static const emailNotVerified = 'E-posta adresin henüz doğrulanmadı.';
   static const resendVerification = 'Doğrulama e-postasını tekrar gönder';
   static const verificationSent = 'Doğrulama e-postası gönderildi.';

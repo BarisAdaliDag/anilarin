@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:anilarin/models/photo_book.dart';
 import 'package:anilarin/services/auto_layout_service.dart';
 import 'package:anilarin/services/palette_service.dart';
+import 'package:anilarin/view_model/editor_view_model.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -92,6 +93,18 @@ void main() {
         expect(page.photos.length, catalog.template(page.templateId).photoSlots('portrait').length);
       }
       // Uzun sütunlu şablonlar dikeyde kapalı, CEWE düzenleri yalnız dikeyde; otomatik yerleşim buna uyar.
+      // Kullanıcının ayıkladıkları (üst üste, CEWE kopyası, yazısız küçük, dar sütunlu) dikeyde yok.
+      for (final id in [6, 10, 11, 15, 21, 29, 53, 55, 59, 74]) {
+        expect(catalog.template(id).availableFor('portrait'), isFalse, reason: 'şablon $id');
+      }
+      for (final id in [3, 5, 9, 22, 39, 41, 52, 63, 89]) {
+        expect(catalog.template(id).availableFor('portrait'), isTrue, reason: 'şablon $id');
+      }
+      // Kaldırılan CEWE kopyalarıyla kurulmuş eski dikey sayfalar karşılığına geçer; liste CEWE ile başlar.
+      book.pages[1].templateId = 6;
+      final vm = EditorViewModel(book: book, catalog: catalog);
+      expect(vm.book.pages[1].templateId, 76);
+      expect(vm.templatesFor(1).first.id, 75);
       for (final id in [4, 7, 8, 16]) {
         expect(catalog.template(id).availableFor('portrait'), isFalse, reason: 'şablon $id');
         expect(catalog.template(id).availableFor('square'), isTrue);

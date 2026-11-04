@@ -34,7 +34,20 @@ class EditorViewModel extends ChangeNotifier {
     required this.catalog,
     this.onSave,
     this.saveDelay = const Duration(milliseconds: 400),
-  }) : _book = book;
+  }) : _book = book {
+    _replaceRemovedPortraitTemplates();
+  }
+
+  /// Dikeyde kaldırılan şablonların CEWE karşılıkları (aynı fotoğraf sayısı ve sırası).
+  static const portraitReplacements = {6: 76, 10: 77, 15: 78, 21: 85, 29: 88};
+
+  /// Dikey kitapta bu şablonlarla kurulmuş eski sayfalar CEWE karşılığına geçer; fotoğraflar yerinde kalır.
+  void _replaceRemovedPortraitTemplates() {
+    if (format != 'portrait') return;
+    for (final page in _book.pages) {
+      if (portraitReplacements[page.templateId] case final id?) page.templateId = id;
+    }
+  }
 
   final Catalog catalog;
   final Future<void> Function(PhotoBook book)? onSave;
@@ -291,7 +304,13 @@ class EditorViewModel extends ChangeNotifier {
     if (_book.pages[pageIndex].isCover) {
       return [for (final id in coverOrder) catalog.template(id)];
     }
-    return catalog.templates.where((t) => !t.isCover && t.availableFor(format)).toList();
+    final list = catalog.templates.where((t) => !t.isCover && t.availableFor(format)).toList();
+    // Dikeyde CEWE düzenleri (75–88) listenin başında; geri kalanların sırası korunur.
+    if (format == 'portrait') {
+      bool cewe(PageTemplate t) => t.id >= 75 && t.id <= 88;
+      return [...list.where(cewe), ...list.where((t) => !cewe(t))];
+    }
+    return list;
   }
 
   // ---- tema / yazı ----
