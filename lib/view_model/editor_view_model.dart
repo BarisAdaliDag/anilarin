@@ -311,7 +311,10 @@ class EditorViewModel extends ChangeNotifier {
     if (format == 'portrait') {
       int group(PageTemplate t) {
         final c = t.categories;
-        final band = t.photoCount > 0 && t.textSlots(format).any((e) => e.role == 'title');
+        // Başlık bandı: sayfanın üstünde tam genişlikte başlık (anı sayfalarındaki ad alanı sayılmaz).
+        final band =
+            t.photoCount > 0 &&
+            t.textSlots(format).any((e) => e.role == 'title' && e.frame.width > 80 && e.frame.top < 8);
         if (c.contains('overlapping')) return 4;
         if (band) return 0;
         if (c.contains('minimal')) return 2;

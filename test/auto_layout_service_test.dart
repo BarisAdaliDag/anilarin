@@ -112,6 +112,9 @@ void main() {
       expect(order.indexOf(88), lessThan(order.indexOf(97)));
       expect(order.indexOf(98), lessThan(order.indexOf(41)));
       expect(order.indexOf(41), lessThan(order.indexOf(95)));
+      // Anı sayfaları yazılılar arasında, başlık bandlıların yanında değil.
+      expect(order.indexOf(99), greaterThan(order.indexOf(98)));
+      expect(order.indexOf(100), greaterThan(order.indexOf(98)));
       expect(order.last, anyOf(53, 54));
       for (var id = 91; id <= 100; id++) {
         expect(catalog.template(id).availableFor('square'), isFalse, reason: 'şablon $id');
