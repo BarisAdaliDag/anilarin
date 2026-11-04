@@ -157,8 +157,8 @@ class PrintPageView extends StatelessWidget {
               Positioned(
                 left: w * 0.045,
                 right: w * 0.045,
-                top: h * (page.captionTop ? 1.5 : 100 - band + 0.5) / 100,
-                height: h * (band - 2) / 100,
+                top: h * (page.captionTop ? 1.5 + captionTopInset(product.aspect) : 100 - band + 0.5) / 100,
+                height: h * (band - 2 - (page.captionTop ? captionTopInset(product.aspect) : 0)) / 100,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: onTextTap == null ? null : () => onTextTap!(-1),
@@ -358,8 +358,13 @@ int captionLines(PrintPage page, double aspect) {
 /// Küçük stil ve kısa metin daha dar şerit demektir.
 double captionBandFor(PrintPage page, double aspect) {
   if (page.isCover || page.caption.isEmpty) return 0;
-  return captionLines(page, aspect) * page.captionStyle.sizeFactor * 100 * 1.25 + 3.5;
+  final band = captionLines(page, aspect) * page.captionStyle.sizeFactor * 100 * 1.25 + 3.5;
+  return band + (page.captionTop ? captionTopInset(aspect) : 0);
 }
+
+/// Dikey (A4) sayfada üstteki yazı kenara yapışmasın: yan kenar boşluğu (%4,5 genişlik) kadar aşağıdan başlar.
+/// Kare ve yatayda 0 (görünüm değişmez).
+double captionTopInset(double aspect) => aspect < 1 ? max(0.0, 4.5 * aspect - 1.5) : 0;
 
 /// Şablon öğelerini sayfaya uygular: kenarlıksız, Popsa'nın dar boşlukları ve yazı şeridi (üstte ya da altta).
 List<TemplateElement> pageLayout(PrintPage page, PageTemplate tpl, String format, double aspect) {

@@ -94,22 +94,30 @@ void main() {
       }
       // Uzun sütunlu şablonlar dikeyde kapalı, CEWE düzenleri yalnız dikeyde; otomatik yerleşim buna uyar.
       // Kullanıcının ayıkladıkları (üst üste, CEWE kopyası, yazısız küçük, dar sütunlu) dikeyde yok.
-      for (final id in [6, 10, 11, 15, 21, 29, 53, 55, 59, 74]) {
+      for (final id in [6, 10, 11, 15, 21, 29, 55, 59, 63, 64, 74]) {
         expect(catalog.template(id).availableFor('portrait'), isFalse, reason: 'şablon $id');
       }
-      for (final id in [3, 5, 9, 22, 39, 41, 52, 63, 89]) {
+      for (final id in [3, 5, 9, 22, 39, 41, 52, 53, 54, 89, 91, 95, 97, 98]) {
         expect(catalog.template(id).availableFor('portrait'), isTrue, reason: 'şablon $id');
       }
       // Kaldırılan CEWE kopyalarıyla kurulmuş eski dikey sayfalar karşılığına geçer; liste CEWE ile başlar.
       book.pages[1].templateId = 6;
       final vm = EditorViewModel(book: book, catalog: catalog);
       expect(vm.book.pages[1].templateId, 76);
-      expect(vm.templatesFor(1).first.id, 75);
+      // Dikeyde liste fotoğraf sayısına göre artar; yalnız yazı sayfaları en sonda.
+      final order = vm.templatesFor(1);
+      final counts = order.map((t) => t.photoCount == 0 ? 99 : t.photoCount).toList();
+      expect(counts, [...counts]..sort());
+      expect(order.first.photoCount, 1);
+      expect(order.last.photoCount, 0);
+      for (var id = 91; id <= 98; id++) {
+        expect(catalog.template(id).availableFor('square'), isFalse, reason: 'şablon $id');
+      }
       for (final id in [4, 7, 8, 16]) {
         expect(catalog.template(id).availableFor('portrait'), isFalse, reason: 'şablon $id');
         expect(catalog.template(id).availableFor('square'), isTrue);
       }
-      for (var id = 75; id <= 90; id++) {
+      for (var id = 75; id <= 98; id++) {
         expect(catalog.template(id).availableFor('portrait'), isTrue, reason: 'şablon $id');
         expect(catalog.template(id).availableFor('square'), isFalse);
         expect(catalog.template(id).availableFor('landscape'), isFalse);

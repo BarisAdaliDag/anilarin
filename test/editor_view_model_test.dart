@@ -188,6 +188,21 @@ void main() {
     expect(cols[1].left - cols[0].right, closeTo(1.8, 0.01));
     expect(cols[2].left - cols[1].right, closeTo(1.8, 0.01));
     final page = PrintPage(id: 'x', tag: 'layout-regular', templateId: 5, photos: [], texts: [], caption: 'Merhaba');
+    // Dikeyde üstteki yazı kenara yapışmaz; şerit büyür, fotoğraflar şeridin altından başlar. Karede değişmez.
+    final topPage = PrintPage(
+      id: 'y',
+      tag: 'layout-regular',
+      templateId: 76,
+      photos: [],
+      texts: [],
+      caption: 'Merhaba',
+      captionTop: true,
+    );
+    expect(captionTopInset(1), 0);
+    expect(captionTopInset(0.7071), greaterThan(1));
+    final topBand = captionBandFor(topPage, 0.7071);
+    final topLaid = pageLayout(topPage, catalog.template(76), 'portrait', 0.7071);
+    expect(topLaid.map((e) => e.frame.top).reduce(min), greaterThanOrEqualTo(topBand));
     final laid = pageLayout(page, tpl, 'square', 1);
     final band = captionBandFor(page, 1);
     final bottom = laid.map((e) => e.frame.bottom).reduce((a, b) => a > b ? a : b);

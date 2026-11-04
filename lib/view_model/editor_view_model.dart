@@ -305,10 +305,25 @@ class EditorViewModel extends ChangeNotifier {
       return [for (final id in coverOrder) catalog.template(id)];
     }
     final list = catalog.templates.where((t) => !t.isCover && t.availableFor(format)).toList();
-    // Dikeyde CEWE düzenleri (75–88) listenin başında; geri kalanların sırası korunur.
+    // Dikeyde (okul yıllığı) fotoğraf sayısına göre: 1, 2, … 9, yalnız yazı sayfaları en sonda. Aynı sayıda önce
+    // düz/kolaj düzenler, sonra başlık bandlılar, yazılılar, minimal ve üst üste olanlar.
     if (format == 'portrait') {
-      bool cewe(PageTemplate t) => t.id >= 75 && t.id <= 88;
-      return [...list.where(cewe), ...list.where((t) => !cewe(t))];
+      int count(PageTemplate t) => t.photoCount == 0 ? 99 : t.photoCount;
+      int kind(PageTemplate t) {
+        final c = t.categories;
+        if (c.contains('overlapping')) return 4;
+        if (c.contains('minimal')) return 3;
+        if (t.textSlots(format).any((e) => e.role == 'title') && t.photoCount > 0) return 1;
+        if (c.contains('text')) return 2;
+        return 0;
+      }
+
+      list.sort((a, b) {
+        final byCount = count(a).compareTo(count(b));
+        if (byCount != 0) return byCount;
+        final byKind = kind(a).compareTo(kind(b));
+        return byKind != 0 ? byKind : a.id.compareTo(b.id);
+      });
     }
     return list;
   }

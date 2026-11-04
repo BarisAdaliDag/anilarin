@@ -69,13 +69,14 @@ def shapes_for(t, aspect):
 
 
 CEWE_ASPECT = 205 / 270  # CEWE dikey kitap düzenlerinin sayfa oranı
+BAND = [5.4, 4.1, 89.3, 9]  # başlık bandı
 MIN_SLOT_ASPECT = 0.35  # dikeyde bundan ince fotoğraf alanı olan şablon gizlenir (CEWE'nin en incesi)
 
 # Kullanıcının ayıkladığı, dikeyde gösterilmeyen şablonlar (okul yıllığı: yazılılar ve CEWE düzenleri kalır).
 PORTRAIT_REMOVED = {
-    53, 54, 55, 56, 57, 58,  # üst üste binen
+    55, 56, 57, 58,  # üst üste binen (yazılı olanlar 53/54 kalır)
     6, 10, 15, 21, 29,  # CEWE karşılığı var (76, 77, 78, 85, 88)
-    59, 60, 61, 62, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,  # yazısız küçük (minimal)
+    59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74,  # küçük minimal (yerine 97/98)
     11, 12, 13, 14, 17, 24, 26, 27, 28,  # dar sütunlu kolajlar
 }
 
@@ -85,7 +86,7 @@ def _grid(xs, w, ys, h):
 
 
 # CEWE'nin dikey kitap düzenlerinden en yaygınları (editördeki SVG önizlemelerinden, sayfa yüzdesi [x, y, w, h]).
-# (id, kategoriler, fotoğraf çerçeveleri, yazı çerçevesi)
+# (id, kategoriler, fotoğraf çerçeveleri, yazı alanları [(çerçeve, rol, hiza)] ya da tek altyazı çerçevesi)
 CEWE = [
     (75, ['p2'], [[5.4, 4.1, 89.3, 28.7], [5.4, 35.7, 89.3, 60.3]], None),
     (76, ['p2'], [[5.4, 4.1, 89.3, 44.4], [5.4, 51.5, 89.3, 44.4]], None),
@@ -108,6 +109,17 @@ CEWE = [
     # Yazılı: büyük fotoğraf + altta tam genişlikte yazı; yan yana iki fotoğraf + altta yazı.
     (89, ['text', 'p1'], [[5.4, 4.1, 89.3, 66]], [5.4, 74, 89.3, 21.9]),
     (90, ['text', 'p2'], [[5.3, 4.1, 42.7, 60], [51.9, 4.1, 42.7, 60]], [5.4, 68, 89.3, 27.9]),
+    # Okul yıllığı: üstte başlık bandı + fotoğraflar.
+    (91, ['text', 'p1'], [[5.4, 15.5, 89.3, 80.5]], [(BAND, 'title', 'center')]),
+    (92, ['text', 'p2'], _grid([5.4], 89.3, [15.5, 57.4], 38.6), [(BAND, 'title', 'center')]),
+    (93, ['text', 'p4'], _grid([5.3, 51.9], 42.7, [15.5, 57.4], 38.6), [(BAND, 'title', 'center')]),
+    (94, ['text', 'collage', 'p6'], _grid([5.3, 51.9], 42.7, [15.5, 42.6, 69.7], 25.6), [(BAND, 'title', 'center')]),
+    # Fotoğrafsız iki yazı alanı: sağlı sollu, altlı üstlü.
+    (95, ['text', 'p0'], [], [([5.4, 4.1, 42.7, 91.9], 'caption', 'left'), ([51.9, 4.1, 42.7, 91.9], 'caption', 'left')]),
+    (96, ['text', 'p0'], [], [([5.4, 4.1, 89.3, 44.4], 'caption', 'left'), ([5.4, 51.5, 89.3, 44.4], 'caption', 'left')]),
+    # Minimal: geniş kenarlı ikili ve dörtlü.
+    (97, ['minimal', 'p2'], [[16, 14, 68, 33], [16, 53, 68, 33]], []),
+    (98, ['minimal', 'p4'], _grid([16, 51], 33, [22, 52], 26), []),
 ]
 
 
@@ -115,13 +127,14 @@ def cewe_templates():
     out = []
     for tid, cats, photos, text in CEWE:
         elements = [{'type': 'photo', 'frame': f} for f in photos]
-        if text:
-            elements.append({'type': 'text', 'role': 'caption', 'frame': text, 'align': 'left'})
+        texts = [(text, 'caption', 'left')] if text and not isinstance(text[0], tuple) else (text or [])
+        for frame, role, align in texts:
+            elements.append({'type': 'text', 'role': role, 'frame': frame, 'align': align})
         out.append({
             'id': tid,
             'tag': 'layout-regular',
             'photoCount': len(photos),
-            'automaticUse': text is None,
+            'automaticUse': text is None and 'minimal' not in cats,
             'categories': cats if text or any(c.startswith('p') for c in cats) else cats + [f'p{len(photos)}'],
             'shapes': {'portrait': derive(elements, PORTRAIT_ASPECT / CEWE_ASPECT)},
         })
