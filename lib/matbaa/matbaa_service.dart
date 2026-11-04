@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,6 +16,44 @@ import '../models/print_set.dart';
 import '../print/print_renderer.dart';
 import '../print/print_spec.dart';
 import 'work_order.dart';
+
+/// Okul yıllığı sınıf grubu (Firestore `groups/{kod}`). Öğrenciler müşteri uygulamasında bu kodla girer.
+class MatbaaGroup {
+  final String code;
+  final String name;
+  final int createdAtMs;
+  final String createdByEmail;
+
+  const MatbaaGroup({required this.code, required this.name, required this.createdAtMs, this.createdByEmail = ''});
+
+  factory MatbaaGroup.fromDoc(String code, Map<String, dynamic> j) => MatbaaGroup(
+    code: code,
+    name: j['name'] ?? '',
+    createdAtMs: (j['createdAtMs'] as num?)?.toInt() ?? 0,
+    createdByEmail: j['createdByEmail'] ?? '',
+  );
+
+  DateTime get createdAt => DateTime.fromMillisecondsSinceEpoch(createdAtMs);
+
+  /// Ekranda okunaklı biçim: `K7M-4QX`.
+  String get display => formatGroupCode(code);
+}
+
+/// Grup kodu alfabesi: karışan karakterler (0/O, 1/I/L) yok.
+const groupCodeAlphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const groupCodeLength = 6;
+
+/// Rastgele grup kodu (tiresiz, büyük harf).
+String newGroupCode([Random? random]) {
+  final r = random ?? Random.secure();
+  return String.fromCharCodes([
+    for (var i = 0; i < groupCodeLength; i++) groupCodeAlphabet.codeUnitAt(r.nextInt(groupCodeAlphabet.length)),
+  ]);
+}
+
+/// `K7M4QX` → `K7M-4QX`.
+String formatGroupCode(String code) =>
+    code.length == groupCodeLength ? '${code.substring(0, 3)}-${code.substring(3)}' : code;
 
 /// Matbaanın gördüğü sipariş (Firestore `orders/{ref}`).
 class ShopOrder {
@@ -90,7 +129,35 @@ class ShopOrder {
 class MatbaaService {
   final _auth = FirebaseAuth.instance;
   final _orders = FirebaseFirestore.instance.collection('orders');
+  final _groups = FirebaseFirestore.instance.collection('groups');
   final _storage = FirebaseStorage.instance;
+
+  /// Yeni sınıf grubu: benzersiz kod üretilir (aynı kod varsa yeniden), `groups/{kod}` yazılır.
+  Future<MatbaaGroup> createGroup(String name) async {
+    final data = {
+      'name': name.trim(),
+      'createdAtMs': DateTime.now().millisecondsSinceEpoch,
+      'createdByEmail': _auth.currentUser?.email ?? '',
+    };
+    for (var attempt = 0; attempt < 5; attempt++) {
+      final code = newGroupCode();
+      final ref = _groups.doc(code);
+      final created = await FirebaseFirestore.instance.runTransaction((tx) async {
+        if ((await tx.get(ref)).exists) return false;
+        tx.set(ref, data);
+        return true;
+      });
+      if (created) return MatbaaGroup.fromDoc(code, data);
+    }
+    throw StateError('Benzersiz grup kodu üretilemedi, tekrar dene.');
+  }
+
+  /// Gruplar, en yenisi üstte.
+  Stream<List<MatbaaGroup>> groups() => _groups.snapshots().map(
+    (s) =>
+        [for (final d in s.docs) MatbaaGroup.fromDoc(d.id, d.data())]
+          ..sort((a, b) => b.createdAtMs.compareTo(a.createdAtMs)),
+  );
 
   /// Giriş yapan hesabın rolü (Firestore `users/{uid}.role`): `editor`, `admin` ya da boş.
   /// Rol yalnız Firebase konsolundan verilir.

@@ -199,6 +199,12 @@ class _OrdersScreenState extends State<_OrdersScreen> {
         title: const Text('Siparişler'),
         actions: [
           TextButton.icon(
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const _GroupsScreen())),
+            icon: const Icon(Icons.groups_outlined),
+            label: const Text('Gruplar'),
+          ),
+          const SizedBox(width: 8),
+          TextButton.icon(
             onPressed: _pickSaveRoot,
             icon: const Icon(Icons.folder_outlined),
             label: Text(_saveRoot ?? 'Kayıt klasörü seç'),
@@ -586,6 +592,137 @@ class _OrderDetailState extends State<_OrderDetail> {
         ],
         if (_progress != null) ...[const SizedBox(height: 16), SelectableText(_progress!, style: muted)],
       ],
+    );
+  }
+}
+
+/// Okul yıllığı sınıf grupları: matbaa grubu oluşturur, üretilen kodu öğrencilerle paylaşır.
+class _GroupsScreen extends StatelessWidget {
+  const _GroupsScreen();
+
+  static void _copy(BuildContext context, MatbaaGroup g) {
+    Clipboard.setData(ClipboardData(text: g.display));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${g.display} kopyalandı')));
+  }
+
+  Future<void> _create(BuildContext context) async {
+    final name = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('Yeni Grup'),
+        content: SizedBox(
+          width: 420,
+          child: TextField(
+            controller: name,
+            autofocus: true,
+            decoration: const InputDecoration(labelText: 'Grup adı', hintText: 'Örn. 2026 Atatürk Lisesi 10-A'),
+            onSubmitted: (_) => Navigator.pop(c, true),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Vazgeç')),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Oluştur')),
+        ],
+      ),
+    );
+    if (ok != true || name.text.trim().isEmpty || !context.mounted) return;
+    try {
+      final g = await MatbaaService().createGroup(name.text);
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: Text(g.name),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Grup kodu'),
+              const SizedBox(height: 8),
+              SelectableText(
+                g.display,
+                style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700, letterSpacing: 4),
+              ),
+              const SizedBox(height: 8),
+              Text('Öğrenciler uygulamada bu kodla gruba girer.', style: TextStyle(color: c.mutedText)),
+            ],
+          ),
+          actions: [
+            TextButton.icon(onPressed: () => _copy(c, g), icon: const Icon(Icons.copy), label: const Text('Kopyala')),
+            FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Tamam')),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Grup oluşturulamadı: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final date = DateFormat('d MMM yyyy HH:mm', 'tr');
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Gruplar'),
+        actions: [
+          FilledButton.icon(
+            onPressed: () => _create(context),
+            icon: const Icon(Icons.add),
+            label: const Text('Yeni Grup'),
+          ),
+          const SizedBox(width: 12),
+        ],
+      ),
+      body: StreamBuilder<List<MatbaaGroup>>(
+        stream: MatbaaService().groups(),
+        builder: (context, snap) {
+          if (snap.hasError) return Center(child: Text('${snap.error}'));
+          if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+          final groups = snap.data!;
+          if (groups.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Henüz grup yok', style: TextStyle(fontSize: 18, color: context.mutedText)),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () => _create(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Yeni Grup'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.all(20),
+            itemCount: groups.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, i) {
+              final g = groups[i];
+              return ListTile(
+                leading: const Icon(Icons.groups_outlined),
+                title: Text(g.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                subtitle: Text(
+                  [date.format(g.createdAt), if (g.createdByEmail.isNotEmpty) g.createdByEmail].join(' · '),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SelectableText(
+                      g.display,
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: 2),
+                    ),
+                    IconButton(tooltip: 'Kopyala', onPressed: () => _copy(context, g), icon: const Icon(Icons.copy)),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

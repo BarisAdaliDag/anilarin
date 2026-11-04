@@ -25,6 +25,14 @@ service cloud.firestore {
       allow delete: if signedIn() && request.auth.uid == uid;
     }
 
+    // Okul yıllığı sınıf grupları: matbaa (editor/admin) oluşturur; kodu bilen herkes tek belgeyi okuyabilir
+    // (müşteri uygulaması kodu doğrular), liste yalnız matbaada.
+    match /groups/{code} {
+      allow get: if signedIn();
+      allow list, create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
     match /orders/{ref} {
       allow read: if isStaff() || (signedIn() && resource.data.uid == request.auth.uid);
       allow create: if signedIn()
