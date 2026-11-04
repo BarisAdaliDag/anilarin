@@ -97,7 +97,13 @@ class _TemplatePickerScreenState extends State<TemplatePickerScreen> {
                     vm.changeTemplate(widget.pageIndex, t.id);
                     Navigator.pop(context);
                   },
-                  child: TemplateThumb(template: t, format: vm.format, selected: t.id == current),
+                  // Geçici: dikey şablonlar ayıklanırken numarayla seçilsin diye kimlik gösterilir.
+                  child: TemplateThumb(
+                    template: t,
+                    format: vm.format,
+                    selected: t.id == current,
+                    showId: vm.format == 'portrait',
+                  ),
                 );
               },
             ),
@@ -158,11 +164,20 @@ class _CategoryChip extends StatelessWidget {
 
 /// Popsa'daki gibi şablon önizlemesi: gri zemin, açık gri fotoğraf alanları, "AaBbCc" yazı örneği.
 class TemplateThumb extends StatelessWidget {
-  const TemplateThumb({super.key, required this.template, required this.format, this.selected = false});
+  const TemplateThumb({
+    super.key,
+    required this.template,
+    required this.format,
+    this.selected = false,
+    this.showId = false,
+  });
 
   final PageTemplate template;
   final String format;
   final bool selected;
+
+  /// Sol üstte şablon numarası (geçici ayıklama yardımcısı).
+  final bool showId;
 
   @override
   Widget build(BuildContext context) {
@@ -223,6 +238,19 @@ class TemplateThumb extends StatelessWidget {
                     width: e.frame.width / 100 * w,
                     height: e.frame.height / 100 * h,
                     child: _sampleText(e, w, h, text),
+                  ),
+                if (showId)
+                  Positioned(
+                    left: 6,
+                    top: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(10)),
+                      child: Text(
+                        '${template.id}',
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
                   ),
               ],
             );
