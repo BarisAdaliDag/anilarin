@@ -104,14 +104,14 @@ void main() {
       book.pages[1].templateId = 6;
       final vm = EditorViewModel(book: book, catalog: catalog);
       expect(vm.book.pages[1].templateId, 76);
-      // Dikeyde sıra: fotoğraflı düz düzenler ve başlık bandları, yazılılar (fotoğrafsızlar sonunda), kolajlar,
-      // minimal ve üst üste.
+      // Dikeyde sıra: fotoğraflı düz düzenler ve başlık bandları, kolajlar, minimal, yazılılar (fotoğrafsızlar
+      // sonunda), üst üste.
       final order = vm.templatesFor(1).map((t) => t.id).toList();
       expect(order.first, 3);
-      expect(order.indexOf(91), lessThan(order.indexOf(41)));
-      expect(order.indexOf(95), lessThan(order.indexOf(5)));
-      expect(order.indexOf(41), lessThan(order.indexOf(95)));
+      expect(order.indexOf(91), lessThan(order.indexOf(5)));
       expect(order.indexOf(88), lessThan(order.indexOf(97)));
+      expect(order.indexOf(98), lessThan(order.indexOf(41)));
+      expect(order.indexOf(41), lessThan(order.indexOf(95)));
       expect(order.last, anyOf(53, 54));
       for (var id = 91; id <= 98; id++) {
         expect(catalog.template(id).availableFor('square'), isFalse, reason: 'şablon $id');

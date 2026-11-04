@@ -305,18 +305,18 @@ class EditorViewModel extends ChangeNotifier {
       return [for (final id in coverOrder) catalog.template(id)];
     }
     final list = catalog.templates.where((t) => !t.isCover && t.availableFor(format)).toList();
-    // Dikeyde (okul yıllığı) gruplar: önce fotoğraflı düz düzenler ve başlık bandlılar, sonra yazılılar (fotoğrafsız
-    // yazı sayfaları bu grubun sonunda), sonra kolajlar, en son minimal ve üst üste olanlar. Grup içinde fotoğraf
+    // Dikeyde (okul yıllığı) gruplar: önce fotoğraflı düz düzenler ve başlık bandlılar, sonra kolajlar, minimal,
+    // yazılılar (fotoğrafsız yazı sayfaları bu grubun sonunda), en son üst üste olanlar. Grup içinde fotoğraf
     // sayısına, sonra numaraya göre.
     if (format == 'portrait') {
       int group(PageTemplate t) {
         final c = t.categories;
         final band = t.photoCount > 0 && t.textSlots(format).any((e) => e.role == 'title');
         if (c.contains('overlapping')) return 4;
-        if (c.contains('minimal')) return 3;
         if (band) return 0;
-        if (c.contains('text')) return 1;
-        if (c.contains('collage')) return 2;
+        if (c.contains('minimal')) return 2;
+        if (c.contains('text')) return 3;
+        if (c.contains('collage')) return 1;
         return 0;
       }
 
