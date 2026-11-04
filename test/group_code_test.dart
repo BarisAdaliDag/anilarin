@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:anilarin/matbaa/matbaa_service.dart';
+import 'package:anilarin/models/photo_book.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -17,5 +18,21 @@ void main() {
     final g = MatbaaGroup.fromDoc('K7M4QX', {'name': '10-A', 'createdAtMs': 5});
     expect(g.display, 'K7M-4QX');
     expect(g.name, '10-A');
+    expect(normalizeGroupCode(' k7m-4qx '), 'K7M4QX');
+  });
+
+  test('kitabın grup bilgisi JSON gidiş-dönüş; eski kitapta yok', () {
+    final g = GroupMembership(
+      code: 'K7M4QX',
+      name: '10-A',
+      studentName: 'Ali Veli',
+      studentPhoto: const BookPhoto(id: 'x', width: 4, height: 5),
+    );
+    final back = GroupMembership.fromJson(g.toJson());
+    expect(back.code, 'K7M4QX');
+    expect(back.studentName, 'Ali Veli');
+    expect(back.studentPhoto!.id, 'x');
+    expect(back.complete, isTrue);
+    expect(GroupMembership(code: 'K7M4QX', name: '').complete, isFalse);
   });
 }

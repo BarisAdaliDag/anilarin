@@ -10,6 +10,7 @@ import '../widgets/ref_image.dart';
 import '../../models/catalog.dart';
 import '../../models/print_set.dart';
 import '../prints/print_screens.dart';
+import '../group/group_album_screen.dart';
 import 'photo_books_screen.dart';
 
 /// "Bugün ne oluşturmak istersin?" (Popsa ProductsOverviewActivity).
@@ -124,6 +125,24 @@ class ProductsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GroupAlbumScreen())),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(18)),
+                        child: const Icon(Icons.school_outlined, size: 48, color: AppColors.accent),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(S.groupAlbum, style: TextStyle(fontWeight: FontWeight.w600)),
+                    Text(S.groupAlbumShort, style: TextStyle(color: context.mutedText)),
                   ],
                 ),
               ),

@@ -29,6 +29,7 @@ class AppViewModel extends ChangeNotifier {
   int tabIndex = 0;
   Coupon? coupon;
   Address? address;
+  GroupMembership? group; // Grup Albümü: son girilen grup ve öğrenci bilgisi
   List<Order> orders = [];
   bool authSkipped = false;
 
@@ -40,6 +41,7 @@ class AppViewModel extends ChangeNotifier {
     basket = await designs.loadBasket();
     coupon = Coupon.byCode(await designs.loadCoupon());
     address = await designs.loadAddress();
+    group = await designs.loadGroup();
     orders = await designs.loadOrders();
     for (final b in books) {
       _syncBasketItem(b);
@@ -249,6 +251,12 @@ class AppViewModel extends ChangeNotifier {
     coupon = null;
     notifyListeners();
     await designs.saveCoupon(null);
+  }
+
+  Future<void> saveGroup(GroupMembership? g) async {
+    group = g;
+    notifyListeners();
+    await designs.saveGroup(g);
   }
 
   Future<void> saveAddress(Address a) async {

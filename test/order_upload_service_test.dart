@@ -125,6 +125,33 @@ void main() {
     expect(design['photoFiles'], {'p0': 'p0', 'p1': 'p1', 'p2': 'p2'});
   });
 
+  test('okul yıllığı: öğrenci fotoğrafı yüklenir, sipariş ve manifestte grup bilgisi', () async {
+    final photos = testPhotos(2);
+    final student = BookPhoto(id: 'st/1', width: 800, height: 1000);
+    final g = GroupMembership(code: 'K7M4QX', name: '10-A', studentName: 'Ali Veli', studentPhoto: student);
+    final design = OrderDesign(
+      BasketItem(bookId: 'b1', title: 'b1', productCode: 'PBK-14', pages: 1, options: ProductOptions.fromJson(null)),
+      {'id': 'b1'},
+      [...photos, student],
+      group: g,
+    );
+    final backend = _FakeBackend();
+    await OrderUploadService(backend: backend, encode: encode).upload(_order([design.item]), [design]);
+
+    expect(backend.files.keys, contains('orders/u1/AN-TEST/photos/st_1.jpg'));
+    expect(backend.order['groupCodes'], ['K7M4QX']);
+    expect(backend.order['groups'], [
+      {'code': 'K7M4QX', 'name': '10-A', 'studentName': 'Ali Veli', 'studentPhoto': 'st_1.jpg', 'design': 'b1.json'},
+    ]);
+    final manifest = jsonDecode(utf8.decode(backend.files['orders/u1/AN-TEST/siparis.json']!));
+    expect(manifest['urunler'][0]['grup']['studentName'], 'Ali Veli');
+
+    // Grupsuz siparişte alan yok.
+    final plain = _FakeBackend();
+    await OrderUploadService(backend: plain, encode: encode).upload(_order([design.item]), [_design('b2', photos)]);
+    expect(plain.order.containsKey('groups'), isFalse);
+  });
+
   test('yarıda kalan yükleme yüklenmiş fotoğrafları atlayarak devam eder', () async {
     final photos = testPhotos(4);
     final backend = _FakeBackend()..failAfter = 2;

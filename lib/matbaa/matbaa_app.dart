@@ -189,7 +189,10 @@ class _OrdersScreenState extends State<_OrdersScreen> {
   bool _matches(ShopOrder o) {
     final q = _query.trim().toLowerCase();
     if (q.isEmpty) return true;
-    return [o.ref, o.customerName, o.customer['email'] ?? ''].any((s) => '$s'.toLowerCase().contains(q));
+    final groups = [
+      for (final g in o.groups) ...[g['code'], formatGroupCode('${g['code']}'), g['name'], g['studentName']],
+    ];
+    return [o.ref, o.customerName, o.customer['email'] ?? '', ...groups].any((s) => '$s'.toLowerCase().contains(q));
   }
 
   @override
@@ -250,7 +253,7 @@ class _OrdersScreenState extends State<_OrdersScreen> {
                       child: TextField(
                         decoration: const InputDecoration(
                           prefixIcon: Icon(Icons.search),
-                          hintText: 'Sipariş no, isim ya da e-posta',
+                          hintText: 'Sipariş no, isim, e-posta ya da grup kodu',
                           isDense: true,
                           border: OutlineInputBorder(),
                         ),
@@ -512,6 +515,17 @@ class _OrderDetailState extends State<_OrderDetail> {
         const Text('Müşteri', style: heading),
         Text(o.customerName),
         Text([c['email'], c['phone']].where((s) => s != null && '$s'.isNotEmpty).join(' · '), style: muted),
+        if (o.groups.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          const Text('Okul Yıllığı', style: heading),
+          for (final g in o.groups) ...[
+            SelectableText('${g['name']} · ${formatGroupCode('${g['code']}')}'),
+            Text(
+              'Öğrenci: ${g['studentName'] ?? ''}${g['studentPhoto'] == null ? '' : ' · Fotoğraf: photos/${g['studentPhoto']}'}',
+              style: muted,
+            ),
+          ],
+        ],
         const SizedBox(height: 16),
         const Text('Teslimat', style: heading),
         Text(o.addressLines.join('\n'), style: muted),

@@ -32,12 +32,32 @@ class OrderDesign {
   final Map<String, dynamic> json;
   final List<BookPhoto> photos;
 
-  const OrderDesign(this.item, this.json, this.photos);
+  /// Okul yıllığı grubu: öğrencinin adı ve fotoğrafı ([photos] içinde de yüklenir).
+  final GroupMembership? group;
 
-  factory OrderDesign.book(BasketItem item, PhotoBook book) => OrderDesign(item, book.toJson(), [
-    for (final id in book.usedPhotoIds)
-      if (book.photos[id] != null) book.photos[id]!,
-  ]);
+  const OrderDesign(this.item, this.json, this.photos, {this.group});
+
+  factory OrderDesign.book(BasketItem item, PhotoBook book) {
+    final student = book.group?.studentPhoto;
+    return OrderDesign(item, book.toJson(), [
+      for (final id in book.usedPhotoIds)
+        if (book.photos[id] != null) book.photos[id]!,
+      if (student != null && !book.usedPhotoIds.contains(student.id)) student,
+    ], group: book.group);
+  }
+
+  /// Matbaanın sınıf sayfası için: grup ve öğrenci (fotoğraf dosya adıyla).
+  Map<String, dynamic>? get groupJson {
+    final g = group;
+    if (g == null) return null;
+    return {
+      'code': g.code,
+      'name': g.name,
+      'studentName': g.studentName,
+      if (g.studentPhoto != null) 'studentPhoto': '${OrderUploadService.fileNameOf(g.studentPhoto!.id)}.jpg',
+      'design': '${item.bookId}.json',
+    };
+  }
 
   factory OrderDesign.prints(BasketItem item, PrintSet set) =>
       OrderDesign(item, set.toJson(), [for (final i in set.items) i.photo]);
@@ -90,6 +110,7 @@ class OrderUploadService {
           'sayfa': d.item.pages,
           'tasarimDosyasi': '${d.item.bookId}.json',
           'fotografSayisi': d.photos.length,
+          'grup': ?d.groupJson,
         },
     ],
   };
@@ -125,6 +146,11 @@ class OrderUploadService {
       'products': summary['urunler'],
       'fileCount': total,
       'photos': {for (final e in photos.entries) e.key: e.value.id},
+      // Okul yıllığı: matbaa grup koduna göre süzer (array-contains) ve öğrencileri görür.
+      if (designs.any((d) => d.group != null)) ...{
+        'groupCodes': {for (final d in designs) ?d.group?.code}.toList(),
+        'groups': [for (final d in designs) ?d.groupJson],
+      },
     });
 
     final done = await backend.uploadedPhotos(order.reference);

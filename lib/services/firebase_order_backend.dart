@@ -39,6 +39,14 @@ class FirebaseOrderBackend implements OrderBackend {
     return user.uid;
   }
 
+  /// Okul yıllığı grubu: matbaanın verdiği kodla `groups/{kod}` okunur; yoksa null. Adı döner.
+  Future<String?> groupName(String code) async {
+    await signIn();
+    final snap = await FirebaseFirestore.instance.collection('groups').doc(code).get();
+    if (!snap.exists) return null;
+    return (snap.data()?['name'] as String?) ?? '';
+  }
+
   @override
   Future<Set<String>> uploadedPhotos(String orderRef) async {
     final snap = await _orders.doc(orderRef).get();

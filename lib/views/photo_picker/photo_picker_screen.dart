@@ -21,10 +21,12 @@ class PhotoPickerScreen extends StatelessWidget {
     this.maxPhotos = 200,
     this.minPhotos = 1,
     this.single = false,
+    this.group,
   });
 
   final Product? product;
   final ProductOptions? options;
+  final GroupMembership? group;
   final int maxPhotos;
   final int minPhotos;
   final bool single;
@@ -37,17 +39,18 @@ class PhotoPickerScreen extends StatelessWidget {
                 ? PhotoPickerViewModel.forProduct(product!)
                 : PhotoPickerViewModel.addMore(max: single ? 1 : maxPhotos, min: single ? 1 : minPhotos))
             ..init(),
-      child: _PickerBody(product: product, options: options, single: single),
+      child: _PickerBody(product: product, options: options, single: single, group: group),
     );
   }
 }
 
 class _PickerBody extends StatefulWidget {
-  const _PickerBody({required this.product, required this.options, required this.single});
+  const _PickerBody({required this.product, required this.options, required this.single, this.group});
 
   final Product? product;
   final ProductOptions? options;
   final bool single;
+  final GroupMembership? group;
 
   @override
   State<_PickerBody> createState() => _PickerBodyState();
@@ -66,7 +69,8 @@ class _PickerBodyState extends State<_PickerBody> {
     }
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => TitleScreen(product: widget.product!, options: widget.options!, photos: photos),
+        builder: (_) =>
+            TitleScreen(product: widget.product!, options: widget.options!, photos: photos, group: widget.group),
       ),
     );
   }

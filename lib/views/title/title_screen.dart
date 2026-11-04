@@ -12,11 +12,14 @@ import '../editor/editor_screen.dart';
 
 /// Başlık ve alt başlık; ardından kitap otomatik tasarlanır (Popsa CreatePrintTitleActivity).
 class TitleScreen extends StatefulWidget {
-  const TitleScreen({super.key, required this.product, required this.options, required this.photos});
+  const TitleScreen({super.key, required this.product, required this.options, required this.photos, this.group});
 
   final Product product;
   final ProductOptions options;
   final List<BookPhoto> photos;
+
+  /// Grup Albümü: kitap bu okul yıllığı grubuna bağlanır (öğrenci adı + fotoğrafı siparişle gider).
+  final GroupMembership? group;
 
   @override
   State<TitleScreen> createState() => _TitleScreenState();
@@ -56,7 +59,7 @@ class _TitleScreenState extends State<TitleScreen> {
       subtitle: _subtitle.text.trim(),
       options: widget.options,
       palette: palette,
-    );
+    )..group = widget.group?.copy();
     // Tasarım ekranı bir an görünsün.
     final wait = const Duration(milliseconds: 1400) - DateTime.now().difference(started);
     if (!wait.isNegative) await Future<void>.delayed(wait);

@@ -121,6 +121,26 @@ class DesignRepository {
     await File('${(await _dir('checkout')).path}/address.json').writeAsString(jsonEncode(a.toJson()));
   }
 
+  /// Son girilen okul yıllığı grubu ve öğrenci bilgisi (Grup Albümü ekranı açılınca hatırlanır).
+  Future<GroupMembership?> loadGroup() async {
+    final f = File('${(await _dir('group')).path}/group.json');
+    if (!await f.exists()) return null;
+    try {
+      return GroupMembership.fromJson(jsonDecode(await f.readAsString()));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> saveGroup(GroupMembership? g) async {
+    final f = File('${(await _dir('group')).path}/group.json');
+    if (g == null) {
+      if (await f.exists()) await f.delete();
+      return;
+    }
+    await f.writeAsString(jsonEncode(g.toJson()));
+  }
+
   Future<List<Order>> loadOrders() async {
     final f = File('${(await _dir('checkout')).path}/orders.json');
     if (!await f.exists()) return [];

@@ -121,6 +121,18 @@ CEWE = [
     (97, ['minimal', 'p2'], [[16, 14, 68, 33], [16, 53, 68, 33]], []),
     # Satır ve sütun arası gerçekte aynı (%3 genişlik): dikey boşluk CEWE yüzdesinde 3 × 0,759 / 0,9316 ≈ 2,28.
     (98, ['minimal', 'p4'], _grid([16, 51.5], 32.5, [22, 50.28], 26), []),
+    # Okul yıllığı anı sayfaları: solda vesikalık oranında (0,8) fotoğraf, sağda ad ve düşünce.
+    (99, ['text', 'p1'], [[5.4, 4.1, 40, 38]], [
+        ([49.4, 4.1, 45.3, 8], 'title', 'left'),
+        ([49.4, 13.5, 45.3, 28.6], 'caption', 'left'),
+        ([5.4, 47.5, 89.3, 48.5], 'caption', 'left'),  # arkadaşların notları
+    ]),
+    (100, ['text', 'p2'], [[5.4, 4.1, 36, 34.2], [5.4, 52, 36, 34.2]], [
+        ([45.4, 4.1, 49.3, 8], 'title', 'left'),
+        ([45.4, 13.5, 49.3, 24.8], 'caption', 'left'),
+        ([45.4, 52, 49.3, 8], 'title', 'left'),
+        ([45.4, 61.4, 49.3, 24.8], 'caption', 'left'),
+    ]),
 ]
 
 

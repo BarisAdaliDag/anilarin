@@ -15,10 +15,13 @@ import '../widgets/ref_image.dart';
 
 /// Boyut, fiyat, ürün özellikleri, ekstralar ve teslimat (Popsa ProductFormatDetailActivity).
 class FormatDetailScreen extends StatefulWidget {
-  const FormatDetailScreen({super.key, required this.type, required this.format});
+  const FormatDetailScreen({super.key, required this.type, required this.format, this.group});
 
   final String type;
   final String format;
+
+  /// Grup Albümü'nden gelindiyse oluşacak kitap bu gruba bağlanır.
+  final GroupMembership? group;
 
   @override
   State<FormatDetailScreen> createState() => _FormatDetailScreenState();
@@ -59,7 +62,7 @@ class _FormatDetailScreenState extends State<FormatDetailScreen> {
               icon: Icons.arrow_forward,
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => PhotoPickerScreen(product: product, options: _options.copy()),
+                  builder: (_) => PhotoPickerScreen(product: product, options: _options.copy(), group: widget.group),
                 ),
               ),
             ),

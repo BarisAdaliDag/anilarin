@@ -229,6 +229,24 @@ class S {
   static const basketTitle = 'Sepet';
   static const basketEmpty = 'Sepetin boş';
   static const photoPrints = 'Fotoğraf Baskıları';
+  static const groupAlbum = 'Grup Albümü';
+  static const groupAlbumShort = 'Okul yıllığı';
+  static const groupAlbumBody =
+      'Okulunun yıllığına katıl. Matbaanın sınıfına verdiği kodu gir; adını ve fotoğrafını ekle, ardından kendi albümünü oluştur.';
+  static const groupCode = 'Grup kodu';
+  static const groupJoin = 'Gruba Katıl';
+  static const groupCodeInvalid = 'Kod 6 karakterdir (örn. K7M-4QX).';
+  static const groupNotFound = 'Bu kodla bir grup bulunamadı.';
+  static const groupConnectionError = 'Bağlantı kurulamadı, tekrar dene.';
+  static const groupServerMissing = 'Sunucu bağlantısı henüz yapılandırılmadı.';
+  static const groupChange = 'Değiştir';
+  static const groupStudentBody =
+      'Sınıf sayfasında görünecek adını ve vesikalık gibi yüzünün göründüğü bir fotoğrafını ekle.';
+  static const groupStudentName = 'Ad Soyad';
+  static const groupStudentPhoto = 'Fotoğraf ekle';
+  static const groupStudentPhotoChange = 'Fotoğrafı değiştir';
+  static const groupCreateAlbum = 'Albümümü Oluştur';
+  static const groupSendNote = 'Adın ve fotoğrafın, albüm siparişin gönderilirken matbaaya iletilir.';
   static const photoPrintsBody = 'Yapıştır, as, hediye et. Deneyimlerini paylaşmanın en yaratıcı yolu.';
   static const regularPrints = 'Normal Baskılar';
   static const squarePrints = 'Kare Baskılar';

@@ -113,14 +113,14 @@ void main() {
       expect(order.indexOf(98), lessThan(order.indexOf(41)));
       expect(order.indexOf(41), lessThan(order.indexOf(95)));
       expect(order.last, anyOf(53, 54));
-      for (var id = 91; id <= 98; id++) {
+      for (var id = 91; id <= 100; id++) {
         expect(catalog.template(id).availableFor('square'), isFalse, reason: 'şablon $id');
       }
       for (final id in [4, 7, 8, 16]) {
         expect(catalog.template(id).availableFor('portrait'), isFalse, reason: 'şablon $id');
         expect(catalog.template(id).availableFor('square'), isTrue);
       }
-      for (var id = 75; id <= 98; id++) {
+      for (var id = 75; id <= 100; id++) {
         expect(catalog.template(id).availableFor('portrait'), isTrue, reason: 'şablon $id');
         expect(catalog.template(id).availableFor('square'), isFalse);
         expect(catalog.template(id).availableFor('landscape'), isFalse);

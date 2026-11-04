@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,11 +10,14 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../models/catalog.dart';
+import '../models/group_code.dart';
 import '../models/photo_book.dart';
 import '../models/print_set.dart';
 import '../print/print_renderer.dart';
 import '../print/print_spec.dart';
 import 'work_order.dart';
+
+export '../models/group_code.dart';
 
 /// Okul yıllığı sınıf grubu (Firestore `groups/{kod}`). Öğrenciler müşteri uygulamasında bu kodla girer.
 class MatbaaGroup {
@@ -39,22 +41,6 @@ class MatbaaGroup {
   String get display => formatGroupCode(code);
 }
 
-/// Grup kodu alfabesi: karışan karakterler (0/O, 1/I/L) yok.
-const groupCodeAlphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const groupCodeLength = 6;
-
-/// Rastgele grup kodu (tiresiz, büyük harf).
-String newGroupCode([Random? random]) {
-  final r = random ?? Random.secure();
-  return String.fromCharCodes([
-    for (var i = 0; i < groupCodeLength; i++) groupCodeAlphabet.codeUnitAt(r.nextInt(groupCodeAlphabet.length)),
-  ]);
-}
-
-/// `K7M4QX` → `K7M-4QX`.
-String formatGroupCode(String code) =>
-    code.length == groupCodeLength ? '${code.substring(0, 3)}-${code.substring(3)}' : code;
-
 /// Matbaanın gördüğü sipariş (Firestore `orders/{ref}`).
 class ShopOrder {
   final String ref;
@@ -63,6 +49,11 @@ class ShopOrder {
   const ShopOrder(this.ref, this.data);
 
   String get uid => data['uid'] ?? '';
+
+  /// Okul yıllığı: siparişteki grup(lar) ve öğrenci (ad, fotoğraf dosyası). Normal siparişte boş.
+  List<Map<String, dynamic>> get groups => [
+    for (final g in (data['groups'] as List? ?? const [])) Map<String, dynamic>.from(g as Map),
+  ];
   String get status => data['status'] ?? '';
   Map<String, dynamic> get _order => Map<String, dynamic>.from(data['order'] ?? const {});
 

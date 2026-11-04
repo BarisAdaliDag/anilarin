@@ -190,6 +190,35 @@ class ProductOptions {
   ProductOptions copy() => ProductOptions(giftBox: giftBox, layflat: layflat, foil: foil, gloss: gloss);
 }
 
+/// Okul yıllığı grubuna bağlı albüm: grup (matbaanın verdiği kod) ve öğrencinin adı + fotoğrafı.
+/// Sipariş gönderilirken öğrenci fotoğrafı diğer fotoğraflarla birlikte matbaaya gider.
+class GroupMembership {
+  final String code; // tiresiz, büyük harf (K7M4QX)
+  final String name; // grup adı (matbaanın verdiği)
+  String studentName;
+  BookPhoto? studentPhoto;
+
+  GroupMembership({required this.code, required this.name, this.studentName = '', this.studentPhoto});
+
+  bool get complete => studentName.trim().isNotEmpty && studentPhoto != null;
+
+  Map<String, dynamic> toJson() => {
+    'code': code,
+    'name': name,
+    'student': studentName,
+    if (studentPhoto != null) 'photo': studentPhoto!.toJson(),
+  };
+
+  factory GroupMembership.fromJson(Map<String, dynamic> j) => GroupMembership(
+    code: j['code'],
+    name: j['name'] ?? '',
+    studentName: j['student'] ?? '',
+    studentPhoto: j['photo'] == null ? null : BookPhoto.fromJson(Map<String, dynamic>.from(j['photo'])),
+  );
+
+  GroupMembership copy() => GroupMembership.fromJson(toJson());
+}
+
 /// Popsa'daki `Print` modelinin karşılığı.
 class PhotoBook {
   String id;
@@ -205,6 +234,7 @@ class PhotoBook {
   List<String> palette; // fotoğraflardan çıkarılan dinamik renkler
   int createdAtMs;
   int updatedAtMs;
+  GroupMembership? group; // okul yıllığı grubu (yoksa normal albüm)
 
   PhotoBook({
     required this.id,
@@ -220,6 +250,7 @@ class PhotoBook {
     this.palette = const [],
     required this.createdAtMs,
     required this.updatedAtMs,
+    this.group,
   });
 
   PrintPage get cover => pages.first;
@@ -249,6 +280,7 @@ class PhotoBook {
     'palette': palette,
     'created': createdAtMs,
     'updated': updatedAtMs,
+    if (group != null) 'group': group!.toJson(),
   };
 
   factory PhotoBook.fromJson(Map<String, dynamic> j) => PhotoBook(
@@ -265,6 +297,7 @@ class PhotoBook {
     palette: List<String>.from(j['palette'] ?? const []),
     createdAtMs: j['created'],
     updatedAtMs: j['updated'],
+    group: j['group'] == null ? null : GroupMembership.fromJson(Map<String, dynamic>.from(j['group'])),
   );
 
   String encode() => jsonEncode(toJson());
