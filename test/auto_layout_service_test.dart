@@ -104,12 +104,15 @@ void main() {
       book.pages[1].templateId = 6;
       final vm = EditorViewModel(book: book, catalog: catalog);
       expect(vm.book.pages[1].templateId, 76);
-      // Dikeyde liste fotoğraf sayısına göre artar; yalnız yazı sayfaları en sonda.
-      final order = vm.templatesFor(1);
-      final counts = order.map((t) => t.photoCount == 0 ? 99 : t.photoCount).toList();
-      expect(counts, [...counts]..sort());
-      expect(order.first.photoCount, 1);
-      expect(order.last.photoCount, 0);
+      // Dikeyde sıra: fotoğraflı düz düzenler ve başlık bandları, yazılılar (fotoğrafsızlar sonunda), kolajlar,
+      // minimal ve üst üste.
+      final order = vm.templatesFor(1).map((t) => t.id).toList();
+      expect(order.first, 3);
+      expect(order.indexOf(91), lessThan(order.indexOf(41)));
+      expect(order.indexOf(95), lessThan(order.indexOf(5)));
+      expect(order.indexOf(41), lessThan(order.indexOf(95)));
+      expect(order.indexOf(88), lessThan(order.indexOf(97)));
+      expect(order.last, anyOf(53, 54));
       for (var id = 91; id <= 98; id++) {
         expect(catalog.template(id).availableFor('square'), isFalse, reason: 'şablon $id');
       }

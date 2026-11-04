@@ -305,24 +305,27 @@ class EditorViewModel extends ChangeNotifier {
       return [for (final id in coverOrder) catalog.template(id)];
     }
     final list = catalog.templates.where((t) => !t.isCover && t.availableFor(format)).toList();
-    // Dikeyde (okul yıllığı) fotoğraf sayısına göre: 1, 2, … 9, yalnız yazı sayfaları en sonda. Aynı sayıda önce
-    // düz/kolaj düzenler, sonra başlık bandlılar, yazılılar, minimal ve üst üste olanlar.
+    // Dikeyde (okul yıllığı) gruplar: önce fotoğraflı düz düzenler ve başlık bandlılar, sonra yazılılar (fotoğrafsız
+    // yazı sayfaları bu grubun sonunda), sonra kolajlar, en son minimal ve üst üste olanlar. Grup içinde fotoğraf
+    // sayısına, sonra numaraya göre.
     if (format == 'portrait') {
-      int count(PageTemplate t) => t.photoCount == 0 ? 99 : t.photoCount;
-      int kind(PageTemplate t) {
+      int group(PageTemplate t) {
         final c = t.categories;
+        final band = t.photoCount > 0 && t.textSlots(format).any((e) => e.role == 'title');
         if (c.contains('overlapping')) return 4;
         if (c.contains('minimal')) return 3;
-        if (t.textSlots(format).any((e) => e.role == 'title') && t.photoCount > 0) return 1;
-        if (c.contains('text')) return 2;
+        if (band) return 0;
+        if (c.contains('text')) return 1;
+        if (c.contains('collage')) return 2;
         return 0;
       }
 
+      int count(PageTemplate t) => t.photoCount == 0 ? 99 : t.photoCount;
       list.sort((a, b) {
+        final byGroup = group(a).compareTo(group(b));
+        if (byGroup != 0) return byGroup;
         final byCount = count(a).compareTo(count(b));
-        if (byCount != 0) return byCount;
-        final byKind = kind(a).compareTo(kind(b));
-        return byKind != 0 ? byKind : a.id.compareTo(b.id);
+        return byCount != 0 ? byCount : a.id.compareTo(b.id);
       });
     }
     return list;

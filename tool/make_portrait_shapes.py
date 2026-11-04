@@ -119,7 +119,8 @@ CEWE = [
     (96, ['text', 'p0'], [], [([5.4, 4.1, 89.3, 44.4], 'caption', 'left'), ([5.4, 51.5, 89.3, 44.4], 'caption', 'left')]),
     # Minimal: geniş kenarlı ikili ve dörtlü.
     (97, ['minimal', 'p2'], [[16, 14, 68, 33], [16, 53, 68, 33]], []),
-    (98, ['minimal', 'p4'], _grid([16, 51], 33, [22, 52], 26), []),
+    # Satır ve sütun arası gerçekte aynı (%3 genişlik): dikey boşluk CEWE yüzdesinde 3 × 0,759 / 0,9316 ≈ 2,28.
+    (98, ['minimal', 'p4'], _grid([16, 51.5], 32.5, [22, 50.28], 26), []),
 ]
 
 
