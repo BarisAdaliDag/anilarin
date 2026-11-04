@@ -600,6 +600,9 @@ class _OrderDetailState extends State<_OrderDetail> {
 class _GroupsScreen extends StatelessWidget {
   const _GroupsScreen();
 
+  // Tema dolu düğmeyi tam genişlik yapar (Size.fromHeight); AppBar'da sınırsız genişlik düzeni bozuyordu.
+  static final _compact = FilledButton.styleFrom(minimumSize: const Size(0, 44));
+
   static void _copy(BuildContext context, MatbaaGroup g) {
     Clipboard.setData(ClipboardData(text: g.display));
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${g.display} kopyalandı')));
@@ -622,7 +625,7 @@ class _GroupsScreen extends StatelessWidget {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Vazgeç')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Oluştur')),
+          FilledButton(style: _compact, onPressed: () => Navigator.pop(c, true), child: const Text('Oluştur')),
         ],
       ),
     );
@@ -649,7 +652,7 @@ class _GroupsScreen extends StatelessWidget {
           ),
           actions: [
             TextButton.icon(onPressed: () => _copy(c, g), icon: const Icon(Icons.copy), label: const Text('Kopyala')),
-            FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Tamam')),
+            FilledButton(style: _compact, onPressed: () => Navigator.pop(c), child: const Text('Tamam')),
           ],
         ),
       );
@@ -667,6 +670,7 @@ class _GroupsScreen extends StatelessWidget {
         title: const Text('Gruplar'),
         actions: [
           FilledButton.icon(
+            style: _compact,
             onPressed: () => _create(context),
             icon: const Icon(Icons.add),
             label: const Text('Yeni Grup'),
@@ -688,6 +692,7 @@ class _GroupsScreen extends StatelessWidget {
                   Text('Henüz grup yok', style: TextStyle(fontSize: 18, color: context.mutedText)),
                   const SizedBox(height: 12),
                   FilledButton.icon(
+                    style: _compact,
                     onPressed: () => _create(context),
                     icon: const Icon(Icons.add),
                     label: const Text('Yeni Grup'),
