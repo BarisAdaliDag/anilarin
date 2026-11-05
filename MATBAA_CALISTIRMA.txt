@@ -1,0 +1,78 @@
+ANILARIN MATBAA – MAC UYGULAMASINI ÇALIŞTIRMA
+==============================================
+
+Matbaa uygulaması telefondaki müşteri uygulamasından ayrıdır. Siparişleri indirir, baskı
+PDF'lerini üretir ve okul yıllığı gruplarını oluşturur. Aynı projede durur, giriş dosyası:
+lib/main_matbaa.dart
+
+
+1) EN KOLAY YOL – tek komut
+---------------------------
+Terminal'i aç ve şunu yaz:
+
+    cd /Users/ada/Desktop/flutter_repo/myprojects/anilarin
+    ./tool/matbaa.sh
+
+Bu komut:
+  - açık Matbaa penceresi varsa kapatır,
+  - uygulamayı derler (ilk sefer birkaç dakika sürer, sonrakiler hızlıdır),
+  - uygulamayı açar.
+
+Çıktıdaki "warning: ..." satırları önemsizdir. En sonda şu yazar:
+    ✓ Built build/macos/Build/Products/Debug/Anilarin Matbaa.app
+Pencere öne gelmezse Dock'taki "Anilarin Matbaa" simgesine tıkla.
+
+
+2) DERLEMEDEN AÇMAK – kod değişmediyse
+--------------------------------------
+Daha önce derlendiyse şununla doğrudan açabilirsin:
+
+    open "/Users/ada/Desktop/flutter_repo/myprojects/anilarin/build/macos/Build/Products/Debug/Anilarin Matbaa.app"
+
+Ya da Finder'da bu .app dosyasına çift tıkla. İstersen Dock'a sürükleyip sabitleyebilirsin.
+Kod güncellendikten sonra yeni hali için 1. adımı (./tool/matbaa.sh) tekrar çalıştır.
+
+
+3) GELİŞTİRİRKEN – canlı yeniden yükleme
+----------------------------------------
+    cd /Users/ada/Desktop/flutter_repo/myprojects/anilarin
+    flutter run -d macos -t lib/main_matbaa.dart
+
+Terminalde "r" anında yeniler, "R" baştan başlatır, "q" kapatır.
+DİKKAT: "-t lib/main_matbaa.dart" yazılmazsa telefon uygulaması açılır.
+
+
+4) GİRİŞ
+--------
+  - Matbaa yetkisi olan hesapla (e-posta + şifre) giriş yap.
+  - Yetki Firebase konsolunda verilir: Firestore → users → hesabın UID'li kaydı →
+    role = "editor" ya da "admin". Yetki yoksa uygulama "bu uygulama için yetkili değil" der.
+
+
+5) KULLANIM KISA ÖZET
+---------------------
+Siparişler:
+  - Sağ üstten "Kayıt klasörü seç" (ör. harici disk). Seçim hatırlanır.
+  - Siparişi seç → "Baskı Dosyalarını Üret": dosyalar iner, baskı PDF'leri üretilir.
+  - Durumlar: Yeni → İndirildi → Basıldı → Kargoya Ver.
+  - Arama kutusu: sipariş no, müşteri adı, e-posta ya da grup kodu (ör. 857-KTX).
+  - Okul yıllığı siparişlerinde "Okul Yıllığı" bölümünde grup, öğrenci adı ve fotoğraf dosyası görünür.
+
+Gruplar (okul yıllığı):
+  - Sağ üstte "Gruplar" → "Yeni Grup" → grup adını yaz (ör. 2026 Atatürk Lisesi 10-A) → Oluştur.
+  - Çıkan 6 karakterli kodu (ör. 857-KTX) öğrencilerle paylaş. Kopyala düğmesi var.
+  - Öğrenciler telefonda Ürünler → Grup Albümü'nden bu kodla katılır.
+  - Grup silmek şimdilik yalnız Firebase konsolundan: Firestore → groups → kod.
+
+
+6) SORUN ÇIKARSA
+----------------
+  - "flutter: command not found": Flutter kurulu değil ya da PATH'te yok.
+  - CocoaPods / UTF-8 hatası: tool/matbaa.sh bunu ayarlar, onunla çalıştır.
+  - Grup oluştururken izin hatası: hesabın role alanını (4. madde) ve Firestore kurallarının
+    yüklü olduğunu kontrol et. Kuralları yüklemek için:
+        cd /Users/ada/Desktop/flutter_repo/myprojects/anilarin
+        firebase deploy --only firestore:rules --project anilarin-b29ac
+  - Uygulama açılmıyor ya da eski görünüyor: önce kapat (Cmd+Q), sonra ./tool/matbaa.sh.
+
+Daha ayrıntılı Firebase bilgisi: docs/firebase-kurulum.md
