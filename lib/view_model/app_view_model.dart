@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -54,6 +56,49 @@ class AppViewModel extends ChangeNotifier {
     authSkipped = true;
     notifyListeners();
     await designs.saveAuthSkipped();
+  }
+
+  /// Sipariş verilmiş tasarımlar (kitap ya da baskı seti kimliği). Taslaklarda gösterilmez; Siparişlerim'de durur.
+  Set<String> get orderedIds => {
+    for (final o in orders)
+      for (final i in o.items) i.bookId,
+  };
+
+  /// Tasarımlarım'daki taslaklar: henüz sipariş edilmemiş kitaplar ve baskı setleri.
+  List<PhotoBook> get draftBooks {
+    final ordered = orderedIds;
+    return books.where((b) => !ordered.contains(b.id)).toList();
+  }
+
+  List<PrintSet> get draftPrintSets {
+    final ordered = orderedIds;
+    return printSets.where((s) => !ordered.contains(s.id)).toList();
+  }
+
+  int get draftCount => draftBooks.length + draftPrintSets.length;
+
+  /// Sipariş edilmiş bir tasarımın kopyasını taslak olarak geri getirir (tekrar sipariş ya da değiştirmek için).
+  /// Kopya siparişteki hâlinden yapılır; özgün tasarım silinmiş olsa da çalışır.
+  Future<String?> copyOrderedDesign(Order order, String designId) async {
+    final json = order.designs[designId];
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final item = order.items.where((i) => i.bookId == designId).firstOrNull;
+    if (json == null || item == null) return null;
+    if (item.isPrints) {
+      final set = PrintSet.fromJson(jsonDecode(jsonEncode(json)))
+        ..id = const Uuid().v4()
+        ..updatedAtMs = now;
+      printSets.add(set);
+      notifyListeners();
+      await designs.savePrintSet(set);
+      return set.id;
+    }
+    final copy = PhotoBook.fromJson(jsonDecode(jsonEncode(json)))
+      ..id = const Uuid().v4()
+      ..createdAtMs = now
+      ..updatedAtMs = now;
+    await saveBook(copy);
+    return copy.id;
   }
 
   void setTab(int i) {

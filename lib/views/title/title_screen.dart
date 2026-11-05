@@ -64,7 +64,7 @@ class _TitleScreenState extends State<TitleScreen> {
     final wait = const Duration(milliseconds: 1400) - DateTime.now().difference(started);
     if (!wait.isNegative) await Future<void>.delayed(wait);
     await app.saveBook(book);
-    app.setTab(0);
+    app.setTab(1); // Tasarımlarım
     navigator.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => EditorScreen(bookId: book.id, firstCreation: true)),
       (route) => route.isFirst,

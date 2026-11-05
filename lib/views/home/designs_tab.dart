@@ -7,7 +7,6 @@ import '../../models/catalog.dart';
 import '../../models/photo_book.dart';
 import '../../view_model/app_view_model.dart';
 import '../editor/editor_screen.dart';
-import '../product/products_screen.dart';
 import '../../models/print_set.dart';
 import '../prints/print_screens.dart';
 import '../widgets/book_mockup.dart';
@@ -26,7 +25,7 @@ class DesignsTab extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
           children: [
-            const _Brand(),
+            const AppBrand(),
             const SizedBox(height: 22),
             const Text(S.myDesigns, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
@@ -34,8 +33,9 @@ class DesignsTab extends StatelessWidget {
             const SizedBox(height: 24),
             // Kitaplar ve baskı setleri son düzenlemeye göre tek listede.
             for (final d in [
-              ...app.books.map(_Design.book),
-              ...app.printSets.map(_Design.prints),
+              // Sipariş edilenler taslak değil: Hesap > Siparişlerim'de görünür.
+              ...app.draftBooks.map(_Design.book),
+              ...app.draftPrintSets.map(_Design.prints),
             ]..sort((a, b) => b.updatedAtMs.compareTo(a.updatedAtMs))) ...[
               if (d.book != null) _DesignCard(book: d.book!, catalog: catalog) else _PrintSetCard(set: d.prints!),
               const SizedBox(height: 20),
@@ -186,12 +186,14 @@ class _PrintSetCard extends StatelessWidget {
   }
 }
 
+/// Ürünler artık ana ekranın Mağaza sekmesi: açık ekranlar kapanır, sekmeye geçilir.
 void openProducts(BuildContext context) {
-  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProductsScreen()));
+  context.read<AppViewModel>().setTab(0);
+  Navigator.of(context).popUntil((r) => r.isFirst);
 }
 
-class _Brand extends StatelessWidget {
-  const _Brand();
+class AppBrand extends StatelessWidget {
+  const AppBrand({super.key});
 
   @override
   Widget build(BuildContext context) {

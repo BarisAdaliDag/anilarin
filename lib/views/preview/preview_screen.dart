@@ -23,7 +23,10 @@ List<List<int>> bookSpreads(int pageCount) {
 
 /// Kitap önizlemesi: sayfa çevirme animasyonlu karşılıklı sayfalar (Popsa'daki 3D Unity önizlemenin 2D karşılığı).
 class PreviewScreen extends StatefulWidget {
-  const PreviewScreen({super.key});
+  const PreviewScreen({super.key, this.readOnly = false});
+
+  /// Sipariş edilmiş tasarım: yalnız bakılır (arka plan, satın al ve yükseltme düğmeleri yok).
+  final bool readOnly;
 
   @override
   State<PreviewScreen> createState() => _PreviewScreenState();
@@ -236,33 +239,34 @@ class _PreviewScreenState extends State<PreviewScreen> {
                   inactiveColor: fg.withValues(alpha: 0.25),
                   onChanged: (v) => _controller.jumpToPage(v.round()),
                 ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(28, 8, 28, 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _RoundButton(icon: Icons.palette_outlined, onTap: _pickBackground),
-                    _RoundButton(icon: Icons.shopping_cart_outlined, large: true, onTap: () => buyBook(context, vm)),
-                    _RoundButton(
-                      icon: Icons.auto_stories_outlined,
-                      onTap: () => showUpgradesSheet(
-                        context,
-                        vm,
-                        // Kâğıt sekmesinde Popsa gibi kitap açılır; iç sayfa görünür.
-                        onTab: (tab) {
-                          if (tab == 2 && _page < 1) {
-                            _controller.animateToPage(
-                              1,
-                              duration: const Duration(milliseconds: 450),
-                              curve: Curves.easeInOut,
-                            );
-                          }
-                        },
+              if (!widget.readOnly)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _RoundButton(icon: Icons.palette_outlined, onTap: _pickBackground),
+                      _RoundButton(icon: Icons.shopping_cart_outlined, large: true, onTap: () => buyBook(context, vm)),
+                      _RoundButton(
+                        icon: Icons.auto_stories_outlined,
+                        onTap: () => showUpgradesSheet(
+                          context,
+                          vm,
+                          // Kâğıt sekmesinde Popsa gibi kitap açılır; iç sayfa görünür.
+                          onTab: (tab) {
+                            if (tab == 2 && _page < 1) {
+                              _controller.animateToPage(
+                                1,
+                                duration: const Duration(milliseconds: 450),
+                                curve: Curves.easeInOut,
+                              );
+                            }
+                          },
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),

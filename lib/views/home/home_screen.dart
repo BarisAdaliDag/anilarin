@@ -9,14 +9,16 @@ import '../basket/basket_screen.dart';
 import '../order/orders_screen.dart';
 import 'account_tab.dart';
 import 'designs_tab.dart';
-import 'memories_tab.dart';
+import '../product/products_screen.dart';
 
-/// Alt sekmeli ana ekran (Popsa HomeActivity): Tasarımlar, Hatırlatıcılar, Anılar, Sepet, Hesap.
+/// Alt sekmeli ana ekran: Mağaza (ürünler), Tasarımlarım (taslaklar), Sepet, Hesap.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static const designsTab = 0;
-  static const basketTab = 3;
+  static const shopTab = 0;
+  static const designsTab = 1;
+  static const basketTab = 2;
+  static const accountTab = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -30,10 +32,17 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: AppColors.failure,
       child: Icon(selected ? Icons.shopping_cart : Icons.shopping_cart_outlined),
     );
+    final drafts = app.draftCount;
+    Widget draftsIcon(bool selected) => Badge(
+      isLabelVisible: drafts > 0,
+      label: Text('$drafts'),
+      backgroundColor: AppColors.warning,
+      child: Icon(selected ? Icons.menu_book : Icons.menu_book_outlined),
+    );
     return Scaffold(
       body: IndexedStack(
         index: app.tabIndex,
-        children: const [DesignsTab(), _RemindersTab(), MemoriesTab(), BasketScreen(embedded: true), AccountTab()],
+        children: const [ProductsScreen(embedded: true), DesignsTab(), BasketScreen(embedded: true), AccountTab()],
       ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
@@ -57,20 +66,11 @@ class HomeScreen extends StatelessWidget {
             onDestinationSelected: app.setTab,
             destinations: [
               const NavigationDestination(
-                icon: Icon(Icons.menu_book_outlined),
-                selectedIcon: Icon(Icons.menu_book),
-                label: S.tabDesigns,
+                icon: Icon(Icons.storefront_outlined),
+                selectedIcon: Icon(Icons.storefront),
+                label: S.tabShop,
               ),
-              const NavigationDestination(
-                icon: Icon(Icons.notifications_none),
-                selectedIcon: Icon(Icons.notifications),
-                label: S.tabReminders,
-              ),
-              const NavigationDestination(
-                icon: Icon(Icons.photo_library_outlined),
-                selectedIcon: Icon(Icons.photo_library),
-                label: S.tabMemories,
-              ),
+              NavigationDestination(icon: draftsIcon(false), selectedIcon: draftsIcon(true), label: S.tabDesigns),
               NavigationDestination(icon: basketIcon(false), selectedIcon: basketIcon(true), label: S.tabBasket),
               const NavigationDestination(
                 icon: Icon(Icons.account_circle_outlined),
@@ -79,50 +79,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RemindersTab extends StatelessWidget {
-  const _RemindersTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-        children: [
-          const Text(S.tabReminders, style: TextStyle(fontSize: 30, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 6),
-          Text(S.remindersBody, style: TextStyle(fontSize: 15, color: context.mutedText)),
-          const SizedBox(height: 24),
-          for (final (icon, title, date) in const [
-            (Icons.cake_outlined, 'Doğum günü', 'Sevdiklerinin doğum günlerini ekle'),
-            (Icons.favorite_border, 'Yıl dönümü', 'Özel günlerini unutma'),
-            (Icons.celebration_outlined, 'Yılbaşı', '31 Aralık'),
-          ])
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: context.cardColor, borderRadius: BorderRadius.circular(16)),
-              child: Row(
-                children: [
-                  Icon(icon, color: AppColors.accent),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                        Text(date, style: TextStyle(color: context.mutedText)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );

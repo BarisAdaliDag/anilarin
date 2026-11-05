@@ -18,6 +18,11 @@ class S {
   static const standardShipping = 'Standart Kargo';
   static const trackedShipping = 'Takipli Kargo';
   static const soldBanner = '6.200.000\'DEN FAZLA SATILDI';
+  static const tabShop = 'Mağaza';
+  static const viewOrderedDesign = 'Tasarımı Görüntüle';
+  static const copyOrderedDesign = 'Kopyasını Tasarımlarıma Ekle';
+  static const copyOrderedDesignBody = 'Değiştirip yeniden sipariş vermek için';
+  static const copyOrderedDesignDone = 'Kopya Tasarımlarım\'a eklendi.';
   static const tabDesigns = 'Tasarımlarım';
   static const tabBasket = 'Sepet';
   static const tabAccount = 'Hesap';
