@@ -12,7 +12,8 @@ import 'matbaa_service.dart';
 /// Pakete eklenen tek sayfalık iş emri: sipariş, müşteri, adres ve ürünler.
 class WorkOrder {
   /// Ürün satırı: ad, tür, ölçü, sayfa/baskı sayısı, adet.
-  static List<String> row(Map<String, dynamic> p, Catalog catalog) {
+  /// [group]: ürün okul yıllığı grubuna aitse (ShopOrder.groupOf) tür sütununda belirtilir.
+  static List<String> row(Map<String, dynamic> p, Catalog catalog, {Map<String, dynamic>? group}) {
     final code = '${p['urunKodu']}';
     final count = p['sayfa'] ?? '';
     if (PrintCatalog.isPrintCode(code)) {
@@ -20,7 +21,10 @@ class WorkOrder {
       return ['${p['ad']}', 'Baskı', '${_cm(pr.widthCm)} × ${_cm(pr.heightCm)} cm', '$count baskı', '${p['adet']}'];
     }
     final size = catalog.products.where((x) => x.code == code).firstOrNull?.dimensionsCm ?? code;
-    return ['${p['ad']}', 'Fotokitap', '$size cm', '$count sayfa', '${p['adet']}'];
+    final type = group == null
+        ? 'Fotokitap'
+        : 'Fotokitap · OKUL YILLIĞI (${group['name'] ?? ''}${'${group['studentName'] ?? ''}'.isEmpty ? '' : ', ${group['studentName']}'})';
+    return ['${p['ad']}', type, '$size cm', '$count sayfa', '${p['adet']}'];
   }
 
   static Future<File> write(ShopOrder o, Catalog catalog, File file) async {
@@ -73,7 +77,7 @@ class WorkOrder {
             label('Ürünler'),
             pw.TableHelper.fromTextArray(
               headers: ['Ürün', 'Tür', 'Ölçü', 'İçerik', 'Adet'],
-              data: [for (final p in o.products) row(p, catalog)],
+              data: [for (final p in o.products) row(p, catalog, group: o.groupOf(p))],
               headerStyle: pw.TextStyle(font: bold, fontSize: 10),
               cellStyle: const pw.TextStyle(fontSize: 10),
               headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),

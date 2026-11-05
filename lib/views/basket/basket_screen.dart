@@ -113,6 +113,23 @@ class _BasketScreenState extends State<BasketScreen> {
           for (final item in items) _ItemCard(item: item),
           const SizedBox(height: 8),
           _WideButton(label: S.addAnotherItem, onTap: () => openProducts(context)),
+          // Editörden gelindiyse ödemeyi sonraya bırakıp ana sayfaya dönülebilir; sepet korunur.
+          if (!widget.embedded && items.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _WideButton(
+              label: S.payLater,
+              onTap: () {
+                app.setTab(0);
+                Navigator.of(context).popUntil((r) => r.isFirst);
+              },
+            ),
+            const SizedBox(height: 6),
+            Text(
+              S.payLaterNote,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: context.mutedText),
+            ),
+          ],
           const SizedBox(height: 30),
           const Text(S.discounts, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
           const SizedBox(height: 14),
@@ -242,6 +259,19 @@ class _ItemCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(item.title, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w500)),
+                    // Okul yıllığı kitabı normal kitaptan ayırt edilsin.
+                    if (book?.group case final g?)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(6)),
+                          child: Text(
+                            S.yearbookOf(g.name),
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     _Quantity(item: item),
                     const SizedBox(height: 10),

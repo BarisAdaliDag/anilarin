@@ -35,4 +35,21 @@ void main() {
     expect(back.complete, isTrue);
     expect(GroupMembership(code: 'K7M4QX', name: '').complete, isFalse);
   });
+
+  test('matbaa: siparişte gruplu ürün ayırt edilir (satır, iş emri, baskı klasörü)', () {
+    final o = ShopOrder('AN-1', {
+      'products': [
+        {'ad': 'Normal', 'urunKodu': 'PBK-14', 'adet': 1, 'sayfa': 20, 'tasarimDosyasi': 'b1.json'},
+        {'ad': 'Yillik', 'urunKodu': 'PBK-14', 'adet': 1, 'sayfa': 24, 'tasarimDosyasi': 'b2.json'},
+      ],
+      'groups': [
+        {'code': 'K7M4QX', 'name': '10-A', 'studentName': 'Ali Veli', 'studentPhoto': 'x.jpg', 'design': 'b2.json'},
+      ],
+    });
+    expect(o.groupOf(o.products[0]), isNull);
+    expect(o.groupOf(o.products[1])!['name'], '10-A');
+    expect(ShopOrder.groupSuffix(null), '');
+    expect(ShopOrder.groupSuffix(o.groupOf(o.products[1])), ' - Okul Yilligi 10-A');
+    expect(ShopOrder.groupLabel(o.groupOf(o.products[1])!), contains('Ali Veli'));
+  });
 }

@@ -54,6 +54,21 @@ class ShopOrder {
   List<Map<String, dynamic>> get groups => [
     for (final g in (data['groups'] as List? ?? const [])) Map<String, dynamic>.from(g as Map),
   ];
+
+  /// Bu ürün okul yıllığı grubuna mı ait? (grup kaydındaki tasarım dosyası ürününkiyle eşleşir)
+  Map<String, dynamic>? groupOf(Map<String, dynamic> product) =>
+      groups.where((g) => g['design'] == product['tasarimDosyasi']).firstOrNull;
+
+  /// Klasör ve dosyalarda gruplu ürünü ayırmak için ek: ` - Okul Yilligi 10-A` (grupsuzda boş).
+  static String groupSuffix(Map<String, dynamic>? g) =>
+      g == null ? '' : ' - Okul Yilligi ${'${g['name'] ?? ''}'.replaceAll(RegExp(r'[/\\:]'), '-')}'.trimRight();
+
+  /// İnsan okur grup etiketi: `Okul Yıllığı · 10-A (857-KTX) · Öğrenci: Ali Veli · Fotoğraf: photos/x.jpg`.
+  static String groupLabel(Map<String, dynamic> g) => [
+    'Okul Yıllığı · ${g['name'] ?? ''} (${formatGroupCode('${g['code'] ?? ''}')})',
+    if ('${g['studentName'] ?? ''}'.isNotEmpty) 'Öğrenci: ${g['studentName']}',
+    if (g['studentPhoto'] != null) 'Fotoğraf: photos/${g['studentPhoto']}',
+  ].join(' · ');
   String get status => data['status'] ?? '';
   Map<String, dynamic> get _order => Map<String, dynamic>.from(data['order'] ?? const {});
 
@@ -253,7 +268,8 @@ class MatbaaService {
     final files = <File>[], lines = <String>[], errors = <String>[], lowRes = <String>[];
     if (o.products.isEmpty) errors.add('Siparişte ürün bilgisi bulunamadı.');
     for (final p in o.products) {
-      final name = '${p['ad']}'.replaceAll(RegExp(r'[/\\:]'), '-');
+      final group = o.groupOf(p);
+      final name = '${p['ad']}'.replaceAll(RegExp(r'[/\\:]'), '-') + ShopOrder.groupSuffix(group);
       final copies = (p['adet'] as num?)?.toInt() ?? 1;
       try {
         final json =
@@ -278,7 +294,8 @@ class MatbaaService {
           files.addAll(await renderer.renderBook(book, target, onPage: onPage));
           final inner = book.pages.where((pg) => !pg.isCover).length;
           lines.addAll([
-            '$name × $copies (Fotokitap)',
+            '$name × $copies (Fotokitap${group == null ? '' : ' · OKUL YILLIĞI'})',
+            if (group != null) '  ${ShopOrder.groupLabel(group)}',
             '  Kapak: ${PrintSpec.book(product, cover: true).label}',
             '  İç sayfalar: $inner sayfa, ${PrintSpec.book(product).label}',
           ]);

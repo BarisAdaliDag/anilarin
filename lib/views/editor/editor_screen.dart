@@ -121,7 +121,7 @@ class _EditorBodyState extends State<_EditorBody> {
                 children: [
                   Expanded(
                     child: Text(
-                      '${vm.product.title} · son düzenleme $edited',
+                      '${vm.book.group == null ? vm.product.title : S.yearbookOf(vm.book.group!.name)} · son düzenleme $edited',
                       style: TextStyle(color: context.mutedText, fontSize: 15, height: 1.4),
                     ),
                   ),

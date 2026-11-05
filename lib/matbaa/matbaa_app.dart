@@ -274,7 +274,7 @@ class _OrdersScreenState extends State<_OrdersScreen> {
                                   title: Text(o.customerName.isEmpty ? o.ref : o.customerName),
                                   subtitle: Text(
                                     '${DateFormat('d MMM y HH:mm', 'tr').format(o.createdAt)} · ${o.ref}\n'
-                                    '${o.products.map((p) => '${p['adet']}× ${p['ad']}').join(', ')}',
+                                    '${o.products.map((p) => '${p['adet']}× ${p['ad']}${o.groupOf(p) == null ? '' : ' (Okul Yıllığı)'}').join(', ')}',
                                   ),
                                   isThreeLine: true,
                                   trailing: _StatusChip(o.status),
@@ -515,27 +515,52 @@ class _OrderDetailState extends State<_OrderDetail> {
         const Text('Müşteri', style: heading),
         Text(o.customerName),
         Text([c['email'], c['phone']].where((s) => s != null && '$s'.isNotEmpty).join(' · '), style: muted),
-        if (o.groups.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          const Text('Okul Yıllığı', style: heading),
-          for (final g in o.groups) ...[
-            SelectableText('${g['name']} · ${formatGroupCode('${g['code']}')}'),
-            Text(
-              'Öğrenci: ${g['studentName'] ?? ''}${g['studentPhoto'] == null ? '' : ' · Fotoğraf: photos/${g['studentPhoto']}'}',
-              style: muted,
-            ),
-          ],
-        ],
         const SizedBox(height: 16),
         const Text('Teslimat', style: heading),
         Text(o.addressLines.join('\n'), style: muted),
         const SizedBox(height: 16),
         const Text('Ürünler', style: heading),
         for (final p in o.products)
-          Text(() {
-            final r = WorkOrder.row(p, widget.catalog);
-            return '${r[4]}× ${r[0]} · ${r[1]} · ${r[2]} · ${r[3]}';
-          }()),
+          Builder(
+            builder: (context) {
+              final r = WorkOrder.row(p, widget.catalog);
+              final g = o.groupOf(p);
+              if (g == null) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('${r[4]}× ${r[0]} · ${r[1]} · ${r[2]} · ${r[3]}'),
+                );
+              }
+              final line = '${r[4]}× ${r[0]} · Fotokitap · ${r[2]} · ${r[3]}';
+              // Okul yıllığı ürünü: aynı siparişteki normal kitaptan ayırt edilsin.
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(color: Colors.deepOrange, borderRadius: BorderRadius.circular(6)),
+                          child: const Text(
+                            'OKUL YILLIĞI',
+                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(line, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                    SelectableText(ShopOrder.groupLabel(g), style: muted),
+                    Text('Baskı klasörü: baski/${r[0]}${ShopOrder.groupSuffix(g)}/', style: muted),
+                  ],
+                ),
+              );
+            },
+          ),
         const SizedBox(height: 28),
         SizedBox(
           width: double.infinity,

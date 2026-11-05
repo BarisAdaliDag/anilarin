@@ -250,7 +250,7 @@ class _DesignCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          S.photoBook.toUpperCase(),
+                          (book.group == null ? S.photoBook : S.yearbookOf(book.group!.name)).toUpperCase(),
                           style: TextStyle(fontSize: 12, letterSpacing: 1.6, color: onCard.withValues(alpha: 0.75)),
                         ),
                         const SizedBox(height: 4),

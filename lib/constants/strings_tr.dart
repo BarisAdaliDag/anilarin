@@ -230,6 +230,10 @@ class S {
   static const basketEmpty = 'Sepetin boş';
   static const photoPrints = 'Fotoğraf Baskıları';
   static const groupAlbum = 'Grup Albümü';
+  static const yearbook = 'Okul Yıllığı';
+  static String yearbookOf(String group) => group.isEmpty ? yearbook : '$yearbook · $group';
+  static const payLater = 'Sonra Öde – Ana Sayfaya Dön';
+  static const payLaterNote = 'Ürünlerin sepette kalır; istediğin zaman ödeyebilirsin.';
   static const groupAlbumShort = 'Okul yıllığı';
   static const groupAlbumBody =
       'Okulunun yıllığına katıl. Matbaanın sınıfına verdiği kodu gir; adını ve fotoğrafını ekle, ardından kendi albümünü oluştur.';
