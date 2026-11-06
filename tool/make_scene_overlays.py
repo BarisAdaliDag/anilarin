@@ -9,8 +9,106 @@ import json
 import sys
 from pathlib import Path
 
+from collections import deque
+
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
+
+
+def largest_component(mask):
+    """Maskenin en büyük 4-komşulu bağlı parçası (el); masadaki küçük renkli lekeler atılır."""
+    h, w = mask.shape
+    label = np.zeros((h, w), np.int32)
+    best, best_n, n = 0, 0, 0
+    for sy, sx in zip(*np.nonzero(mask)):
+        if label[sy, sx]:
+            continue
+        n += 1
+        label[sy, sx] = n
+        q, size = deque([(sy, sx)]), 0
+        while q:
+            y, x = q.popleft()
+            size += 1
+            for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                if 0 <= ny < h and 0 <= nx < w and mask[ny, nx] and not label[ny, nx]:
+                    label[ny, nx] = n
+                    q.append((ny, nx))
+        if size > best_n:
+            best, best_n = n, size
+    return label == best if best else mask
+
+
+def fill_holes(mask, max_hole=4000):
+    """Dışarıdan erişilemeyen küçük boşlukları doldurur."""
+    h, w = mask.shape
+    holes = ~mask
+    seen = np.zeros_like(mask)
+    out = mask.copy()
+    for sy, sx in zip(*np.nonzero(holes)):
+        if seen[sy, sx]:
+            continue
+        comp, q, edge = [], deque([(sy, sx)]), False
+        seen[sy, sx] = True
+        while q:
+            y, x = q.popleft()
+            comp.append((y, x))
+            if y in (0, h - 1) or x in (0, w - 1):
+                edge = True
+            for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                if 0 <= ny < h and 0 <= nx < w and holes[ny, nx] and not seen[ny, nx]:
+                    seen[ny, nx] = True
+                    q.append((ny, nx))
+        if not edge and len(comp) <= max_hole:
+            ys, xs = zip(*comp)
+            out[list(ys), list(xs)] = True
+    return out
+
+
+def thumb_on_card(rgb, card, hand_below):
+    """Kartın üstüne uzanan parmak (başparmak): kartın alt şeridinde kâğıt olmayan (renkli ya da koyu)
+    pikseller; elin kart altındaki sütunlarından başlayan bağlı bölge, içindeki boşluklar (tırnak, parlama)
+    doldurulur. Yumuşak kenarlı maske (0..1) döner."""
+    h, w = card.shape
+    ys = np.nonzero(card.any(axis=1))[0]
+    xs = np.nonzero(card.any(axis=0))[0]
+    y0, y1, x0, x1 = ys[0], ys[-1], xs[0], xs[-1]
+    lum = rgb.mean(axis=2)
+    chroma = rgb.max(axis=2) - rgb.min(axis=2)
+    r, g = rgb[..., 0], rgb[..., 1]
+    # Kâğıt beyaz ve renksiz; ten kırmızımsı (yaprak arası kahve gölgeler r - g ≈ 15).
+    skin = card & (chroma >= 18) & (r - g >= 18)
+    skin[: int(y1 - (y1 - y0) * 0.3)] = False
+    # Elin karta girdiği sütunlar: kartın hemen altında el olan yerler.
+    cols = hand_below[min(h - 1, y1 + 2): min(h, y1 + 10)].any(axis=0)
+    cols = largest_component(cols[None, :])[0]  # başparmağın altındaki el; uzaktaki parmak uçları değil
+    cols = np.convolve(cols.astype(float), np.ones(9), mode="same") > 0
+    seen = np.zeros_like(skin)
+    q = deque((y1, x) for x in range(x0, x1 + 1) if cols[x] and skin[y1, x])
+    for y, x in q:
+        seen[y, x] = True
+    while q:
+        y, x = q.popleft()
+        for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+            # Yalnız elin girdiği sütunlarda: kart alt kenarı boyunca uzanan yaprak gölgesi başparmağa eklenmesin.
+            if y0 <= ny <= y1 and x0 <= nx <= x1 and cols[nx] and skin[ny, nx] and not seen[ny, nx]:
+                seen[ny, nx] = True
+                q.append((ny, nx))
+    # Kapat (genişlet + daralt) ve küçük delikleri doldur: tırnak ve parlak uç da parmağın parçası.
+    seen = largest_component(seen)  # başparmak; kenardaki yaprak gölgeleri ayrı küçük parçalar
+    m = Image.fromarray((seen * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(7))
+    closed = np.asarray(m) > 127
+    sub_ = closed[y0 : y1 + 1, x0 : x1 + 1]
+    filled = np.zeros_like(sub_)
+    band = (y1 - y0) * 0.3
+    for cx in range(sub_.shape[1]):
+        col = np.nonzero(sub_[:, cx])[0]
+        # Parmak alttan girer: ilk el pikselinin altı da eldir. Kısa sütunlar (kenardaki ince gölge) atılır.
+        if len(col) and (sub_.shape[0] - col[0]) >= band * 0.25:
+            filled[col[0] :, cx] = True
+    out = np.zeros((h, w), bool)
+    out[y0 : y1 + 1, x0 : x1 + 1] = filled
+    soft = Image.fromarray((out * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2))
+    return np.asarray(soft).astype(np.float32) / 255.0
 
 src, dst = Path(sys.argv[1]), Path(sys.argv[2])
 dst.mkdir(parents=True, exist_ok=True)
@@ -54,6 +152,10 @@ for kind, n in [("PBK", n) for n in range(1, 13)] + [("PTS", n) for n in range(2
         hand = (diff > 18) & (chroma >= 50)
         hand = hand | np.roll(hand, 1, 0) | np.roll(hand, -1, 0) | np.roll(hand, 1, 1) | np.roll(hand, -1, 1)
         hand[: int(y0 + (y1 - y0) * 0.6)] = False  # el destenin alt kısmından girer
+        hand = largest_component(hand)
+        # Elin parlak ve soluk yerleri (tırnak, parlama) delik kalmasın: kapat ve küçük delikleri doldur.
+        hm = Image.fromarray((hand * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(7)).filter(ImageFilter.MinFilter(7))
+        hand = fill_holes(np.asarray(hm) > 127)
         box = np.zeros((h, w), bool)
         box[by0:by1, bx0:bx1] = True
         color = np.where(box[..., None], recon, color)
@@ -62,6 +164,14 @@ for kind, n in [("PBK", n) for n in range(1, 13)] + [("PTS", n) for n in range(2
         alpha = np.where(card, 0.0, alpha)
         color = np.where(hand[..., None], rgb, color)
         alpha = np.where(hand, 1.0, alpha)
+        # Başparmak kartın üstünde: tırnak ve açık tenli uç dahil tek parça, yumuşak kenarlı ve opak; altında
+        # kâğıda düşen hafif gölge. Düz alfa için kenarda da ten rengi kullanılır (siyah hale olmasın).
+        thumb = thumb_on_card(rgb, card, hand)
+        shadow = np.asarray(Image.fromarray((thumb * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(3)))
+        shadow = np.roll(np.roll(shadow / 255.0, 3, 0), 2, 1) * 0.25
+        alpha = np.where(card, np.maximum(alpha, shadow * (thumb < 0.5)), alpha)
+        color = np.where((thumb > 0.02)[..., None], rgb, color)
+        alpha = np.maximum(alpha, thumb)
     out = np.dstack([color, alpha * 255]).astype(np.uint8)
     img = Image.fromarray(out, "RGBA")
     img = img.resize((640, round(640 * h / w)), Image.LANCZOS)  # kartlar küçük; dosya hafif kalsın
